@@ -1,19 +1,14 @@
-p                           = dict()
-p['picklefolder']           = 'pickles'
-# -----------------------------------
+p = dict()
 
-p['geocode']                = 'PLZ'
+p["dataset_folder"] = "datasets"
+p["picklefolder"] = "pickles"
 
-p["file_lstations"]         = "Ladesaeulenregister.csv"
-# p["file_buildings"]         = "gebaeude.csv"
-p["file_residents"]         = "plz_einwohner.csv"
-# p["file_amounttraf"]        = "Verkehrsaufkommen.csv"
+p["geocode"] = "PLZ"
 
-p["file_geodat_plz"]       = "geodata_berlin_plz.csv"
-p["file_geodat_dis"]       = "geodata_berlin_dis.csv"
+p["file_lstations"] = "Ladesaeulenregister.csv" # Original file name: Ladesaeulenregister_BNetzA_2025-10-23.csv
+p["file_residents"] = "plz_einwohner.csv"
 
-# p["gebaeude_filter"]        = ["Freistehendes Einzelgebäude", "Doppelhaushälfte"]
+p["file_geodat_plz"] = "geodata_berlin_plz.csv"
+p["file_geodat_dis"] = "geodata_berlin_dis.csv"
 
-# -----------------------------------
 pdict = p.copy()
-
