@@ -51,7 +51,7 @@ def filter_federal_state(df: pd.DataFrame) -> pd.DataFrame:
 @ht.timer
 def main() -> None:
     """
-    Main: Generation of Streamlit App for visualizing electric charging stations & residents in Berlin.
+    Main: Generation of Streamlit App for visualizing electric charging stations & residents in Berlin with power categories and search functionality.
     """
 
     # Load datasets.
@@ -65,13 +65,15 @@ def main() -> None:
 
     # Preprocess the charging stations data.
     df_lstat2 = mt.preprop_lstat(df_lstat, df_geodat_plz, pdict)
-    gdf_lstat3 = mt.count_plz_occurrences(df_lstat2)
+    
+    # Count charging stations by power category
+    power_category_dict = mt.count_plz_by_power_category(df_lstat2)
 
     # Preprocess the residents data.
     gdf_residents2 = mt.preprop_resid(df_residents, df_geodat_plz, pdict)
 
-    # Generate the Streamlit App for visualizing electric charging stations & residents in Berlin.
-    mt.make_streamlit_electric_Charging_resid(gdf_lstat3, gdf_residents2)
+    # Generate the Streamlit App with power categories and search functionality
+    mt.make_streamlit_with_enhanced_features(power_category_dict, gdf_residents2, df_lstat2)
 
 
 if __name__ == "__main__":
