@@ -353,6 +353,59 @@ def make_streamlit_electric_charging_resid(
 
     # Sidebar - View Options
     st.sidebar.header("🔍 View Options")
+    
+    # Postal Code Search in Sidebar
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📍 Search by Postal Code")
+    
+    # Get all available postal codes from the datasets
+    all_plz = sorted(set(dframe1['PLZ'].tolist() + dframe2['PLZ'].tolist()))
+    
+    # Search input with suggestions
+    search_plz = st.sidebar.selectbox(
+        "Select PLZ:",
+        options=[''] + all_plz,
+        format_func=lambda x: "All areas" if x == '' else str(int(x)),
+        help="Select a postal code to focus the map on that area"
+    )
+    
+    # Initialize map center and zoom
+    map_center = [52.52, 13.40]
+    map_zoom = 10
+    plz_info = {}
+    
+    # If a PLZ is selected, update map center and zoom
+    if search_plz != '':
+        # Find the geometry for the selected PLZ in either dataset
+        plz_geometry = None
+        
+        if search_plz in dframe1['PLZ'].values:
+            plz_row = dframe1[dframe1['PLZ'] == search_plz].iloc[0]
+            plz_geometry = plz_row['geometry']
+            plz_info['stations'] = int(plz_row['Number'])
+        
+        if search_plz in dframe2['PLZ'].values:
+            plz_row = dframe2[dframe2['PLZ'] == search_plz].iloc[0]
+            if plz_geometry is None:
+                plz_geometry = plz_row['geometry']
+            plz_info['population'] = int(plz_row['Einwohner'])
+        
+        if plz_geometry is not None:
+            # Get centroid of the selected area
+            centroid = plz_geometry.centroid
+            map_center = [centroid.y, centroid.x]
+            map_zoom = 13  # Zoom in when focusing on a specific PLZ
+            
+            # Display info in sidebar
+            info_parts = []
+            if 'population' in plz_info:
+                info_parts.append(f"👥 Pop: {plz_info['population']:,}")
+            if 'stations' in plz_info:
+                info_parts.append(f"⚡ Stations: {plz_info['stations']}")
+            if info_parts:
+                st.sidebar.info(" | ".join(info_parts))
+    
+    st.sidebar.markdown("---")
     view_mode = st.sidebar.radio(
         "Visualization Mode",
         ["Basic View", "Power Capacity (KW) View"],
@@ -378,8 +431,16 @@ def make_streamlit_electric_charging_resid(
     else:
         show_demand = False
 
-    # Create a Folium map
-    m = folium.Map(location=[52.52, 13.40], zoom_start=10)
+    # Create a Folium map with dynamic center and zoom
+    m = folium.Map(location=map_center, zoom_start=map_zoom)
+    
+    # Store selected PLZ geometry for highlighting
+    selected_plz_geometry = None
+    if search_plz != '':
+        if search_plz in dframe1['PLZ'].values:
+            selected_plz_geometry = dframe1[dframe1['PLZ'] == search_plz].iloc[0]['geometry']
+        elif search_plz in dframe2['PLZ'].values:
+            selected_plz_geometry = dframe2[dframe2['PLZ'] == search_plz].iloc[0]['geometry']
 
     # Handle layer rendering
     if layer_selection == "Residents":
@@ -392,15 +453,16 @@ def make_streamlit_electric_charging_resid(
 
         # Add polygons to the map for Residents
         for _, row in dframe2.iterrows():
+            is_selected = (search_plz != '' and row['PLZ'] == search_plz)
             folium.GeoJson(
                 row["geometry"],
-                style_function=lambda _, color=color_map(row["Einwohner"]): {
+                style_function=lambda _, color=color_map(row["Einwohner"]), is_sel=is_selected: {
                     "fillColor": color,
-                    "color": "black",
-                    "weight": 1,
-                    "fillOpacity": 0.7,
+                    "color": "blue" if is_sel else "black",
+                    "weight": 4 if is_sel else 1,
+                    "fillOpacity": 0.9 if is_sel else 0.7,
                 },
-                tooltip=f"PLZ: {row['PLZ']}, Einwohner: {row['Einwohner']}",
+                tooltip=f"PLZ: {row['PLZ']}, Einwohner: {row['Einwohner']}" + (" ⭐ SELECTED" if is_selected else ""),
             ).add_to(m)
 
         color_map.add_to(m)
@@ -415,15 +477,16 @@ def make_streamlit_electric_charging_resid(
 
         # Add polygons to the map for all charging stations
         for _, row in dframe1.iterrows():
+            is_selected = (search_plz != '' and row['PLZ'] == search_plz)
             folium.GeoJson(
                 row["geometry"],
-                style_function=lambda _, color=color_map(row["Number"]): {
+                style_function=lambda _, color=color_map(row["Number"]), is_sel=is_selected: {
                     "fillColor": color,
-                    "color": "black",
-                    "weight": 1,
-                    "fillOpacity": 0.7,
+                    "color": "blue" if is_sel else "black",
+                    "weight": 4 if is_sel else 1,
+                    "fillOpacity": 0.9 if is_sel else 0.7,
                 },
-                tooltip=f"PLZ: {row['PLZ']}, Number: {row['Number']}",
+                tooltip=f"PLZ: {row['PLZ']}, Number: {row['Number']}" + (" ⭐ SELECTED" if is_selected else ""),
             ).add_to(m)
 
         color_map.add_to(m)
@@ -442,15 +505,16 @@ def make_streamlit_electric_charging_resid(
 
             # Add polygons to the map for this KW range
             for _, row in df_kw.iterrows():
+                is_selected = (search_plz != '' and row['PLZ'] == search_plz)
                 folium.GeoJson(
                     row["geometry"],
-                    style_function=lambda _, color=color_map(row["Number"]): {
+                    style_function=lambda _, color=color_map(row["Number"]), is_sel=is_selected: {
                         "fillColor": color,
-                        "color": "black",
-                        "weight": 1,
-                        "fillOpacity": 0.7,
+                        "color": "blue" if is_sel else "black",
+                        "weight": 4 if is_sel else 1,
+                        "fillOpacity": 0.9 if is_sel else 0.7,
                     },
-                    tooltip=f"PLZ: {row['PLZ']}, Stations: {row['Number']} ({layer_selection})",
+                    tooltip=f"PLZ: {row['PLZ']}, Stations: {row['Number']} ({layer_selection})" + (" ⭐ SELECTED" if is_selected else ""),
                 ).add_to(m)
 
             color_map.add_to(m)
@@ -462,32 +526,42 @@ def make_streamlit_electric_charging_resid(
     if show_demand and demand_analysis is not None:
         st.markdown("---")
         st.header("📊 Demand Priority Analysis for EV Charging Stations")
+        
+        # Filter demand analysis by selected PLZ if applicable
+        filtered_demand = demand_analysis.copy()
+        if search_plz != '':
+            filtered_demand = demand_analysis[demand_analysis['PLZ'] == search_plz]
+            if not filtered_demand.empty:
+                st.info(f"📍 Showing analysis for PLZ: **{int(search_plz)}**")
+            else:
+                st.warning(f"No demand analysis data available for PLZ: {int(search_plz)}")
+                filtered_demand = demand_analysis.copy()  # Fall back to all data
 
         # Summary cards
-        st.subheader("Priority Distribution")
+        st.subheader("Priority Distribution" + (f" for PLZ {int(search_plz)}" if search_plz != '' and len(filtered_demand) == 1 else ""))
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
-            critical_count = len(demand_analysis[demand_analysis["Demand_Priority"] == "CRITICAL"])
+            critical_count = len(filtered_demand[filtered_demand["Demand_Priority"] == "CRITICAL"])
             st.metric("🔴 CRITICAL", critical_count, help="Pop > 15K, Stations < 10")
 
         with col2:
-            high_count = len(demand_analysis[demand_analysis["Demand_Priority"] == "HIGH"])
+            high_count = len(filtered_demand[filtered_demand["Demand_Priority"] == "HIGH"])
             st.metric("🟠 HIGH", high_count, help="Pop > 15K, Stations 10-20")
 
         with col3:
-            medium_count = len(demand_analysis[demand_analysis["Demand_Priority"] == "MEDIUM"])
+            medium_count = len(filtered_demand[filtered_demand["Demand_Priority"] == "MEDIUM"])
             st.metric("🟡 MEDIUM", medium_count, help="Pop 8K-15K, Stations < 10")
 
         with col4:
-            low_count = len(demand_analysis[demand_analysis["Demand_Priority"] == "LOW"])
+            low_count = len(filtered_demand[filtered_demand["Demand_Priority"] == "LOW"])
             st.metric("🟢 LOW", low_count, help="Well-served or low demand")
 
         st.markdown("---")
         st.subheader("🗺️ Demand Priority Map")
         
-        # Create a separate Folium map for demand analysis
-        demand_map = folium.Map(location=[52.52, 13.40], zoom_start=10)
+        # Create a separate Folium map for demand analysis (use same center and zoom as main map)
+        demand_map = folium.Map(location=map_center, zoom_start=map_zoom)
         
         # Define colors for each priority level
         priority_colors = {
@@ -498,9 +572,10 @@ def make_streamlit_electric_charging_resid(
         }
         
         # Add polygons colored by demand priority
-        for _, row in demand_analysis.iterrows():
+        for _, row in filtered_demand.iterrows():
             priority = row["Demand_Priority"]
             color = priority_colors.get(priority, "#888888")
+            is_selected = (search_plz != '' and row['PLZ'] == search_plz)
             
             # Format tooltip information
             ratio_text = (
@@ -521,11 +596,11 @@ def make_streamlit_electric_charging_resid(
             
             folium.GeoJson(
                 row["geometry"],
-                style_function=lambda _, color=color: {
+                style_function=lambda _, color=color, is_sel=is_selected: {
                     "fillColor": color,
-                    "color": "black",
-                    "weight": 1,
-                    "fillOpacity": 0.7,
+                    "color": "blue" if is_sel else "black",
+                    "weight": 4 if is_sel else 1,
+                    "fillOpacity": 0.9 if is_sel else 0.7,
                 },
                 tooltip=folium.Tooltip(tooltip_html),
             ).add_to(demand_map)
@@ -555,8 +630,10 @@ def make_streamlit_electric_charging_resid(
         col1, col2, col3 = st.columns(3)
 
         with col1:
+            # If a specific PLZ is selected, show all priorities by default
+            default_priorities = ["CRITICAL", "HIGH", "MEDIUM", "LOW"] if search_plz != '' else ["CRITICAL", "HIGH"]
             priority_filter = st.multiselect(
-                "Filter by Priority", ["CRITICAL", "HIGH", "MEDIUM", "LOW"], default=["CRITICAL", "HIGH"]
+                "Filter by Priority", ["CRITICAL", "HIGH", "MEDIUM", "LOW"], default=default_priorities
             )
 
         with col2:
@@ -574,11 +651,11 @@ def make_streamlit_electric_charging_resid(
             sort_order = st.radio("Order", ["Descending", "Ascending"], horizontal=True)
 
         # Filter and display data
-        filtered_data = demand_analysis[demand_analysis["Demand_Priority"].isin(priority_filter)].copy()
+        display_demand = filtered_demand[filtered_demand["Demand_Priority"].isin(priority_filter)].copy()
 
-        if not filtered_data.empty:
+        if not display_demand.empty:
             # Handle inf values for sorting
-            display_data = filtered_data.copy()
+            display_data = display_demand.copy()
             display_data["Residents_per_Station"] = display_data["Residents_per_Station"].replace(float("inf"), 999999)
             display_data = display_data.sort_values(by=sort_by, ascending=(sort_order == "Ascending"))
 
@@ -603,13 +680,14 @@ def make_streamlit_electric_charging_resid(
             )
 
             # Download option
-            csv = filtered_data[["PLZ", "Einwohner", "Number", "Residents_per_Station", "Demand_Priority"]].to_csv(
+            csv = display_demand[["PLZ", "Einwohner", "Number", "Residents_per_Station", "Demand_Priority"]].to_csv(
                 index=False
             )
+            csv_filename = f"berlin_ev_demand_analysis_PLZ_{int(search_plz)}.csv" if search_plz != '' else "berlin_ev_demand_analysis.csv"
             st.download_button(
                 label="📥 Download Analysis as CSV",
                 data=csv,
-                file_name="berlin_ev_demand_analysis.csv",
+                file_name=csv_filename,
                 mime="text/csv",
             )
         else:
