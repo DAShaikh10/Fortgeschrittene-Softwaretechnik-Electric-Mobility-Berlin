@@ -776,15 +776,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-## Contact
-
-For questions or suggestions, please contact the development team:
-
-- **GitHub:** [Amaan6674/Electric-Mobility-Berlin](https://github.com/Amaan6674/Electric-Mobility-Berlin)
-- **Course:** Advanced Software Engineering
-
----
-
 ## Acknowledgments
 
 - **Bundesnetzagentur** for providing comprehensive charging station data
