@@ -484,6 +484,71 @@ def make_streamlit_electric_charging_resid(
             st.metric("🟢 LOW", low_count, help="Well-served or low demand")
 
         st.markdown("---")
+        st.subheader("🗺️ Demand Priority Map")
+        
+        # Create a separate Folium map for demand analysis
+        demand_map = folium.Map(location=[52.52, 13.40], zoom_start=10)
+        
+        # Define colors for each priority level
+        priority_colors = {
+            "CRITICAL": "#d32f2f",  # Red
+            "HIGH": "#ff9800",      # Orange
+            "MEDIUM": "#fbc02d",    # Yellow
+            "LOW": "#388e3c"        # Green
+        }
+        
+        # Add polygons colored by demand priority
+        for _, row in demand_analysis.iterrows():
+            priority = row["Demand_Priority"]
+            color = priority_colors.get(priority, "#888888")
+            
+            # Format tooltip information
+            ratio_text = (
+                f"{row['Residents_per_Station']:.1f}"
+                if row["Residents_per_Station"] != float("inf")
+                else "No stations"
+            )
+            
+            tooltip_html = f"""
+            <div style="font-family: Arial; font-size: 12px;">
+                <b>PLZ:</b> {row['PLZ']}<br>
+                <b>Priority:</b> {priority}<br>
+                <b>Population:</b> {int(row['Einwohner']):,}<br>
+                <b>Stations:</b> {int(row['Number'])}<br>
+                <b>Residents/Station:</b> {ratio_text}
+            </div>
+            """
+            
+            folium.GeoJson(
+                row["geometry"],
+                style_function=lambda _, color=color: {
+                    "fillColor": color,
+                    "color": "black",
+                    "weight": 1,
+                    "fillOpacity": 0.7,
+                },
+                tooltip=folium.Tooltip(tooltip_html),
+            ).add_to(demand_map)
+        
+        # Add a custom legend
+        legend_html = '''
+        <div style="position: fixed; 
+                    top: 10px; right: 10px; width: 200px; 
+                    background-color: white; z-index:9999; font-size:14px;
+                    border:2px solid grey; border-radius: 5px; padding: 10px">
+            <p style="margin: 0 0 10px 0; font-weight: bold;">Demand Priority</p>
+            <p style="margin: 5px 0;"><span style="background-color: #d32f2f; padding: 3px 10px; border-radius: 3px; color: white;">■</span> CRITICAL</p>
+            <p style="margin: 5px 0;"><span style="background-color: #ff9800; padding: 3px 10px; border-radius: 3px; color: white;">■</span> HIGH</p>
+            <p style="margin: 5px 0;"><span style="background-color: #fbc02d; padding: 3px 10px; border-radius: 3px; color: black;">■</span> MEDIUM</p>
+            <p style="margin: 5px 0;"><span style="background-color: #388e3c; padding: 3px 10px; border-radius: 3px; color: white;">■</span> LOW</p>
+        </div>
+        '''
+        demand_map.get_root().html.add_child(folium.Element(legend_html))
+        
+        # Display the demand analysis map
+        folium_static(demand_map, width=1400, height=800)
+        
+        st.markdown("---")
         st.subheader("📋 Detailed Analysis Table")
 
         # Filter and sort options
