@@ -47,7 +47,7 @@ def sort_by_plz_add_geometry(dfr: pd.DataFrame, dfg: pd.DataFrame, pdict: dict) 
 
 # -----------------------------------------------------------------------------
 @ht.timer
-def preprop_lstat(dfr, dfg, pdict):
+def preprop_lstat(dfr: pd.DataFrame, dfg: pd.DataFrame, pdict: dict) -> gpd.GeoDataFrame:
     """
     Preprocessing dataframe from `Ladesaeulenregister.csv`
     """
@@ -130,67 +130,61 @@ def count_plz_occurrences(df_lstat2: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
 # -----------------------------------------------------------------------------
 @ht.timer
-def count_plz_by_power_category(df_lstat2):
+def count_plz_by_power_category(df_lstat2: pd.DataFrame):
     """
     Counts loading stations per PLZ categorized by power rating (kW).
-    
+
     Categories:
     - Slow: < 11 kW
     - Normal: 11-22 kW
     - Fast: 22-50 kW
     - Rapid: 50-150 kW
     - Ultra-rapid: >= 150 kW
-    
+
     Returns:
         Dictionary with DataFrames for each category and total
     """
     df = df_lstat2.copy()
-    
+
     # Convert KW to numeric
-    df['KW_numeric'] = pd.to_numeric(df['KW'], errors='coerce')
-    
+    df["KW_numeric"] = pd.to_numeric(df["KW"], errors="coerce")
+
     # Remove rows with invalid KW values
-    df = df.dropna(subset=['KW_numeric'])
-    
+    df = df.dropna(subset=["KW_numeric"])
+
     # Define power categories
     def categorize_power(kw):
         if kw < 11:
-            return 'Slow'
+            return "Slow"
         elif kw < 22:
-            return 'Normal'
+            return "Normal"
         elif kw < 50:
-            return 'Fast'
+            return "Fast"
         elif kw < 150:
-            return 'Rapid'
+            return "Rapid"
         else:
-            return 'Ultra-rapid'
-    
-    df['Power_Category'] = df['KW_numeric'].apply(categorize_power)
-    
+            return "Ultra-rapid"
+
+    df["Power_Category"] = df["KW_numeric"].apply(categorize_power)
+
     # Group by PLZ and power category
     result_dict = {}
-    
+
     # Total count (same as count_plz_occurrences)
-    result_dict['Total'] = df.groupby("PLZ").agg(
-        Number=("PLZ", "count"), 
-        geometry=("geometry", "first")
-    ).reset_index()
-    
+    result_dict["Total"] = df.groupby("PLZ").agg(Number=("PLZ", "count"), geometry=("geometry", "first")).reset_index()
+
     # Count by category
-    categories = ['Slow', 'Normal', 'Fast', 'Rapid', 'Ultra-rapid']
+    categories = ["Slow", "Normal", "Fast", "Rapid", "Ultra-rapid"]
     for category in categories:
-        df_category = df[df['Power_Category'] == category]
+        df_category = df[df["Power_Category"] == category]
         if len(df_category) > 0:
-            result_dict[category] = df_category.groupby("PLZ").agg(
-                Number=("PLZ", "count"), 
-                geometry=("geometry", "first")
-            ).reset_index()
+            result_dict[category] = (
+                df_category.groupby("PLZ").agg(Number=("PLZ", "count"), geometry=("geometry", "first")).reset_index()
+            )
         else:
             # Empty dataframe with correct structure
-            result_dict[category] = gpd.GeoDataFrame(
-                columns=['PLZ', 'Number', 'geometry']
-            )
-    
+            result_dict[category] = gpd.GeoDataFrame(columns=["PLZ", "Number", "geometry"])
+
     return result_dict
 
 
@@ -311,413 +305,401 @@ def preprop_resid(dfr: pd.DataFrame, dfg: gpd.GeoDataFrame, pdict: dict) -> gpd.
 
 
 # -----------------------------------------------------------------------------
-@ht.timer
-def make_streamlit_electric_charging_resid(
-    dfr1: gpd.GeoDataFrame, dfr2: gpd.GeoDataFrame, dfr_by_kw: dict = None, demand_analysis: gpd.GeoDataFrame = None
-) -> None:
+def setup_sidebar_search(dframe1: gpd.GeoDataFrame, dframe2: gpd.GeoDataFrame):
     """
-    Creates and displays a Streamlit application with interactive heatmaps showing the distribution
-    of electric charging stations and residents across Berlin postal codes.
-
-    This function generates an interactive Folium map embedded in a Streamlit app, allowing users
-    to toggle between multiple visualization layers including resident population density, total
-    charging stations, charging stations grouped by power capacity (KW), and demand priority analysis.
-
-    Args:
-        dfr1 (gpd.GeoDataFrame): GeoDataFrame containing electric charging stations data.
-            Expected columns:
-                - 'geometry': Polygon geometries for postal code areas
-                - 'PLZ': Postal code identifier
-                - 'Number': Count of charging stations in each postal code area
-        dfr2 (gpd.GeoDataFrame): GeoDataFrame containing residents data.
-            Expected columns:
-                - 'geometry': Polygon geometries for postal code areas
-                - 'PLZ': Postal code identifier
-                - 'Einwohner': Number of residents in each postal code area
-        dfr_by_kw (dict, optional): Dictionary of GeoDataFrames grouped by KW ranges.
-            Keys are KW range labels, values are GeoDataFrames with charging station counts.
-        demand_analysis (gpd.GeoDataFrame, optional): GeoDataFrame with demand priority analysis.
-            Expected columns: PLZ, Einwohner, Number, Residents_per_Station, Demand_Priority
-
-    Returns:
-        None: The function renders the visualization directly to the Streamlit app interface.
+    Setup postal code search in sidebar and return selected PLZ with info.
     """
 
-    dframe1 = dfr1.copy()
-    dframe2 = dfr2.copy()
-
-    # Streamlit app with wide layout
-    st.set_page_config(layout="wide", page_title="Berlin EV Infrastructure Analysis")
-
-    st.title("Berlin Electric Vehicle Infrastructure Analysis")
-
-    # Sidebar - View Options
-    st.sidebar.header("🔍 View Options")
-    
-    # Postal Code Search in Sidebar
     st.sidebar.markdown("---")
     st.sidebar.subheader("📍 Search by Postal Code")
-    
-    # Get all available postal codes from the datasets
-    all_plz = sorted(set(dframe1['PLZ'].tolist() + dframe2['PLZ'].tolist()))
-    
-    # Search input with suggestions
+
+    all_plz = sorted(set(dframe1["PLZ"].tolist() + dframe2["PLZ"].tolist()))
+
     search_plz = st.sidebar.selectbox(
-        "Select PLZ:",
-        options=[''] + all_plz,
-        format_func=lambda x: "All areas" if x == '' else str(int(x)),
-        help="Select a postal code to focus the map on that area"
-    )
-    
-    # Initialize map center and zoom
-    map_center = [52.52, 13.40]
-    map_zoom = 10
-    plz_info = {}
-    
-    # If a PLZ is selected, update map center and zoom
-    if search_plz != '':
-        # Find the geometry for the selected PLZ in either dataset
-        plz_geometry = None
-        
-        if search_plz in dframe1['PLZ'].values:
-            plz_row = dframe1[dframe1['PLZ'] == search_plz].iloc[0]
-            plz_geometry = plz_row['geometry']
-            plz_info['stations'] = int(plz_row['Number'])
-        
-        if search_plz in dframe2['PLZ'].values:
-            plz_row = dframe2[dframe2['PLZ'] == search_plz].iloc[0]
-            if plz_geometry is None:
-                plz_geometry = plz_row['geometry']
-            plz_info['population'] = int(plz_row['Einwohner'])
-        
-        if plz_geometry is not None:
-            # Get centroid of the selected area
-            centroid = plz_geometry.centroid
-            map_center = [centroid.y, centroid.x]
-            map_zoom = 13  # Zoom in when focusing on a specific PLZ
-            
-            # Display info in sidebar
-            info_parts = []
-            if 'population' in plz_info:
-                info_parts.append(f"👥 Pop: {plz_info['population']:,}")
-            if 'stations' in plz_info:
-                info_parts.append(f"⚡ Stations: {plz_info['stations']}")
-            if info_parts:
-                st.sidebar.info(" | ".join(info_parts))
-    
-    st.sidebar.markdown("---")
-    view_mode = st.sidebar.radio(
-        "Visualization Mode",
-        ["Basic View", "Power Capacity (KW) View"],
-        help="Choose between basic heatmaps or power capacity breakdown",
+        "Select PLZ:", options=[""] + all_plz, format_func=lambda x: "All areas" if x == "" else str(int(x))
     )
 
-    # Build layer options based on view mode
+    plz_info = {}
+    if search_plz != "":
+        if search_plz in dframe1["PLZ"].values:
+            plz_info["stations"] = int(dframe1[dframe1["PLZ"] == search_plz].iloc[0]["Number"])
+        if search_plz in dframe2["PLZ"].values:
+            plz_info["population"] = int(dframe2[dframe2["PLZ"] == search_plz].iloc[0]["Einwohner"])
+
+        if plz_info:
+            info_parts = []
+            if "population" in plz_info:
+                info_parts.append(f"👥 Pop: {plz_info['population']:,}")
+            if "stations" in plz_info:
+                info_parts.append(f"⚡ Stations: {plz_info['stations']}")
+            st.sidebar.info("\n\n".join(info_parts))
+
+    return search_plz, plz_info
+
+
+# -----------------------------------------------------------------------------
+def get_map_center_and_zoom(search_plz, dframe1: gpd.GeoDataFrame, dframe2: gpd.GeoDataFrame):
+    """
+    Calculate map center and zoom level based on selected postal code.
+    """
+
+    if search_plz == "":
+        return [52.52, 13.40], 10
+
+    plz_geometry = None
+    if search_plz in dframe1["PLZ"].values:
+        plz_geometry = dframe1[dframe1["PLZ"] == search_plz].iloc[0]["geometry"]
+    elif search_plz in dframe2["PLZ"].values:
+        plz_geometry = dframe2[dframe2["PLZ"] == search_plz].iloc[0]["geometry"]
+
+    if plz_geometry:
+        centroid = plz_geometry.centroid
+        return [centroid.y, centroid.x], 13
+
+    return [52.52, 13.40], 10
+
+
+# -----------------------------------------------------------------------------
+def setup_view_mode_selection(dfr_by_kw: dict):
+    """
+    Setup visualization mode and layer selection in sidebar.
+    """
+
+    st.sidebar.markdown("---")
+    view_mode = st.sidebar.radio("Visualization Mode", ["Basic View", "Power Capacity (KW) View"])
+
     if view_mode == "Basic View":
         layer_options = ["Residents", "All Charging Stations"]
-    else:  # Power Capacity (KW) View
+    else:
         layer_options = ["Residents"]
         if dfr_by_kw:
             layer_options.extend(list(dfr_by_kw.keys()))
 
-    # Layer selection in sidebar
     st.sidebar.header("📊 Layer Selection")
     layer_selection = st.sidebar.radio("Select Layer", layer_options)
 
-    # Add Demand Analysis Toggle
+    return view_mode, layer_selection
+
+
+# -----------------------------------------------------------------------------
+def render_residents_layer(m, dframe2: gpd.GeoDataFrame, search_plz):
+    """
+    Add residents heatmap layer to the map.
+    """
+
+    color_map = LinearColormap(
+        colors=["yellow", "red"],
+        vmin=dframe2["Einwohner"].min(),
+        vmax=dframe2["Einwohner"].max(),
+    )
+
+    for _, row in dframe2.iterrows():
+        is_selected = search_plz != "" and row["PLZ"] == search_plz
+        folium.GeoJson(
+            row["geometry"],
+            style_function=lambda _, color=color_map(row["Einwohner"]), is_sel=is_selected: {
+                "fillColor": color,
+                "color": "blue" if is_sel else "black",
+                "weight": 4 if is_sel else 1,
+                "fillOpacity": 0.9 if is_sel else 0.7,
+            },
+            tooltip=f"PLZ: {row['PLZ']}, Einwohner: {row['Einwohner']}" + (" ⭐ SELECTED" if is_selected else ""),
+        ).add_to(m)
+
+    color_map.add_to(m)
+
+
+# -----------------------------------------------------------------------------
+def render_charging_stations_layer(m, dframe1: gpd.GeoDataFrame, search_plz):
+    """
+    Add charging stations heatmap layer to the map.
+    """
+
+    color_map = LinearColormap(
+        colors=["yellow", "red"],
+        vmin=dframe1["Number"].min(),
+        vmax=dframe1["Number"].max(),
+    )
+
+    for _, row in dframe1.iterrows():
+        is_selected = search_plz != "" and row["PLZ"] == search_plz
+        folium.GeoJson(
+            row["geometry"],
+            style_function=lambda _, color=color_map(row["Number"]), is_sel=is_selected: {
+                "fillColor": color,
+                "color": "blue" if is_sel else "black",
+                "weight": 4 if is_sel else 1,
+                "fillOpacity": 0.9 if is_sel else 0.7,
+            },
+            tooltip=f"PLZ: {row['PLZ']}, Number: {row['Number']}" + (" ⭐ SELECTED" if is_selected else ""),
+        ).add_to(m)
+
+    color_map.add_to(m)
+
+
+# -----------------------------------------------------------------------------
+def render_kw_layer(m, df_kw: gpd.GeoDataFrame, layer_name: str, search_plz):
+    """
+    Add power capacity specific layer to the map.
+    """
+
+    color_map = LinearColormap(
+        colors=["yellow", "red"],
+        vmin=df_kw["Number"].min(),
+        vmax=df_kw["Number"].max(),
+    )
+
+    for _, row in df_kw.iterrows():
+        is_selected = search_plz != "" and row["PLZ"] == search_plz
+        folium.GeoJson(
+            row["geometry"],
+            style_function=lambda _, color=color_map(row["Number"]), is_sel=is_selected: {
+                "fillColor": color,
+                "color": "blue" if is_sel else "black",
+                "weight": 4 if is_sel else 1,
+                "fillOpacity": 0.9 if is_sel else 0.7,
+            },
+            tooltip=f"PLZ: {row['PLZ']}, Stations: {row['Number']} ({layer_name})"
+            + (" ⭐ SELECTED" if is_selected else ""),
+        ).add_to(m)
+
+    color_map.add_to(m)
+
+
+# -----------------------------------------------------------------------------
+def create_demand_priority_map(demand_analysis: gpd.GeoDataFrame, map_center, map_zoom, search_plz) -> folium.Map:
+    """
+    Create a separate map showing demand priority analysis.
+    """
+
+    demand_map = folium.Map(location=map_center, zoom_start=map_zoom)
+
+    priority_colors = {"CRITICAL": "#d32f2f", "HIGH": "#ff9800", "MEDIUM": "#fbc02d", "LOW": "#388e3c"}
+
+    for _, row in demand_analysis.iterrows():
+        is_selected = search_plz != "" and row["PLZ"] == search_plz
+        color = priority_colors.get(row["Demand_Priority"], "#888888")
+
+        ratio_text = (
+            f"{row['Residents_per_Station']:.1f}" if row["Residents_per_Station"] != float("inf") else "No stations"
+        )
+
+        tooltip_html = f"""
+        <div style="font-family: Arial; font-size: 12px;">
+            <b>PLZ:</b> {row['PLZ']}<br>
+            <b>Priority:</b> {row['Demand_Priority']}<br>
+            <b>Population:</b> {int(row['Einwohner']):,}<br>
+            <b>Stations:</b> {int(row['Number'])}<br>
+            <b>Residents/Station:</b> {ratio_text}
+        </div>
+        """
+
+        folium.GeoJson(
+            row["geometry"],
+            style_function=lambda _, color=color, is_sel=is_selected: {
+                "fillColor": color,
+                "color": "blue" if is_sel else "black",
+                "weight": 4 if is_sel else 1,
+                "fillOpacity": 0.9 if is_sel else 0.7,
+            },
+            tooltip=folium.Tooltip(tooltip_html),
+        ).add_to(demand_map)
+
+    # Add legend
+    legend_html = """
+    <div style="position: fixed; top: 10px; right: 10px; width: 200px;
+                background-color: white; z-index:9999; font-size:14px;
+                border:2px solid grey; border-radius: 5px; padding: 10px">
+        <p style="margin: 0 0 10px 0; font-weight: bold;">Demand Priority</p>
+        <p style="margin: 5px 0;"><span style="background-color: #d32f2f; padding: 3px 10px; border-radius: 3px; color: white;">■</span> CRITICAL</p>
+        <p style="margin: 5px 0;"><span style="background-color: #ff9800; padding: 3px 10px; border-radius: 3px; color: white;">■</span> HIGH</p>
+        <p style="margin: 5px 0;"><span style="background-color: #fbc02d; padding: 3px 10px; border-radius: 3px; color: black;">■</span> MEDIUM</p>
+        <p style="margin: 5px 0;"><span style="background-color: #388e3c; padding: 3px 10px; border-radius: 3px; color: white;">■</span> LOW</p>
+    </div>
+    """
+    demand_map.get_root().html.add_child(folium.Element(legend_html))
+
+    return demand_map
+
+
+# -----------------------------------------------------------------------------
+def display_priority_summary(demand_analysis: gpd.GeoDataFrame, search_plz):
+    """
+    Display summary cards for priority distribution.
+    """
+
+    st.subheader("Priority Distribution" + (f" for PLZ {int(search_plz)}" if search_plz != "" else ""))
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    priorities = ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+    emojis = ["🔴", "🟠", "🟡", "🟢"]
+    helps = [
+        "Pop > 15K, Stations < 10",
+        "Pop > 15K, Stations 10-20",
+        "Pop 8K-15K, Stations < 10",
+        "Well-served or low demand",
+    ]
+
+    for col, priority, emoji, help_text in zip([col1, col2, col3, col4], priorities, emojis, helps):
+        with col:
+            count = len(demand_analysis[demand_analysis["Demand_Priority"] == priority])
+            st.metric(f"{emoji} {priority}", count, help=help_text)
+
+
+# -----------------------------------------------------------------------------
+def display_analysis_table(demand_analysis: gpd.GeoDataFrame, search_plz):
+    """
+    Display filterable and sortable demand analysis table.
+    """
+    st.subheader("📋 Detailed Analysis Table")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        default_priorities = ["CRITICAL", "HIGH", "MEDIUM", "LOW"] if search_plz != "" else ["CRITICAL", "HIGH"]
+        priority_filter = st.multiselect(
+            "Filter by Priority", ["CRITICAL", "HIGH", "MEDIUM", "LOW"], default=default_priorities
+        )
+
+    with col2:
+        sort_by = st.selectbox(
+            "Sort by",
+            ["Residents_per_Station", "Einwohner", "Number"],
+            format_func=lambda x: {
+                "Residents_per_Station": "Residents/Station",
+                "Einwohner": "Population",
+                "Number": "Station Count",
+            }[x],
+        )
+
+    with col3:
+        sort_order = st.radio("Order", ["Descending", "Ascending"], horizontal=True)
+
+    display_data = demand_analysis[demand_analysis["Demand_Priority"].isin(priority_filter)].copy()
+
+    if not display_data.empty:
+        display_data["Residents_per_Station"] = display_data["Residents_per_Station"].replace(float("inf"), 999999)
+        display_data = display_data.sort_values(by=sort_by, ascending=(sort_order == "Ascending"))
+
+        display_data["Residents_per_Station_Display"] = display_data["Residents_per_Station"].apply(
+            lambda x: "No stations" if x >= 999999 else f"{x:.1f}"
+        )
+
+        st.dataframe(
+            display_data[["PLZ", "Einwohner", "Number", "Residents_per_Station_Display", "Demand_Priority"]].rename(
+                columns={
+                    "PLZ": "Postal Code",
+                    "Einwohner": "Population",
+                    "Number": "Charging Stations",
+                    "Residents_per_Station_Display": "Residents/Station",
+                    "Demand_Priority": "Priority",
+                }
+            ),
+            use_container_width=True,
+            height=500,
+        )
+
+        csv = display_data[["PLZ", "Einwohner", "Number", "Residents_per_Station", "Demand_Priority"]].to_csv(
+            index=False
+        )
+        csv_filename = f"demand_analysis_PLZ_{int(search_plz)}.csv" if search_plz != "" else "demand_analysis.csv"
+        st.download_button(label="📥 Download CSV", data=csv, file_name=csv_filename, mime="text/csv")
+    else:
+        st.info("No data matches the selected filters.")
+
+
+# -----------------------------------------------------------------------------
+def display_methodology():
+    """
+    Display methodology explanation in expander.
+    """
+
+    with st.expander("How is Priority Calculated?"):
+        st.markdown(
+            """
+        **Priority Classification:**
+
+        - **🔴 CRITICAL**: Pop > 15K, Stations < 10 -> Immediate action
+        - **🟠 HIGH**: Pop > 15K, Stations 10-20 -> Short-term planning
+        - **🟡 MEDIUM**: Pop 8K-15K, Stations < 10 -> Medium-term planning
+        - **🟢 LOW**: Pop < 8K or Stations > 20 -> Monitor
+
+                **Data Ranges:** Population (139-35,535), Stations (1-105)
+        """
+        )
+
+
+# -----------------------------------------------------------------------------
+@ht.timer
+def make_streamlit_electric_charging_resid(
+    dfr1: gpd.GeoDataFrame, dfr2: gpd.GeoDataFrame, dfr_by_kw: dict = None, demand_analysis: gpd.GeoDataFrame = None
+):
+    """
+    Main Streamlit app displaying interactive maps of Berlin's EV infrastructure.
+
+    Shows heatmaps of charging stations and population density with options to:
+    - Filter by power capacity
+    - Search specific postal codes
+    - View demand priority analysis
+    """
+    dframe1 = dfr1.copy()
+    dframe2 = dfr2.copy()
+
+    st.set_page_config(layout="wide", page_title="Berlin EV Infrastructure")
+    st.title("Berlin Electric Vehicle Infrastructure Analysis")
+
+    # Sidebar setup.
+    st.sidebar.header("🔍 View Options")
+    search_plz, _ = setup_sidebar_search(dframe1, dframe2)
+    _, layer_selection = setup_view_mode_selection(dfr_by_kw)
+
+    # Demand analysis toggle.
+    show_demand = False
     if demand_analysis is not None:
         st.sidebar.markdown("---")
         show_demand = st.sidebar.checkbox("📈 Show Demand Analysis", value=False)
-    else:
-        show_demand = False
 
-    # Create a Folium map with dynamic center and zoom
+    # Create main map.
+    map_center, map_zoom = get_map_center_and_zoom(search_plz, dframe1, dframe2)
     m = folium.Map(location=map_center, zoom_start=map_zoom)
-    
-    # Store selected PLZ geometry for highlighting
-    selected_plz_geometry = None
-    if search_plz != '':
-        if search_plz in dframe1['PLZ'].values:
-            selected_plz_geometry = dframe1[dframe1['PLZ'] == search_plz].iloc[0]['geometry']
-        elif search_plz in dframe2['PLZ'].values:
-            selected_plz_geometry = dframe2[dframe2['PLZ'] == search_plz].iloc[0]['geometry']
 
-    # Handle layer rendering
+    # Render selected layer.
     if layer_selection == "Residents":
-        # Create a color map for Residents
-        color_map = LinearColormap(
-            colors=["yellow", "red"],
-            vmin=dframe2["Einwohner"].min(),
-            vmax=dframe2["Einwohner"].max(),
-        )
-
-        # Add polygons to the map for Residents
-        for _, row in dframe2.iterrows():
-            is_selected = (search_plz != '' and row['PLZ'] == search_plz)
-            folium.GeoJson(
-                row["geometry"],
-                style_function=lambda _, color=color_map(row["Einwohner"]), is_sel=is_selected: {
-                    "fillColor": color,
-                    "color": "blue" if is_sel else "black",
-                    "weight": 4 if is_sel else 1,
-                    "fillOpacity": 0.9 if is_sel else 0.7,
-                },
-                tooltip=f"PLZ: {row['PLZ']}, Einwohner: {row['Einwohner']}" + (" ⭐ SELECTED" if is_selected else ""),
-            ).add_to(m)
-
-        color_map.add_to(m)
-
+        render_residents_layer(m, dframe2, search_plz)
     elif layer_selection == "All Charging Stations":
-        # Create a color map for all charging stations
-        color_map = LinearColormap(
-            colors=["yellow", "red"],
-            vmin=dframe1["Number"].min(),
-            vmax=dframe1["Number"].max(),
-        )
-
-        # Add polygons to the map for all charging stations
-        for _, row in dframe1.iterrows():
-            is_selected = (search_plz != '' and row['PLZ'] == search_plz)
-            folium.GeoJson(
-                row["geometry"],
-                style_function=lambda _, color=color_map(row["Number"]), is_sel=is_selected: {
-                    "fillColor": color,
-                    "color": "blue" if is_sel else "black",
-                    "weight": 4 if is_sel else 1,
-                    "fillOpacity": 0.9 if is_sel else 0.7,
-                },
-                tooltip=f"PLZ: {row['PLZ']}, Number: {row['Number']}" + (" ⭐ SELECTED" if is_selected else ""),
-            ).add_to(m)
-
-        color_map.add_to(m)
-
+        render_charging_stations_layer(m, dframe1, search_plz)
     else:
-        # Handle KW-specific layers
         if dfr_by_kw and layer_selection in dfr_by_kw:
-            df_kw = dfr_by_kw[layer_selection]
+            render_kw_layer(m, dfr_by_kw[layer_selection], layer_selection, search_plz)
 
-            # Create a color map for this KW range
-            color_map = LinearColormap(
-                colors=["yellow", "red"],
-                vmin=df_kw["Number"].min(),
-                vmax=df_kw["Number"].max(),
-            )
-
-            # Add polygons to the map for this KW range
-            for _, row in df_kw.iterrows():
-                is_selected = (search_plz != '' and row['PLZ'] == search_plz)
-                folium.GeoJson(
-                    row["geometry"],
-                    style_function=lambda _, color=color_map(row["Number"]), is_sel=is_selected: {
-                        "fillColor": color,
-                        "color": "blue" if is_sel else "black",
-                        "weight": 4 if is_sel else 1,
-                        "fillOpacity": 0.9 if is_sel else 0.7,
-                    },
-                    tooltip=f"PLZ: {row['PLZ']}, Stations: {row['Number']} ({layer_selection})" + (" ⭐ SELECTED" if is_selected else ""),
-                ).add_to(m)
-
-            color_map.add_to(m)
-
-    # Display full-width map
     folium_static(m, width=1400, height=800)
 
-    # Show Demand Analysis below the map if checkbox is enabled
+    # Show demand analysis if enabled
     if show_demand and demand_analysis is not None:
         st.markdown("---")
-        st.header("📊 Demand Priority Analysis for EV Charging Stations")
-        
-        # Filter demand analysis by selected PLZ if applicable
+        st.header("📊 Demand Priority Analysis")
+
+        # Filter by selected PLZ if applicable
         filtered_demand = demand_analysis.copy()
-        if search_plz != '':
-            filtered_demand = demand_analysis[demand_analysis['PLZ'] == search_plz]
-            if not filtered_demand.empty:
+        if search_plz != "":
+            plz_filtered = demand_analysis[demand_analysis["PLZ"] == search_plz]
+            if not plz_filtered.empty:
                 st.info(f"📍 Showing analysis for PLZ: **{int(search_plz)}**")
+                filtered_demand = plz_filtered
             else:
-                st.warning(f"No demand analysis data available for PLZ: {int(search_plz)}")
-                filtered_demand = demand_analysis.copy()  # Fall back to all data
+                st.warning(f"No data for PLZ: {int(search_plz)}")
 
-        # Summary cards
-        st.subheader("Priority Distribution" + (f" for PLZ {int(search_plz)}" if search_plz != '' and len(filtered_demand) == 1 else ""))
-        col1, col2, col3, col4 = st.columns(4)
-
-        with col1:
-            critical_count = len(filtered_demand[filtered_demand["Demand_Priority"] == "CRITICAL"])
-            st.metric("🔴 CRITICAL", critical_count, help="Pop > 15K, Stations < 10")
-
-        with col2:
-            high_count = len(filtered_demand[filtered_demand["Demand_Priority"] == "HIGH"])
-            st.metric("🟠 HIGH", high_count, help="Pop > 15K, Stations 10-20")
-
-        with col3:
-            medium_count = len(filtered_demand[filtered_demand["Demand_Priority"] == "MEDIUM"])
-            st.metric("🟡 MEDIUM", medium_count, help="Pop 8K-15K, Stations < 10")
-
-        with col4:
-            low_count = len(filtered_demand[filtered_demand["Demand_Priority"] == "LOW"])
-            st.metric("🟢 LOW", low_count, help="Well-served or low demand")
+        display_priority_summary(filtered_demand, search_plz)
 
         st.markdown("---")
         st.subheader("🗺️ Demand Priority Map")
-        
-        # Create a separate Folium map for demand analysis (use same center and zoom as main map)
-        demand_map = folium.Map(location=map_center, zoom_start=map_zoom)
-        
-        # Define colors for each priority level
-        priority_colors = {
-            "CRITICAL": "#d32f2f",  # Red
-            "HIGH": "#ff9800",      # Orange
-            "MEDIUM": "#fbc02d",    # Yellow
-            "LOW": "#388e3c"        # Green
-        }
-        
-        # Add polygons colored by demand priority
-        for _, row in filtered_demand.iterrows():
-            priority = row["Demand_Priority"]
-            color = priority_colors.get(priority, "#888888")
-            is_selected = (search_plz != '' and row['PLZ'] == search_plz)
-            
-            # Format tooltip information
-            ratio_text = (
-                f"{row['Residents_per_Station']:.1f}"
-                if row["Residents_per_Station"] != float("inf")
-                else "No stations"
-            )
-            
-            tooltip_html = f"""
-            <div style="font-family: Arial; font-size: 12px;">
-                <b>PLZ:</b> {row['PLZ']}<br>
-                <b>Priority:</b> {priority}<br>
-                <b>Population:</b> {int(row['Einwohner']):,}<br>
-                <b>Stations:</b> {int(row['Number'])}<br>
-                <b>Residents/Station:</b> {ratio_text}
-            </div>
-            """
-            
-            folium.GeoJson(
-                row["geometry"],
-                style_function=lambda _, color=color, is_sel=is_selected: {
-                    "fillColor": color,
-                    "color": "blue" if is_sel else "black",
-                    "weight": 4 if is_sel else 1,
-                    "fillOpacity": 0.9 if is_sel else 0.7,
-                },
-                tooltip=folium.Tooltip(tooltip_html),
-            ).add_to(demand_map)
-        
-        # Add a custom legend
-        legend_html = '''
-        <div style="position: fixed; 
-                    top: 10px; right: 10px; width: 200px; 
-                    background-color: white; z-index:9999; font-size:14px;
-                    border:2px solid grey; border-radius: 5px; padding: 10px">
-            <p style="margin: 0 0 10px 0; font-weight: bold;">Demand Priority</p>
-            <p style="margin: 5px 0;"><span style="background-color: #d32f2f; padding: 3px 10px; border-radius: 3px; color: white;">■</span> CRITICAL</p>
-            <p style="margin: 5px 0;"><span style="background-color: #ff9800; padding: 3px 10px; border-radius: 3px; color: white;">■</span> HIGH</p>
-            <p style="margin: 5px 0;"><span style="background-color: #fbc02d; padding: 3px 10px; border-radius: 3px; color: black;">■</span> MEDIUM</p>
-            <p style="margin: 5px 0;"><span style="background-color: #388e3c; padding: 3px 10px; border-radius: 3px; color: white;">■</span> LOW</p>
-        </div>
-        '''
-        demand_map.get_root().html.add_child(folium.Element(legend_html))
-        
-        # Display the demand analysis map
+        demand_map = create_demand_priority_map(filtered_demand, map_center, map_zoom, search_plz)
         folium_static(demand_map, width=1400, height=800)
-        
+
         st.markdown("---")
-        st.subheader("📋 Detailed Analysis Table")
-
-        # Filter and sort options
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            # If a specific PLZ is selected, show all priorities by default
-            default_priorities = ["CRITICAL", "HIGH", "MEDIUM", "LOW"] if search_plz != '' else ["CRITICAL", "HIGH"]
-            priority_filter = st.multiselect(
-                "Filter by Priority", ["CRITICAL", "HIGH", "MEDIUM", "LOW"], default=default_priorities
-            )
-
-        with col2:
-            sort_by = st.selectbox(
-                "Sort by",
-                ["Residents_per_Station", "Einwohner", "Number"],
-                format_func=lambda x: {
-                    "Residents_per_Station": "Residents/Station",
-                    "Einwohner": "Population",
-                    "Number": "Station Count",
-                }[x],
-            )
-
-        with col3:
-            sort_order = st.radio("Order", ["Descending", "Ascending"], horizontal=True)
-
-        # Filter and display data
-        display_demand = filtered_demand[filtered_demand["Demand_Priority"].isin(priority_filter)].copy()
-
-        if not display_demand.empty:
-            # Handle inf values for sorting
-            display_data = display_demand.copy()
-            display_data["Residents_per_Station"] = display_data["Residents_per_Station"].replace(float("inf"), 999999)
-            display_data = display_data.sort_values(by=sort_by, ascending=(sort_order == "Ascending"))
-
-            # Format for display
-            display_data["Residents_per_Station_Display"] = display_data["Residents_per_Station"].apply(
-                lambda x: "No stations" if x >= 999999 else f"{x:.1f}"
-            )
-
-            # Display styled dataframe
-            st.dataframe(
-                display_data[["PLZ", "Einwohner", "Number", "Residents_per_Station_Display", "Demand_Priority"]].rename(
-                    columns={
-                        "PLZ": "Postal Code",
-                        "Einwohner": "Population",
-                        "Number": "Charging Stations",
-                        "Residents_per_Station_Display": "Residents/Station",
-                        "Demand_Priority": "Priority",
-                    }
-                ),
-                use_container_width=True,
-                height=500,
-            )
-
-            # Download option
-            csv = display_demand[["PLZ", "Einwohner", "Number", "Residents_per_Station", "Demand_Priority"]].to_csv(
-                index=False
-            )
-            csv_filename = f"berlin_ev_demand_analysis_PLZ_{int(search_plz)}.csv" if search_plz != '' else "berlin_ev_demand_analysis.csv"
-            st.download_button(
-                label="📥 Download Analysis as CSV",
-                data=csv,
-                file_name=csv_filename,
-                mime="text/csv",
-            )
-        else:
-            st.info("No data matches the selected filters.")
-
-        # Methodology explanation
-        with st.expander("ℹ️ How is Priority Calculated?"):
-            st.markdown(
-                """
-            **Priority Classification Criteria:**
-            
-            - **🔴 CRITICAL**: Population > 15,000 AND Stations < 10
-              - High demand with minimal infrastructure
-              - Immediate action required
-            
-            - **🟠 HIGH**: Population > 15,000 AND Stations 10-20
-              - High demand approaching adequate coverage
-              - Short-term planning needed
-            
-            - **🟡 MEDIUM**: Population 8,000-15,000 AND Stations < 10
-              - Moderate demand needing baseline coverage
-              - Medium-term planning
-            
-            - **🟢 LOW**: Population < 8,000 OR Stations > 20
-              - Low demand or already well-served
-              - Monitor for future needs
-            
-            **Data Ranges:** Population (139-35,535), Stations (1-105)
-            """
-            )
+        display_analysis_table(filtered_demand, search_plz)
+        display_methodology()
 
 
 # -----------------------------------------------------------------------------
@@ -813,7 +795,7 @@ def calculate_demand_priority(gdf_residents: gpd.GeoDataFrame, gdf_stations: gpd
 
 # -----------------------------------------------------------------------------
 @ht.timer
-def demand_analysis_summary(demand_analysis: gpd.GeoDataFrame) -> None:
+def demand_analysis_summary(demand_analysis: gpd.GeoDataFrame):
     """
     Print a summary of demand priority analysis for electric charging stations in Berlin.
 

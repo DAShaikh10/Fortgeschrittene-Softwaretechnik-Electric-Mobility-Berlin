@@ -11,3 +11,4 @@ streamlit
 streamlit_folium
 Folium
 chardet # Additionally required for encoding detection.
+tabulate # For pretty-printing tables in the console.
