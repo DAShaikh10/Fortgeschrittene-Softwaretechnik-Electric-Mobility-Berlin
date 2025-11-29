@@ -31,6 +31,18 @@ def main() -> None:
     # Preprocess the residents data.
     gdf_residents2 = mt.preprop_resid(df_residents, df_geodat_plz, pdict)
 
+    # ========== DATA QUALITY ANALYSIS ==========
+    # Perform comprehensive data quality checks and outlier detection
+    # This generates visualizations and statistical summaries to identify anomalies
+    mt.analyze_data_quality_and_outliers(
+        df_geodat_plz=df_geodat_plz,
+        df_lstat=df_lstat,
+        df_residents=df_residents,
+        gdf_lstat3=gdf_lstat3,
+        gdf_residents2=gdf_residents2
+    )
+    # ========== END DATA QUALITY ANALYSIS ==========
+
     # Calculate demand priority analysis.
     demand_analysis = mt.calculate_demand_priority(gdf_residents2, gdf_lstat3)
 
