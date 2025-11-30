@@ -848,14 +848,14 @@ def analyze_data_quality_and_outliers(
 ):
     """
     Generate comprehensive visualizations to identify anomalies, outliers, and data quality issues.
-    
+
     Creates the following plots:
     1. Distribution plots for key numerical variables
     2. Box plots to identify outliers
     3. Correlation heatmaps
     4. Missing data analysis
     5. Statistical summaries
-    
+
     Args:
         df_geodat_plz: Raw geodata for Berlin postal codes
         df_lstat: Raw charging stations data
@@ -863,180 +863,169 @@ def analyze_data_quality_and_outliers(
         gdf_lstat3: Processed charging stations geodataframe (optional)
         gdf_residents2: Processed residents geodataframe (optional)
     """
-    
+
     print("\n" + "=" * 80)
     print("DATA QUALITY ANALYSIS & OUTLIER DETECTION")
     print("=" * 80 + "\n")
-    
+
     # Set style for better looking plots
     sns.set_style("whitegrid")
-    plt.rcParams['figure.figsize'] = (15, 10)
-    
+    plt.rcParams["figure.figsize"] = (15, 10)
+
     # ========== 1. CHARGING STATIONS DATA ANALYSIS ==========
     print("=" * 80)
     print("1. CHARGING STATIONS DATA ANALYSIS")
     print("=" * 80)
-    
+
     # Filter Berlin data
     df_lstat_berlin = df_lstat[
-        (df_lstat["Bundesland"] == "Berlin") & 
-        (df_lstat["Postleitzahl"] > 10115) & 
-        (df_lstat["Postleitzahl"] < 14200)
+        (df_lstat["Bundesland"] == "Berlin") & (df_lstat["Postleitzahl"] > 10115) & (df_lstat["Postleitzahl"] < 14200)
     ].copy()
-    
+
     # Convert KW to numeric
-    df_lstat_berlin["KW_numeric"] = pd.to_numeric(
-        df_lstat_berlin["Nennleistung Ladeeinrichtung [kW]"], 
-        errors="coerce"
-    )
-    
+    df_lstat_berlin["KW_numeric"] = pd.to_numeric(df_lstat_berlin["Nennleistung Ladeeinrichtung [kW]"], errors="coerce")
+
     # Missing data analysis
     print("\n--- Missing Data in Charging Stations ---")
-    missing_lstat = df_lstat_berlin[["Postleitzahl", "Bundesland", "Breitengrad", "Längengrad", "KW_numeric"]].isnull().sum()
+    missing_lstat = (
+        df_lstat_berlin[["Postleitzahl", "Bundesland", "Breitengrad", "Längengrad", "KW_numeric"]].isnull().sum()
+    )
     print(missing_lstat)
     print(f"\nTotal records: {len(df_lstat_berlin)}")
     print(f"Records with valid KW: {df_lstat_berlin['KW_numeric'].notna().sum()}")
-    
+
     # Statistical summary for KW
     print("\n--- Statistical Summary: Power Capacity (KW) ---")
     print(df_lstat_berlin["KW_numeric"].describe())
-    
+
     # Identify outliers using IQR method
     Q1 = df_lstat_berlin["KW_numeric"].quantile(0.25)
     Q3 = df_lstat_berlin["KW_numeric"].quantile(0.75)
     IQR = Q3 - Q1
     lower_bound = Q1 - 1.5 * IQR
     upper_bound = Q3 + 1.5 * IQR
-    
+
     outliers_kw = df_lstat_berlin[
-        (df_lstat_berlin["KW_numeric"] < lower_bound) | 
-        (df_lstat_berlin["KW_numeric"] > upper_bound)
+        (df_lstat_berlin["KW_numeric"] < lower_bound) | (df_lstat_berlin["KW_numeric"] > upper_bound)
     ]
     print(f"\n--- Outliers in Power Capacity (IQR method) ---")
     print(f"Number of outliers: {len(outliers_kw)} ({len(outliers_kw)/len(df_lstat_berlin)*100:.2f}%)")
     print(f"Outlier range: < {lower_bound:.2f} or > {upper_bound:.2f}")
-    
+
     # Create figure for charging stations analysis
     fig1, axes = plt.subplots(2, 3, figsize=(18, 12))
-    fig1.suptitle('Charging Stations Data Quality Analysis', fontsize=16, fontweight='bold')
-    
+    fig1.suptitle("Charging Stations Data Quality Analysis", fontsize=16, fontweight="bold")
+
     # Plot 1: Distribution of Power Capacity
     ax1 = axes[0, 0]
-    df_lstat_berlin["KW_numeric"].dropna().hist(bins=50, ax=ax1, edgecolor='black')
+    df_lstat_berlin["KW_numeric"].dropna().hist(bins=50, ax=ax1, edgecolor="black")
     ax1.set_title("Distribution of Power Capacity (KW)")
     ax1.set_xlabel("Power (KW)")
     ax1.set_ylabel("Frequency")
-    ax1.axvline(df_lstat_berlin["KW_numeric"].mean(), color='red', linestyle='--', label='Mean')
-    ax1.axvline(df_lstat_berlin["KW_numeric"].median(), color='green', linestyle='--', label='Median')
+    ax1.axvline(df_lstat_berlin["KW_numeric"].mean(), color="red", linestyle="--", label="Mean")
+    ax1.axvline(df_lstat_berlin["KW_numeric"].median(), color="green", linestyle="--", label="Median")
     ax1.legend()
-    
     # Plot 2: Box plot for Power Capacity
     ax2 = axes[0, 1]
-    df_lstat_berlin.boxplot(column='KW_numeric', ax=ax2)
+    df_lstat_berlin.boxplot(column="KW_numeric", ax=ax2)
     ax2.set_title("Box Plot: Power Capacity Outliers")
     ax2.set_ylabel("Power (KW)")
-    
+
     # Plot 3: Power Capacity by Category
     ax3 = axes[0, 2]
     df_lstat_berlin_copy = df_lstat_berlin.copy()
     df_lstat_berlin_copy["Power_Category"] = pd.cut(
         df_lstat_berlin_copy["KW_numeric"],
-        bins=[0, 11, 22, 50, 150, float('inf')],
-        labels=['Slow (<11)', 'Normal (11-22)', 'Fast (22-50)', 'Rapid (50-150)', 'Ultra (>150)']
+        bins=[0, 11, 22, 50, 150, float("inf")],
+        labels=["Slow (<11)", "Normal (11-22)", "Fast (22-50)", "Rapid (50-150)", "Ultra (>150)"],
     )
     category_counts = df_lstat_berlin_copy["Power_Category"].value_counts()
-    category_counts.plot(kind='bar', ax=ax3, color='steelblue', edgecolor='black')
+    category_counts.plot(kind="bar", ax=ax3, color="steelblue", edgecolor="black")
     ax3.set_title("Distribution by Power Category")
     ax3.set_xlabel("Category")
     ax3.set_ylabel("Count")
-    ax3.tick_params(axis='x', rotation=45)
-    
+    ax3.tick_params(axis="x", rotation=45)
+
     # Plot 4: Stations per PLZ (if processed data available)
     ax4 = axes[1, 0]
     if gdf_lstat3 is not None:
-        gdf_lstat3["Number"].hist(bins=30, ax=ax4, edgecolor='black', color='coral')
+        gdf_lstat3["Number"].hist(bins=30, ax=ax4, edgecolor="black", color="coral")
         ax4.set_title("Stations per Postal Code")
         ax4.set_xlabel("Number of Stations")
         ax4.set_ylabel("Frequency")
-        
+
         # Statistical summary
         print("\n--- Statistical Summary: Stations per PLZ ---")
         print(gdf_lstat3["Number"].describe())
-        
+
         # Identify PLZ with unusually high/low station counts
         mean_stations = gdf_lstat3["Number"].mean()
         std_stations = gdf_lstat3["Number"].std()
-        high_station_plz = gdf_lstat3[gdf_lstat3["Number"] > mean_stations + 2*std_stations]
+        high_station_plz = gdf_lstat3[gdf_lstat3["Number"] > mean_stations + 2 * std_stations]
         low_station_plz = gdf_lstat3[gdf_lstat3["Number"] < 3]
-        
+
         print(f"\nPLZ with unusually HIGH station count (> mean + 2σ):")
         print(high_station_plz[["PLZ", "Number"]].to_string(index=False))
-        
+
         print(f"\nPLZ with LOW station count (< 3):")
         print(low_station_plz[["PLZ", "Number"]].to_string(index=False))
     else:
-        ax4.text(0.5, 0.5, 'Processed data not available', 
-                ha='center', va='center', transform=ax4.transAxes)
+        ax4.text(0.5, 0.5, "Processed data not available", ha="center", va="center", transform=ax4.transAxes)
         ax4.set_title("Stations per Postal Code")
-    
+
     # Plot 5: Missing data visualization
     ax5 = axes[1, 1]
-    missing_pct = (missing_lstat / len(df_lstat_berlin) * 100)
-    missing_pct.plot(kind='bar', ax=ax5, color='indianred', edgecolor='black')
+    missing_pct = missing_lstat / len(df_lstat_berlin) * 100
+    missing_pct.plot(kind="bar", ax=ax5, color="indianred", edgecolor="black")
     ax5.set_title("Missing Data Percentage")
     ax5.set_ylabel("Percentage (%)")
-    ax5.tick_params(axis='x', rotation=45)
-    
+    ax5.tick_params(axis="x", rotation=45)
+
     # Plot 6: Top 10 PLZ by station count
     ax6 = axes[1, 2]
     if gdf_lstat3 is not None:
-        top_plz = gdf_lstat3.nlargest(10, 'Number')
-        ax6.barh(top_plz['PLZ'].astype(str), top_plz['Number'], color='teal', edgecolor='black')
+        top_plz = gdf_lstat3.nlargest(10, "Number")
+        ax6.barh(top_plz["PLZ"].astype(str), top_plz["Number"], color="teal", edgecolor="black")
         ax6.set_title("Top 10 PLZ by Station Count")
         ax6.set_xlabel("Number of Stations")
         ax6.set_ylabel("PLZ")
         ax6.invert_yaxis()
     else:
-        ax6.text(0.5, 0.5, 'Processed data not available', 
-                ha='center', va='center', transform=ax6.transAxes)
+        ax6.text(0.5, 0.5, "Processed data not available", ha="center", va="center", transform=ax6.transAxes)
         ax6.set_title("Top 10 PLZ by Station Count")
-    
+
     plt.tight_layout()
-    plt.savefig('data_quality_charging_stations.png', dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join("assets", "data_quality_charging_stations.png"), dpi=300, bbox_inches="tight")
     print("\n✓ Saved: data_quality_charging_stations.png")
     plt.show()
-    
+
     # ========== 2. RESIDENTS DATA ANALYSIS ==========
     print("\n" + "=" * 80)
     print("2. RESIDENTS DATA ANALYSIS")
     print("=" * 80)
-    
+
     # Filter Berlin data
-    df_residents_berlin = df_residents[
-        (df_residents["plz"] > 10000) & 
-        (df_residents["plz"] < 14200)
-    ].copy()
-    
+    df_residents_berlin = df_residents[(df_residents["plz"] > 10000) & (df_residents["plz"] < 14200)].copy()
+
     # Missing data analysis
     print("\n--- Missing Data in Residents ---")
     missing_resid = df_residents_berlin[["plz", "einwohner", "lat", "lon"]].isnull().sum()
     print(missing_resid)
     print(f"\nTotal records: {len(df_residents_berlin)}")
-    
+
     # Statistical summary
     print("\n--- Statistical Summary: Population (Einwohner) ---")
     print(df_residents_berlin["einwohner"].describe())
-    
+
     # Identify outliers using IQR method
     Q1_pop = df_residents_berlin["einwohner"].quantile(0.25)
     Q3_pop = df_residents_berlin["einwohner"].quantile(0.75)
     IQR_pop = Q3_pop - Q1_pop
     lower_bound_pop = Q1_pop - 1.5 * IQR_pop
     upper_bound_pop = Q3_pop + 1.5 * IQR_pop
-    
+
     outliers_pop = df_residents_berlin[
-        (df_residents_berlin["einwohner"] < lower_bound_pop) | 
-        (df_residents_berlin["einwohner"] > upper_bound_pop)
+        (df_residents_berlin["einwohner"] < lower_bound_pop) | (df_residents_berlin["einwohner"] > upper_bound_pop)
     ]
     print(f"\n--- Outliers in Population (IQR method) ---")
     print(f"Number of outliers: {len(outliers_pop)} ({len(outliers_pop)/len(df_residents_berlin)*100:.2f}%)")
@@ -1044,134 +1033,143 @@ def analyze_data_quality_and_outliers(
     if len(outliers_pop) > 0:
         print("\nOutlier PLZ:")
         print(outliers_pop[["plz", "einwohner"]].to_string(index=False))
-    
+
     # Create figure for residents analysis
     fig2, axes2 = plt.subplots(2, 3, figsize=(18, 12))
-    fig2.suptitle('Residents Data Quality Analysis', fontsize=16, fontweight='bold')
-    
+    fig2.suptitle("Residents Data Quality Analysis", fontsize=16, fontweight="bold")
+
     # Plot 1: Distribution of Population
     ax1_2 = axes2[0, 0]
-    df_residents_berlin["einwohner"].hist(bins=40, ax=ax1_2, edgecolor='black', color='skyblue')
+    df_residents_berlin["einwohner"].hist(bins=40, ax=ax1_2, edgecolor="black", color="skyblue")
     ax1_2.set_title("Distribution of Population per PLZ")
     ax1_2.set_xlabel("Population (Einwohner)")
     ax1_2.set_ylabel("Frequency")
-    ax1_2.axvline(df_residents_berlin["einwohner"].mean(), color='red', linestyle='--', label='Mean')
-    ax1_2.axvline(df_residents_berlin["einwohner"].median(), color='green', linestyle='--', label='Median')
+    ax1_2.axvline(df_residents_berlin["einwohner"].mean(), color="red", linestyle="--", label="Mean")
+    ax1_2.axvline(df_residents_berlin["einwohner"].median(), color="green", linestyle="--", label="Median")
     ax1_2.legend()
-    
+
     # Plot 2: Box plot for Population
     ax2_2 = axes2[0, 1]
-    df_residents_berlin.boxplot(column='einwohner', ax=ax2_2)
+    df_residents_berlin.boxplot(column="einwohner", ax=ax2_2)
     ax2_2.set_title("Box Plot: Population Outliers")
     ax2_2.set_ylabel("Population (Einwohner)")
-    
+
     # Plot 3: Population Categories
     ax3_2 = axes2[0, 2]
     df_residents_berlin_copy = df_residents_berlin.copy()
     df_residents_berlin_copy["Pop_Category"] = pd.cut(
         df_residents_berlin_copy["einwohner"],
-        bins=[0, 5000, 10000, 15000, 20000, float('inf')],
-        labels=['Very Low (<5K)', 'Low (5-10K)', 'Medium (10-15K)', 'High (15-20K)', 'Very High (>20K)']
+        bins=[0, 5000, 10000, 15000, 20000, float("inf")],
+        labels=["Very Low (<5K)", "Low (5-10K)", "Medium (10-15K)", "High (15-20K)", "Very High (>20K)"],
     )
     pop_category_counts = df_residents_berlin_copy["Pop_Category"].value_counts()
-    pop_category_counts.plot(kind='bar', ax=ax3_2, color='mediumseagreen', edgecolor='black')
+    pop_category_counts.plot(kind="bar", ax=ax3_2, color="mediumseagreen", edgecolor="black")
     ax3_2.set_title("Distribution by Population Category")
     ax3_2.set_xlabel("Category")
     ax3_2.set_ylabel("Count")
-    ax3_2.tick_params(axis='x', rotation=45)
-    
+    ax3_2.tick_params(axis="x", rotation=45)
+
     # Plot 4: Top 10 PLZ by Population
     ax4_2 = axes2[1, 0]
     if gdf_residents2 is not None:
-        top_pop_plz = gdf_residents2.nlargest(10, 'Einwohner')
-        ax4_2.barh(top_pop_plz['PLZ'].astype(str), top_pop_plz['Einwohner'], 
-                  color='mediumslateblue', edgecolor='black')
+        top_pop_plz = gdf_residents2.nlargest(10, "Einwohner")
+        ax4_2.barh(top_pop_plz["PLZ"].astype(str), top_pop_plz["Einwohner"], color="mediumslateblue", edgecolor="black")
         ax4_2.set_title("Top 10 PLZ by Population")
         ax4_2.set_xlabel("Population")
         ax4_2.set_ylabel("PLZ")
         ax4_2.invert_yaxis()
     else:
-        ax4_2.text(0.5, 0.5, 'Processed data not available', 
-                  ha='center', va='center', transform=ax4_2.transAxes)
+        ax4_2.text(0.5, 0.5, "Processed data not available", ha="center", va="center", transform=ax4_2.transAxes)
         ax4_2.set_title("Top 10 PLZ by Population")
-    
+
     # Plot 5: Missing data visualization
     ax5_2 = axes2[1, 1]
-    missing_pct_resid = (missing_resid / len(df_residents_berlin) * 100)
-    missing_pct_resid.plot(kind='bar', ax=ax5_2, color='lightcoral', edgecolor='black')
+    missing_pct_resid = missing_resid / len(df_residents_berlin) * 100
+    missing_pct_resid.plot(kind="bar", ax=ax5_2, color="lightcoral", edgecolor="black")
     ax5_2.set_title("Missing Data Percentage")
     ax5_2.set_ylabel("Percentage (%)")
-    ax5_2.tick_params(axis='x', rotation=45)
-    
+    ax5_2.tick_params(axis="x", rotation=45)
+
     # Plot 6: Q-Q plot for normality check
     ax6_2 = axes2[1, 2]
     from scipy import stats
+
     stats.probplot(df_residents_berlin["einwohner"], dist="norm", plot=ax6_2)
     ax6_2.set_title("Q-Q Plot: Population Normality Check")
     ax6_2.grid(True)
-    
+
     plt.tight_layout()
-    plt.savefig('data_quality_residents.png', dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join("assets", "data_quality_residents.png"), dpi=300, bbox_inches="tight")
     print("\n✓ Saved: data_quality_residents.png")
     plt.show()
-    
+
     # ========== 3. COMBINED ANALYSIS ==========
     if gdf_lstat3 is not None and gdf_residents2 is not None:
         print("\n" + "=" * 80)
         print("3. COMBINED ANALYSIS: STATIONS vs POPULATION")
         print("=" * 80)
-        
+
         # Merge data
         combined = gdf_residents2.merge(gdf_lstat3[["PLZ", "Number"]], on="PLZ", how="left")
         combined["Number"] = combined["Number"].fillna(0)
         combined["Residents_per_Station"] = combined.apply(
-            lambda row: row["Einwohner"] / row["Number"] if row["Number"] > 0 else np.nan,
-            axis=1
+            lambda row: row["Einwohner"] / row["Number"] if row["Number"] > 0 else np.nan, axis=1
         )
-        
+
         # Create combined analysis figure
         fig3, axes3 = plt.subplots(2, 2, figsize=(15, 12))
-        fig3.suptitle('Combined Analysis: Infrastructure vs Population', fontsize=16, fontweight='bold')
-        
+        fig3.suptitle("Combined Analysis: Infrastructure vs Population", fontsize=16, fontweight="bold")
+
         # Plot 1: Scatter plot - Population vs Stations
         ax1_3 = axes3[0, 0]
-        ax1_3.scatter(combined["Einwohner"], combined["Number"], alpha=0.6, s=100, c='blue', edgecolors='black')
+        ax1_3.scatter(combined["Einwohner"], combined["Number"], alpha=0.6, s=100, c="blue", edgecolors="black")
         ax1_3.set_title("Population vs Charging Stations")
         ax1_3.set_xlabel("Population (Einwohner)")
         ax1_3.set_ylabel("Number of Stations")
         ax1_3.grid(True, alpha=0.3)
-        
-        # Add correlation coefficient
+
         corr = combined[["Einwohner", "Number"]].corr().iloc[0, 1]
-        ax1_3.text(0.05, 0.95, f'Correlation: {corr:.3f}', 
-                  transform=ax1_3.transAxes, verticalalignment='top',
-                  bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-        
+        ax1_3.text(
+            0.05,
+            0.95,
+            f"Correlation: {corr:.3f}",
+            transform=ax1_3.transAxes,
+            verticalalignment="top",
+            bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+        )
+
         print(f"\n--- Correlation Analysis ---")
         print(f"Correlation between Population and Stations: {corr:.3f}")
-        
+
         # Plot 2: Distribution of Residents per Station
         ax2_3 = axes3[0, 1]
         residents_per_station_clean = combined["Residents_per_Station"].dropna()
         if len(residents_per_station_clean) > 0:
-            residents_per_station_clean.hist(bins=30, ax=ax2_3, edgecolor='black', color='orange')
+            residents_per_station_clean.hist(bins=30, ax=ax2_3, edgecolor="black", color="orange")
             ax2_3.set_title("Distribution: Residents per Station")
             ax2_3.set_xlabel("Residents per Station")
             ax2_3.set_ylabel("Frequency")
-            ax2_3.axvline(residents_per_station_clean.mean(), color='red', linestyle='--', label='Mean')
-            ax2_3.axvline(residents_per_station_clean.median(), color='green', linestyle='--', label='Median')
+            ax2_3.axvline(residents_per_station_clean.mean(), color="red", linestyle="--", label="Mean")
+            ax2_3.axvline(residents_per_station_clean.median(), color="green", linestyle="--", label="Median")
             ax2_3.legend()
-            
+
             print(f"\n--- Residents per Station Statistics ---")
             print(residents_per_station_clean.describe())
-        
+
         # Plot 3: Heatmap - Correlation matrix
         ax3_3 = axes3[1, 0]
         corr_matrix = combined[["Einwohner", "Number"]].corr()
-        sns.heatmap(corr_matrix, annot=True, fmt='.3f', cmap='coolwarm', 
-                   square=True, ax=ax3_3, cbar_kws={'label': 'Correlation'})
+        sns.heatmap(
+            corr_matrix,
+            annot=True,
+            fmt=".3f",
+            cmap="coolwarm",
+            square=True,
+            ax=ax3_3,
+            cbar_kws={"label": "Correlation"},
+        )
         ax3_3.set_title("Correlation Heatmap")
-        
+
         # Plot 4: PLZ without stations
         ax4_3 = axes3[1, 1]
         plz_no_stations = combined[combined["Number"] == 0]
@@ -1180,43 +1178,55 @@ def analyze_data_quality_and_outliers(
         if len(plz_no_stations) > 0:
             print("\nPLZ without stations:")
             print(plz_no_stations[["PLZ", "Einwohner"]].to_string(index=False))
-            
+
             # Bar plot of population in PLZ without stations
             if len(plz_no_stations) <= 20:
-                ax4_3.barh(plz_no_stations['PLZ'].astype(str), plz_no_stations['Einwohner'], 
-                          color='crimson', edgecolor='black')
+                ax4_3.barh(
+                    plz_no_stations["PLZ"].astype(str), plz_no_stations["Einwohner"], color="crimson", edgecolor="black"
+                )
                 ax4_3.set_title("Population in PLZ without Stations")
                 ax4_3.set_xlabel("Population")
                 ax4_3.set_ylabel("PLZ")
                 ax4_3.invert_yaxis()
             else:
-                ax4_3.text(0.5, 0.5, f'{len(plz_no_stations)} PLZ\nwithout stations', 
-                          ha='center', va='center', transform=ax4_3.transAxes, fontsize=14)
+                ax4_3.text(
+                    0.5,
+                    0.5,
+                    f"{len(plz_no_stations)} PLZ\nwithout stations",
+                    ha="center",
+                    va="center",
+                    transform=ax4_3.transAxes,
+                    fontsize=14,
+                )
                 ax4_3.set_title("PLZ without Stations")
-        
+
         plt.tight_layout()
-        plt.savefig('data_quality_combined.png', dpi=300, bbox_inches='tight')
+        plt.savefig(os.path.join("assets", "data_quality_combined.png"), dpi=300, bbox_inches="tight")
         print("\n✓ Saved: data_quality_combined.png")
         plt.show()
-    
+
     # ========== SUMMARY ==========
     print("\n" + "=" * 80)
     print("SUMMARY: KEY FINDINGS")
     print("=" * 80)
     print("\n✓ Charging Stations:")
     print(f"  - Total Berlin stations: {len(df_lstat_berlin)}")
-    print(f"  - Power capacity range: {df_lstat_berlin['KW_numeric'].min():.2f} - {df_lstat_berlin['KW_numeric'].max():.2f} kW")
+    print(
+        f"  - Power capacity range: {df_lstat_berlin['KW_numeric'].min():.2f} - {df_lstat_berlin['KW_numeric'].max():.2f} kW"
+    )
     print(f"  - Power capacity outliers: {len(outliers_kw)} ({len(outliers_kw)/len(df_lstat_berlin)*100:.2f}%)")
-    
+
     print("\n✓ Residents:")
     print(f"  - Total Berlin PLZ: {len(df_residents_berlin)}")
-    print(f"  - Population range: {df_residents_berlin['einwohner'].min():,} - {df_residents_berlin['einwohner'].max():,}")
+    print(
+        f"  - Population range: {df_residents_berlin['einwohner'].min():,} - {df_residents_berlin['einwohner'].max():,}"
+    )
     print(f"  - Population outliers: {len(outliers_pop)} ({len(outliers_pop)/len(df_residents_berlin)*100:.2f}%)")
-    
+
     if gdf_lstat3 is not None and gdf_residents2 is not None:
         print("\n✓ Infrastructure Coverage:")
         print(f"  - Correlation (Population vs Stations): {corr:.3f}")
         print(f"  - PLZ without stations: {len(plz_no_stations)}")
         print(f"  - Average residents per station: {residents_per_station_clean.mean():.1f}")
-    
+
     print("\n" + "=" * 80 + "\n")

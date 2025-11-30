@@ -441,6 +441,8 @@ When you run `python main.py`, the system automatically:
 3. **Generates Visualizations** - Creates 3 PNG files with 16 plots total
 4. **Produces Statistical Reports** - Prints detailed summaries to console
 
+*Note:* A more condensed version of the automated analysis is available at [`check_data.py`](check_data.py)
+
 ### Generated Visualizations
 
 Three comprehensive visualization files are automatically created:
@@ -497,7 +499,7 @@ Contains 4 plots analyzing infrastructure-population relationships:
 
 ### Detailed Documentation
 
-For complete analysis results, see [`DATA_QUALITY_ANALYSIS.md`](DATA_QUALITY_ANALYSIS.md), which includes:
+For complete analysis results, see [`DATA_QUALITY_ANALYSIS.md`](docs/DATA_QUALITY_ANALYSIS.md), which includes:
 - Detailed explanations of each visualization
 - Statistical summaries and thresholds
 - Identified anomalies and their implications
