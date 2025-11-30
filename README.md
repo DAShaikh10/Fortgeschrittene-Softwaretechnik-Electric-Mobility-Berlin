@@ -38,15 +38,17 @@ The analysis helps identify areas with high population density but low charging 
 4. [Installation & Setup](#installation--setup)
 5. [How to Run](#how-to-run)
 6. [Application Usage](#application-usage)
-7. [Results Interpretation](#results-interpretation)
-8. [Demand Analysis](#demand-analysis)
-9. [Limitations of Analysis](#limitations-of-analysis)
-10. [Technologies Used](#technologies-used)
+7. [Data Quality Analysis](#data-quality-analysis)
+8. [Results Interpretation](#results-interpretation)
+9. [Demand Analysis](#demand-analysis)
+10. [Limitations of Analysis](#limitations-of-analysis)
+11. [Technologies Used](#technologies-used)
 
 ---
 
 ## Key Features
 
+- 📊 **Data Quality Analysis & Outlier Detection:** Comprehensive statistical analysis with visualizations to identify anomalies, outliers, and data quality issues in the dataset
 - 🗺️ **Interactive Map Visualization:** Dynamic Folium maps displaying Berlin charging stations with geographic precision
 - 📊 **Population Density Heatmap:** Visual representation of resident distribution by postal code
 - ⚡ **Power Category Filtering:** Analyze charging stations by power output:
@@ -424,6 +426,82 @@ Below the map:
 - Concentration along major roads and highways
 - Clustering near shopping centers and parking facilities
 - Gap in residential-only neighborhoods
+
+---
+
+## Data Quality Analysis
+
+The project includes comprehensive data quality analysis and outlier detection to ensure the reliability of insights and identify anomalies in the dataset.
+
+### Automated Analysis
+
+When you run `python main.py`, the system automatically:
+1. **Analyzes Missing Data** - Identifies incomplete records
+2. **Detects Outliers** - Uses IQR (Interquartile Range) method
+3. **Generates Visualizations** - Creates 3 PNG files with 16 plots total
+4. **Produces Statistical Reports** - Prints detailed summaries to console
+
+### Generated Visualizations
+
+Three comprehensive visualization files are automatically created:
+
+#### 1. `data_quality_charging_stations.png`
+Contains 6 plots analyzing charging station data:
+- **Power Capacity Distribution**: Histogram showing frequency of different power ratings
+- **Outlier Detection**: Box plot identifying stations with unusual power capacities
+- **Power Categories**: Bar chart showing distribution across Slow/Normal/Fast/Rapid/Ultra categories
+- **Stations per PLZ**: Distribution of infrastructure density
+- **Missing Data**: Percentage of incomplete records
+- **Top 10 PLZ**: Areas with highest station counts
+
+#### 2. `data_quality_residents.png`
+Contains 6 plots analyzing population data:
+- **Population Distribution**: Histogram of residents per postal code
+- **Population Outliers**: Box plot identifying unusual density areas
+- **Population Categories**: Distribution across Very Low/Low/Medium/High/Very High
+- **Top 10 PLZ**: Most populated postal codes
+- **Missing Data**: Data completeness check
+- **Q-Q Plot**: Statistical normality test for population distribution
+
+#### 3. `data_quality_combined.png`
+Contains 4 plots analyzing infrastructure-population relationships:
+- **Correlation Scatter**: Population vs station count with correlation coefficient
+- **Residents per Station**: Distribution of service burden
+- **Correlation Heatmap**: Visual representation of variable relationships
+- **Underserved Areas**: PLZ with high population but no stations
+
+### Key Findings from Analysis
+
+**Charging Stations:**
+- Total: 3,664 stations in Berlin
+- Power Range: 6-600 kW
+- Outliers: 461 ultra-rapid chargers (>77 kW)
+- Missing Data: 22% of records lack power rating
+
+**Population:**
+- Total: 191 postal codes analyzed
+- Range: 139 - 35,353 residents per PLZ
+- Outliers: 2 areas (PLZ 12627: very high, PLZ 14053: very low)
+- Missing Data: 0% (complete dataset)
+
+**Infrastructure Coverage:**
+- Correlation: 0.131 (weak) between population and stations
+- Critical Gap: PLZ 10115 (20,313 residents, 0 stations)
+- Average: 1,898 residents per station
+
+### Statistical Methods
+
+- **Outlier Detection**: IQR method (values beyond Q1-1.5×IQR or Q3+1.5×IQR)
+- **Correlation Analysis**: Pearson correlation coefficient
+- **Normality Testing**: Q-Q plots comparing to theoretical distribution
+
+### Detailed Documentation
+
+For complete analysis results, see [`DATA_QUALITY_ANALYSIS.md`](DATA_QUALITY_ANALYSIS.md), which includes:
+- Detailed explanations of each visualization
+- Statistical summaries and thresholds
+- Identified anomalies and their implications
+- Recommendations for infrastructure planning
 
 ---
 
