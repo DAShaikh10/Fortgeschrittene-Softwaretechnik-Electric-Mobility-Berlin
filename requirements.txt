@@ -1,16 +1,7 @@
 pandas
 geopandas
-shapely
-factor-analyzer
-scikit-learn
 matplotlib
 seaborn
-plotly
-dash
 streamlit
 streamlit_folium
-Folium
-numpy
 scipy
-chardet # Additionally required for encoding detection.
-tabulate # For pretty-printing tables in the console.
