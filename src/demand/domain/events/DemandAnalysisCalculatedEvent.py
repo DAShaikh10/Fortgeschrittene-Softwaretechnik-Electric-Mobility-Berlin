@@ -1,3 +1,7 @@
+"""
+Demand Domain Event: Demand Analysis Calculated.
+"""
+
 from dataclasses import dataclass
 
 from src.shared.domain.events import DomainEvent
@@ -19,6 +23,13 @@ class DemandAnalysisCalculatedEvent(DomainEvent):
 
     @staticmethod
     def log_demand_calculation(event: "DemandAnalysisCalculatedEvent"):
+        """
+        Log the demand analysis calculated event.
+
+        Args:
+            event (DemandAnalysisCalculatedEvent): The event instance to log.
+        """
+
         print(
             f"[EVENT] - DemandAnalysisCalculatedEvent - Demand analysis calculated for postal code: {event.postal_code}"
         )

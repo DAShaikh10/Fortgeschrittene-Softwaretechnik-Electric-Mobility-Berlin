@@ -1,3 +1,7 @@
+"""
+Demand Application Service for Demand Analysis.
+"""
+
 from src.shared.domain.events import DomainEventBus
 from src.demand.infrastructure.repositories import DemandAnalysisRepository
 

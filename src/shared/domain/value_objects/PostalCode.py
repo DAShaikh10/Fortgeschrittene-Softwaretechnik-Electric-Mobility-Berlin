@@ -1,3 +1,7 @@
+"""
+Shared Domain Valeu Object - Postal Code
+"""
+
 from dataclasses import dataclass
 
 from src.shared.domain.exceptions import InvalidPostalCodeError
@@ -47,4 +51,12 @@ class PostalCode:
 
     @staticmethod
     def get_values(postal_codes: list["PostalCode"]) -> list[str]:
+        """
+        Extract string values from a list of PostalCode value objects.
+
+        Args:
+            postal_codes (list[PostalCode]): List of PostalCode value objects.
+
+        Returns:
+            list of string postal code values."""
         return [plz.value for plz in postal_codes]

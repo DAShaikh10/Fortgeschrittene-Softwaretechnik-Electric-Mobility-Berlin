@@ -1,3 +1,7 @@
+"""
+Demand Domain Event - High Demand Area Identified Event
+"""
+
 from dataclasses import dataclass
 
 from src.shared.domain.events import DomainEvent
@@ -20,4 +24,11 @@ class HighDemandAreaIdentifiedEvent(DomainEvent):
 
     @staticmethod
     def log_high_demand_area(event: "HighDemandAreaIdentifiedEvent"):
+        """
+        Log the high demand area identified event.
+
+        Args:
+            event (HighDemandAreaIdentifiedEvent): The event instance to log.
+        """
+
         print(f"[EVENT] High demand area identified: {event.postal_code} (Urgency Score: {event.urgency_score})")

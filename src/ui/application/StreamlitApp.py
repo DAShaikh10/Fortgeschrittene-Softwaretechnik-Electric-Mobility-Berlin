@@ -1,7 +1,12 @@
+"""
+Streamlit Application for EVision Berlin.
+"""
+
+from typing import List
+
 import folium
 import streamlit
 
-from typing import List
 from streamlit_folium import folium_static
 
 from src.shared.domain.events import DomainEventBus
@@ -82,7 +87,7 @@ class StreamlitApp:
         streamlit.sidebar.subheader("📍 Search by Postal Code")
 
         # Query: Get all available postal codes
-        postal_codes = self.postal_code_residents_service.get_all_postal_codes(sorted=True)
+        postal_codes = self.postal_code_residents_service.get_all_postal_codes(sort=True)
         postal_code_options = ["All areas"] + PostalCode.get_values(postal_codes)
         selected_plz = streamlit.sidebar.selectbox(
             "Select Postal Code:", options=postal_code_options, key="postal_code_search"
@@ -109,11 +114,10 @@ class StreamlitApp:
             #     layer_options.extend(list(dfr_by_kw.keys()))
 
         streamlit.sidebar.header("📊 Layer Selection")
-        # TODO: Handle layer selection and map render but with DDD :(
-        layer_selection = streamlit.sidebar.radio("Select Layer", layer_options)
+        streamlit.sidebar.radio("Select Layer", layer_options)
 
         streamlit.sidebar.markdown("---")
-        show_demand = streamlit.sidebar.checkbox("📈 Show Demand Analysis", value=False)
+        streamlit.sidebar.checkbox("📈 Show Demand Analysis", value=False)
 
     # TODO: Needs rework. This is AI generated :)
     def _render_about(self) -> None:
@@ -174,7 +178,7 @@ class StreamlitApp:
         Calculate map center and zoom level based on selected postal code.
         """
 
-        if selected_postal_code == "" or selected_postal_code == "All areas":
+        if selected_postal_code in ("", "All areas"):
             return [52.52, 13.40], 10
 
         plz_geometry: GeoLocation = self.geolocation_service.get_geolocation_data_for_postal_code(
@@ -186,19 +190,18 @@ class StreamlitApp:
 
         return [52.52, 13.40], 10
 
-    def _render_residents_layer(self, selected_postal_code: str):
+    def _render_residents_layer(self):
         """
         Add residents heatmap layer to the map.
         """
-        pass
 
-    def render_charging_stations_layer(self, map, selected_postal_code: str):
+    def _render_charging_stations_layer(self, selected_postal_code: str):
         """
         Add charging stations heatmap layer to the map.
         """
 
         areas = None
-        if selected_postal_code != "" and selected_postal_code != "All areas":
+        if selected_postal_code not in ("", "All areas"):
             areas = PostalCodeAreaAggregate(postal_code=PostalCode(selected_postal_code))
         else:
             areas = self.charging_station_service.get_stations_for_all_postal_codes()
@@ -209,6 +212,9 @@ class StreamlitApp:
         for station in stations:
             areas.add_station(station)
 
+        # TODO: Adjust using actual aggregate or data.
+        min_station_count = 0
+        max_station_count = 0
         color_map = folium.LinearColormap(
             colors=["yellow", "red"],
             vmin=min_station_count,
@@ -216,11 +222,7 @@ class StreamlitApp:
         )
 
         for _, row in areas.iterrows():
-            is_selected = (
-                selected_postal_code != ""
-                and selected_postal_code != "All areas"
-                and row["PLZ"] == selected_postal_code
-            )
+            is_selected = selected_postal_code not in ("", "All areas") and row["PLZ"] == selected_postal_code
             folium.GeoJson(
                 row["geometry"],
                 style_function=lambda _, color=color_map(row["Number"]), is_sel=is_selected: {
@@ -241,18 +243,18 @@ class StreamlitApp:
         """
 
         map_center, map_zoom = self._get_map_center_and_zoom(selected_postal_code)
-        map = folium.Map(location=map_center, zoom_start=map_zoom)
+        folium_map = folium.Map(location=map_center, zoom_start=map_zoom)
 
         # Render selected layer.
         if layer_selection == "Residents":
-            self._render_residents_layer(map, selected_postal_code)
+            self._render_residents_layer()
         elif layer_selection == "All Charging Stations":
-            self._render_charging_stations_layer(map, selected_postal_code)
+            self._render_charging_stations_layer(selected_postal_code)
         # else:
         #     if self.dfr_by_kw and layer_selection in self.dfr_by_kw:
         #         self._render_kw_layer(map, self.dfr_by_kw[layer_selection], layer_selection, selected_postal_code)
 
-        folium_static(map, width=1400, height=800)
+        folium_static(folium_map, width=1400, height=800)
 
     def _render_demand_analysis(self, a):
         pass

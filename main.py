@@ -1,3 +1,10 @@
+"""
+EVision Berlin - Main Application Entry Point
+
+This module initializes and runs the EVision Berlin Streamlit application
+for analyzing electric vehicle charging infrastructure in Berlin.
+"""
+
 import os
 
 from pathlib import Path
@@ -5,11 +12,15 @@ from pathlib import Path
 from config import pdict  # Serves as the project configuration dictionary.
 from src.ui.application import StreamlitApp
 from src.shared.domain.events import DomainEventBus, StationSearchPerformedEvent
-from src.shared.infrastructure.repositories import CSVChargingStationRepository, CSVGeoDataRepository
+from src.shared.infrastructure.repositories import (
+    CSVChargingStationRepository,
+    CSVGeoDataRepository,
+    CSVPopulationRepository,
+)
 from src.shared.application.services import ChargingStationService, GeoLocationService, PostalCodeResidentService
 from src.demand.application.services import DemandAnalysisService
 from src.demand.domain.events import DemandAnalysisCalculatedEvent, HighDemandAreaIdentifiedEvent
-from src.demand.infrastructure.repositories import CSVPopulationRepository, InMemoryDemandAnalysisRepository
+from src.demand.infrastructure.repositories import InMemoryDemandAnalysisRepository
 
 
 def setup_repositories():

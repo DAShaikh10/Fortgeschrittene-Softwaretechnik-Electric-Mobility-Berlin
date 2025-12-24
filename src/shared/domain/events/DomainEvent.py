@@ -1,3 +1,7 @@
+"""
+Shared Domain Event - Domain Event Module.
+"""
+
 import uuid
 
 from datetime import datetime

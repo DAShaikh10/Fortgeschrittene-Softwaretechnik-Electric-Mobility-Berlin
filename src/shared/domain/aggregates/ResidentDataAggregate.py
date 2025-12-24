@@ -1,3 +1,7 @@
+"""
+Shared Domain Aggregate - Resident Data Aggregate Module.
+"""
+
 from dataclasses import dataclass
 
 from src.shared.domain.value_objects import PostalCode

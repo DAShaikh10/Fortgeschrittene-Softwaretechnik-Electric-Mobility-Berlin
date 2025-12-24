@@ -1,3 +1,7 @@
+"""
+Shared Infrastructure - Population Repository Interface
+"""
+
 from typing import List
 from abc import ABC, abstractmethod
 
@@ -18,5 +22,3 @@ class PopulationRepository(ABC):
         Returns:
             List of PostalCode value objects
         """
-
-        pass

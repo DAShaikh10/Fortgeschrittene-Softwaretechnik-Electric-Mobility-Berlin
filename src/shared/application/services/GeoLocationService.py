@@ -1,8 +1,12 @@
-from .BaseService import BaseService
+"""
+Shared Application Service for Geographic Location Data.
+"""
 
 from src.shared.domain.events import DomainEventBus
 from src.shared.domain.value_objects import GeoLocation, PostalCode
 from src.shared.infrastructure.repositories import GeoDataRepository
+
+from .BaseService import BaseService
 
 
 class GeoLocationService(BaseService):

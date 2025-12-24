@@ -1,9 +1,17 @@
+"""
+Shared Domain Event Bus Module.
+"""
+
 from typing import Callable, Dict, List, Type
 
 from .DomainEvent import DomainEvent
 
 
 class DomainEventBus:
+    """
+    Simple in-memory Domain Event Bus for publishing and subscribing to domain events.
+    """
+
     def __init__(self):
         self._subscribers: Dict[Type[DomainEvent], List[Callable]] = {}
 
@@ -20,7 +28,6 @@ class DomainEventBus:
 
         if handler not in self._subscribers[event_type]:
             self._subscribers[event_type].append(handler)
-
 
     def publish(self, event: DomainEvent):
         """

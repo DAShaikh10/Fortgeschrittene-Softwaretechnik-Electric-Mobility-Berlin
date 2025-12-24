@@ -1,12 +1,16 @@
-from typing import List
+"""
+Shared Application Service for Charging Station operations.
+"""
 
-from .BaseService import BaseService
+from typing import List
 
 from src.shared.domain.events import DomainEventBus
 from src.shared.domain.entities import ChargingStation
 from src.shared.domain.value_objects import PostalCode
 from src.shared.infrastructure.repositories import ChargingStationRepository
 from src.discovery.domain.aggregates import PostalCodeAreaAggregate
+
+from .BaseService import BaseService
 
 
 class ChargingStationService(BaseService):
@@ -56,4 +60,11 @@ class ChargingStationService(BaseService):
         return area
 
     def get_stations_for_all_postal_codes(self) -> List[PostalCodeAreaAggregate]:
-        stations: List[ChargingStation] = self.repository.get_stations_for_all_postal_codes()
+        """
+        Get All Stations for All Postal Codes.
+
+        Returns:
+            List of PostalCodeAreaAggregate with stations for all postal codes.
+        """
+
+        self.repository.get_stations_for_all_postal_codes()

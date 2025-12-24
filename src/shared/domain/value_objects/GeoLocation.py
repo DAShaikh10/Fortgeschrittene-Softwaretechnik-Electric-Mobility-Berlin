@@ -1,6 +1,10 @@
-import geopandas as gpd
+"""
+GeoLocation Value Object Module.
+"""
 
 from dataclasses import dataclass
+
+import geopandas as gpd
 
 from src.shared.domain.exceptions import InvalidGeoLocationError
 

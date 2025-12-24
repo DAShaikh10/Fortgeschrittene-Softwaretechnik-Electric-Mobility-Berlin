@@ -1,8 +1,13 @@
+"""
+Shared Domain Event - Station Search Performed Event
+"""
+
 from typing import Dict
 from dataclasses import dataclass, field
 
-from .DomainEvent import DomainEvent
 from src.shared.domain.value_objects import PostalCode
+
+from .DomainEvent import DomainEvent
 
 
 @dataclass(frozen=True)
@@ -19,6 +24,13 @@ class StationSearchPerformedEvent(DomainEvent):
 
     @staticmethod
     def log_station_search(event: "StationSearchPerformedEvent"):
+        """
+        Log the station search performed event.
+
+        Args:
+            event (StationSearchPerformedEvent): The event instance to log.
+        """
+
         print(
             f"[EVENT] - StationSearchPerformedEvent - Station search performed for postal code: {event.postal_code.value}"
         )

@@ -1,3 +1,7 @@
+"""
+Discovery Domain Aggregate - Postal Code Area Aggregate Module.
+"""
+
 from typing import List
 from dataclasses import dataclass, field
 

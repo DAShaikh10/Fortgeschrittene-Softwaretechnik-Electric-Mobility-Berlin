@@ -1,3 +1,8 @@
+"""
+Shared Domain Entity - Charging Station Module.
+"""
+
+
 class ChargingStation:
     """
     Entity within the PostalCodeArea aggregate.

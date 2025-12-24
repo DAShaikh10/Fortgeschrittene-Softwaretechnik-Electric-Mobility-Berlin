@@ -1,3 +1,7 @@
+"""
+Shared Infrastructure Abstract Charging Station Repository Module.
+"""
+
 from typing import List
 from abc import ABC, abstractmethod
 
@@ -21,5 +25,3 @@ class ChargingStationRepository(ABC):
         Returns:
             List of ChargingStation entities found.
         """
-
-        pass

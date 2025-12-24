@@ -1,3 +1,7 @@
+"""
+Base CSV Repository Module.
+"""
+
 import pandas as pd
 
 

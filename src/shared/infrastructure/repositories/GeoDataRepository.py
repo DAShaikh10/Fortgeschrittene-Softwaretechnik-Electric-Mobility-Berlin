@@ -1,4 +1,8 @@
-from abc import ABC, abstractmethod
+"""
+Abstract base class for geographic boundary data repositories.
+"""
+
+from abc import ABC
 
 
 class GeoDataRepository(ABC):

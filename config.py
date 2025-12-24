@@ -1,4 +1,8 @@
-p = dict()
+"""
+Configuration Module.
+"""
+
+p = {}
 
 p["dataset_folder"] = "src/shared/infrastructure/datasets"
 

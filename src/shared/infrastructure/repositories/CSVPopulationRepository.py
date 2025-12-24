@@ -1,3 +1,7 @@
+"""
+CSV-based implementation of PopulationRepository.
+"""
+
 from typing import List
 
 from src.shared.domain.value_objects import PostalCode
