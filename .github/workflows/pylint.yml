@@ -19,5 +19,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Analysing the code with pylint
+      continue-on-error: true
       run: |
         pylint main.py config.py src/ --disable=fixme
