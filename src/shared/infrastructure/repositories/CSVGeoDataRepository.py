@@ -39,7 +39,9 @@ class CSVGeoDataRepository(GeoDataRepository, CSVRepository):
         """
         # Convert PLZ to string for consistent comparison with PostalCode value object
         self._df["PLZ"] = self._df["PLZ"].astype(str)
-        logger.info(f"Transformed PLZ column to string type. DataFrame shape: {self._df.shape}")
+        logger.info(
+            "Transformed PLZ column to string type. DataFrame shape: %s", self._df.shape
+        )
 
     def fetch_geolocation_data(self, postal_code: PostalCode):
         """
@@ -51,23 +53,26 @@ class CSVGeoDataRepository(GeoDataRepository, CSVRepository):
         Returns:
             GeoLocation: Geographic location data for the given postal code or None if not found.
         """
-        logger.info(f"CSVGeoDataRepository: Fetching geolocation for PLZ: {postal_code.value}")
-        logger.info(f"DataFrame shape: {self._df.shape}")
-        logger.info(f"DataFrame columns: {self._df.columns.tolist()}")
-        logger.info(f"Available PLZ values (first 10): {self._df['PLZ'].head(10).tolist()}")
+        logger.info(
+            "CSVGeoDataRepository: Fetching geolocation for PLZ: %s", postal_code.value
+        )
+        logger.info("DataFrame shape: %s", self._df.shape)
+        logger.info("DataFrame columns: %s", self._df.columns.tolist())
+        logger.info(
+            "Available PLZ values (first 10): %s", self._df['PLZ'].head(10).tolist()
+        )
 
         result = self._df[self._df["PLZ"] == postal_code.value]
-        logger.info(f"Query result shape: {result.shape}")
-        
+        logger.info("Query result shape: %s", result.shape)
         if result.empty:
-            logger.warning(f"No geometry found for PLZ: {postal_code.value}")
+            logger.warning("No geometry found for PLZ: %s", postal_code.value)
             return None
 
         boundary = result.iloc[0]["geometry"]
-        logger.info(f"Boundary type: {type(boundary)}")
-        logger.info(f"Boundary value (first 200 chars): {str(boundary)[:200]}")
-        
-        logger.info(f"Creating GeoLocation object with postal_code={postal_code.value}")
+        logger.info("Boundary type: %s", type(boundary))
+        logger.info("Boundary value (first 200 chars): %s", str(boundary)[:200])
+
+        logger.info("Creating GeoLocation object with postal_code=%s", postal_code.value)
         geo_location = GeoLocation(postal_code=postal_code, boundary=boundary)
-        logger.info(f"✓ GeoLocation created successfully")
+        logger.info("✓ GeoLocation created successfully")
         return geo_location

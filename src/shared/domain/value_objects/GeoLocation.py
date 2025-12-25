@@ -26,16 +26,17 @@ def _process_boundary(boundary_wkt: str) -> gpd.GeoDataFrame:
     Returns:
         GeoDataFrame with the boundary geometry
     """
-    logger.info(f"_process_boundary called with WKT length: {len(boundary_wkt) if boundary_wkt else 0}")
+    wkt_length = len(boundary_wkt) if boundary_wkt else 0
+    logger.info("_process_boundary called with WKT length: %d", wkt_length)
     if not boundary_wkt:
         logger.warning("Empty boundary_wkt provided")
         return None
     try:
         gdf = gpd.GeoDataFrame(geometry=gpd.GeoSeries.from_wkt([boundary_wkt]))
-        logger.info(f"✓ Successfully created GeoDataFrame with shape: {gdf.shape}")
+        logger.info("✓ Successfully created GeoDataFrame with shape: %s", gdf.shape)
         return gdf
     except Exception as e:
-        logger.error(f"Error processing boundary WKT: {e}", exc_info=True)
+        logger.error("Error processing boundary WKT: %s", e, exc_info=True)
         raise
 
 
@@ -54,28 +55,35 @@ class GeoLocation:
         """
         Process and validate the boundary data on creation.
         """
-        logger.info(f"GeoLocation __post_init__ called for postal_code: {self.postal_code}")
-        logger.info(f"Initial boundary type: {type(self.boundary)}")
-        logger.info(f"Initial boundary value (first 200 chars): {str(self.boundary)[:200] if self.boundary else 'None'}")
-        
+        logger.info("GeoLocation __post_init__ called for postal_code: %s", self.postal_code)
+        logger.info("Initial boundary type: %s", type(self.boundary))
+        boundary_preview = (
+            str(self.boundary)[:200] if self.boundary else 'None'
+        )
+        logger.info("Initial boundary value (first 200 chars): %s", boundary_preview)
+
         # Process the boundary if it's a WKT string
         if isinstance(self.boundary, str):
             logger.info("Boundary is a string, processing WKT...")
             processed_boundary = _process_boundary(self.boundary)
-            logger.info(f"Processed boundary type: {type(processed_boundary)}")
+            logger.info("Processed boundary type: %s", type(processed_boundary))
             if processed_boundary is not None:
-                logger.info(f"Processed boundary shape: {processed_boundary.shape}")
-                logger.info(f"Processed boundary columns: {processed_boundary.columns.tolist()}")
+                logger.info("Processed boundary shape: %s", processed_boundary.shape)
+                logger.info(
+                    "Processed boundary columns: %s",
+                    processed_boundary.columns.tolist()
+                )
             # Use object.__setattr__ because the dataclass is frozen
             object.__setattr__(self, 'boundary', processed_boundary)
-        
         # Validate
-        if self.boundary is None or (isinstance(self.boundary, gpd.GeoDataFrame) and self.boundary.empty):
-            logger.error(f"GeoLocation validation failed - boundary is None or empty")
+        if self.boundary is None or (
+            isinstance(self.boundary, gpd.GeoDataFrame) and self.boundary.empty
+        ):
+            logger.error("GeoLocation validation failed - boundary is None or empty")
             raise InvalidGeoLocationError("Geo Location boundary cannot be None or empty.")
-        
-        logger.info(f"✓ GeoLocation created successfully for {self.postal_code}")
-    
+
+        logger.info("✓ GeoLocation created successfully for %s", self.postal_code)
+
     @property
     def empty(self) -> bool:
         """

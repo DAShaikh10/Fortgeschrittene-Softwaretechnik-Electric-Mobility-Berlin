@@ -131,7 +131,9 @@ class DemandAnalysisService(BaseService):
         postal_code_vo = PostalCode(postal_code)
         return self._repository.find_by_postal_code(postal_code_vo)
 
-    def update_demand_analysis(self, postal_code: str, population: int = None, station_count: int = None) -> DemandAnalysisAggregate:
+    def update_demand_analysis(
+        self, postal_code: str, population: int = None, station_count: int = None
+    ) -> DemandAnalysisAggregate:
         """
         Use case: Update existing demand analysis with new data.
 
@@ -196,5 +198,3 @@ class DemandAnalysisService(BaseService):
             "current_ratio": aggregate.get_residents_per_station(),
             "coverage_assessment": aggregate.get_coverage_assessment(),
         }
-
-

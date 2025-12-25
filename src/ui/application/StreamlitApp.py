@@ -2,26 +2,26 @@
 Streamlit Application for EVision Berlin.
 """
 
-from typing import List
 import json
 import logging
 
 import folium
-import streamlit
-
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
 import pandas as pd
-
-
+import streamlit
 from streamlit_folium import folium_static
 
 from src.shared.domain.events import DomainEventBus
 from src.shared.domain.value_objects import GeoLocation, PostalCode
-from src.shared.application.services import ChargingStationService, GeoLocationService, PostalCodeResidentService
+from src.shared.application.services import (
+    ChargingStationService,
+    GeoLocationService,
+    PostalCodeResidentService
+)
 from src.demand.application.services import DemandAnalysisService
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 class StreamlitApp:
@@ -228,33 +228,62 @@ class StreamlitApp:
         """
         try:
             if selected_postal_code and selected_postal_code not in ("", "All areas"):
-                logger.info(f"=== Starting to render charging stations layer for PLZ: {selected_postal_code} ===")
+                logger.info(
+                    "=== Starting to render charging stations layer for PLZ: %s ===",
+                    selected_postal_code
+                )
                 postal_code_obj = PostalCode(selected_postal_code)
-                
+
                 # Get and render the postal code boundary area
-                logger.info(f"Fetching geolocation data for {selected_postal_code}...")
-                plz_geometry = self.geolocation_service.get_geolocation_data_for_postal_code(postal_code_obj)
-                
-                logger.info(f"plz_geometry is None: {plz_geometry is None}")
+                logger.info("Fetching geolocation data for %s...", selected_postal_code)
+                plz_geometry = self.geolocation_service.get_geolocation_data_for_postal_code(
+                    postal_code_obj
+                )
+
+                logger.info("plz_geometry is None: %s", plz_geometry is None)
                 if plz_geometry is not None:
-                    logger.info(f"plz_geometry type: {type(plz_geometry)}")
-                    logger.info(f"plz_geometry.boundary is None: {plz_geometry.boundary is None}")
+                    logger.info("plz_geometry type: %s", type(plz_geometry))
+                    logger.info(
+                        "plz_geometry.boundary is None: %s",
+                        plz_geometry.boundary is None
+                    )
                     if plz_geometry.boundary is not None:
-                        logger.info(f"plz_geometry.boundary type: {type(plz_geometry.boundary)}")
-                        logger.info(f"plz_geometry.boundary shape: {plz_geometry.boundary.shape}")
-                        logger.info(f"plz_geometry.boundary columns: {plz_geometry.boundary.columns.tolist()}")
-                        logger.info(f"First few rows:\n{plz_geometry.boundary.head()}")
-                
+                        logger.info(
+                            "plz_geometry.boundary type: %s",
+                            type(plz_geometry.boundary)
+                        )
+                        logger.info(
+                            "plz_geometry.boundary shape: %s",
+                            plz_geometry.boundary.shape
+                        )
+                        logger.info(
+                            "plz_geometry.boundary columns: %s",
+                            plz_geometry.boundary.columns.tolist()
+                        )
+                        logger.info(
+                            "First few rows:\n%s",
+                            plz_geometry.boundary.head()
+                        )
                 if plz_geometry is not None and plz_geometry.boundary is not None:
                     try:
                         # Convert the boundary GeoDataFrame to GeoJSON format
                         # The boundary is stored as a GeoDataFrame, access its geometry
                         logger.info("Converting boundary to GeoJSON...")
                         boundary_geojson = json.loads(plz_geometry.boundary.to_json())
-                        logger.info(f"GeoJSON conversion successful. Type: {type(boundary_geojson)}")
-                        logger.info(f"GeoJSON keys: {boundary_geojson.keys() if isinstance(boundary_geojson, dict) else 'Not a dict'}")
-                        logger.info(f"GeoJSON content (first 500 chars): {str(boundary_geojson)[:500]}")
-                        
+                        logger.info(
+                            "GeoJSON conversion successful. Type: %s",
+                            type(boundary_geojson)
+                        )
+                        geojson_keys = (
+                            boundary_geojson.keys()
+                            if isinstance(boundary_geojson, dict)
+                            else 'Not a dict'
+                        )
+                        logger.info("GeoJSON keys: %s", geojson_keys)
+                        logger.info(
+                            "GeoJSON content (first 500 chars): %s",
+                            str(boundary_geojson)[:500]
+                        )
                         # Add the postal code boundary as a shaded area
                         logger.info("Adding GeoJSON to folium map...")
                         folium.GeoJson(
@@ -269,21 +298,36 @@ class StreamlitApp:
                             tooltip=f"Postal Code: {selected_postal_code}",
                         ).add_to(folium_map)
                         logger.info("✓ Postal code boundary added to map successfully!")
-                        streamlit.success(f"✓ Postal code {selected_postal_code} boundary rendered")
+                        streamlit.success(
+                            f"✓ Postal code {selected_postal_code} boundary rendered"
+                        )
                     except Exception as boundary_error:
-                        logger.error(f"Error rendering boundary: {boundary_error}", exc_info=True)
-                        streamlit.error(f"Error rendering postal code boundary: {boundary_error}")
+                        logger.error(
+                            "Error rendering boundary: %s", boundary_error, exc_info=True
+                        )
+                        streamlit.error(
+                            f"Error rendering postal code boundary: {boundary_error}"
+                        )
                 else:
-                    logger.warning(f"Cannot render boundary - plz_geometry: {plz_geometry}, boundary: {plz_geometry.boundary if plz_geometry else 'N/A'}")
-                    streamlit.warning(f"No boundary data available for postal code {selected_postal_code}")
-                
+                    boundary_info = (
+                        plz_geometry.boundary if plz_geometry else 'N/A'
+                    )
+                    logger.warning(
+                        "Cannot render boundary - plz_geometry: %s, boundary: %s",
+                        plz_geometry,
+                        boundary_info
+                    )
+                    streamlit.warning(
+                        f"No boundary data available for postal code {selected_postal_code}"
+                    )
+
                 # Retrieve stations for the selected postal code area
-                logger.info(f"Fetching charging stations for {selected_postal_code}...")
+                logger.info("Fetching charging stations for %s...", selected_postal_code)
                 area = self.charging_station_service.search_by_postal_code(postal_code_obj)
-                logger.info(f"Found {len(area.stations)} charging stations")
-                
+                logger.info("Found %d charging stations", len(area.stations))
+
                 # Create interactive map marker for each charging station
-                for idx, station in enumerate(area.stations):
+                for station in area.stations:
                     folium.CircleMarker(
                         location=[station.latitude, station.longitude],
                         radius=6,
@@ -293,13 +337,15 @@ class StreamlitApp:
                         fillColor="green",
                         fillOpacity=0.8,
                     ).add_to(folium_map)
-                logger.info(f"✓ Added {len(area.stations)} charging station markers to map")
+                logger.info(
+                    "✓ Added %d charging station markers to map", len(area.stations)
+                )
             else:
                 # Prevent map clutter when viewing all areas
                 streamlit.info("Select a specific postal code to view charging stations on the map.")
         except Exception as e:
             # Handle and display any errors gracefully in the UI
-            logger.error(f"Error loading charging stations: {e}", exc_info=True)
+            logger.error("Error loading charging stations: %s", e, exc_info=True)
             streamlit.error(f"Error loading charging stations: {e}")
 
     def _render_map_view(self, selected_postal_code: str, layer_selection: str):
@@ -375,7 +421,7 @@ class StreamlitApp:
         # Perform batch analysis
         if areas_data:
             results = self.demand_analysis_service.analyze_multiple_areas(areas_data)
-            
+
             # Convert aggregates to dicts for DataFrame
             results = [r.to_dict() for r in results]
 
@@ -389,7 +435,7 @@ class StreamlitApp:
                 if analysis:
                     # Convert aggregate to dict for UI
                     analysis = analysis.to_dict()
-                    
+
                     # Display metrics in columns
                     col1, col2, col3, col4 = streamlit.columns(4)
 
@@ -457,7 +503,7 @@ class StreamlitApp:
 
             # Get high priority areas
             high_priority_areas = self.demand_analysis_service.get_high_priority_areas()
-            
+
             # Convert aggregates to dicts for DataFrame
             high_priority_areas = [area.to_dict() for area in high_priority_areas]
 
