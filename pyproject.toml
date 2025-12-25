@@ -1,3 +1,4 @@
+# PyLint config.
 [tool.pylint.format]
 max-line-length = 130
 
@@ -10,3 +11,16 @@ disable = [
     "W0718", # Cacthing too general exception Exception.
     "W0603", # Using global statement.
 ]
+
+# Task runner config.
+[tool.taskipy.tasks]
+install = "pip install -r requirements.txt"
+lint = "pylint main.py config.py src/"
+clean = "python -c \"import shutil, pathlib; [shutil.rmtree(p) for p in pathlib.Path('.').rglob('__pycache__')]\""
+run = "streamlit run main.py"
+run-clean = "task clean && streamlit run main.py"
+test = "python -m pytest tests/ -v"
+pull-task = "git stash && git pull origin task/prof-selcan-ipek-ugay && git stash pop"
+pull-main = "git stash && git pull origin main && git stash pop"
+push-task = "git push origin task/prof-selcan-ipek-ugay"
+push-main = "git push origin main"

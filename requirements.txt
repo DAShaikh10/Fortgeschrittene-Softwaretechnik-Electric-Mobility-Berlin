@@ -5,4 +5,5 @@ seaborn
 streamlit
 streamlit_folium
 scipy
-pylint
+pylint # Linter.
+taskify # Task Runner.
