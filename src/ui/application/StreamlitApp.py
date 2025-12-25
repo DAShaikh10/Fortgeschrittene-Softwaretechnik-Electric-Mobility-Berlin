@@ -375,6 +375,9 @@ class StreamlitApp:
         # Perform batch analysis
         if areas_data:
             results = self.demand_analysis_service.analyze_multiple_areas(areas_data)
+            
+            # Convert aggregates to dicts for DataFrame
+            results = [r.to_dict() for r in results]
 
             # If specific postal code selected, show detailed analysis
             if selected_postal_code and selected_postal_code != "All areas":
@@ -384,6 +387,9 @@ class StreamlitApp:
                 analysis = self.demand_analysis_service.get_demand_analysis(selected_postal_code)
 
                 if analysis:
+                    # Convert aggregate to dict for UI
+                    analysis = analysis.to_dict()
+                    
                     # Display metrics in columns
                     col1, col2, col3, col4 = streamlit.columns(4)
 
@@ -451,6 +457,9 @@ class StreamlitApp:
 
             # Get high priority areas
             high_priority_areas = self.demand_analysis_service.get_high_priority_areas()
+            
+            # Convert aggregates to dicts for DataFrame
+            high_priority_areas = [area.to_dict() for area in high_priority_areas]
 
             if high_priority_areas:
                 streamlit.markdown(f"**🔴 {len(high_priority_areas)} High Priority Areas Identified**")
@@ -477,7 +486,7 @@ class StreamlitApp:
                 ]
                 high_priority_df = high_priority_df.sort_values("Urgency Score", ascending=False)
 
-                streamlit.dataframe(high_priority_df, use_container_width=True, hide_index=True)
+                streamlit.dataframe(high_priority_df, width='stretch', hide_index=True)
 
             # Display overview table with color-coded priority visualization
             streamlit.markdown("---")
@@ -527,7 +536,7 @@ class StreamlitApp:
 
             styled_df = results_df.style.apply(highlight_priority, axis=1)
 
-            streamlit.dataframe(styled_df, use_container_width=True, hide_index=True)
+            streamlit.dataframe(styled_df, width='stretch', hide_index=True)
 
             # Summary statistics
             streamlit.markdown("---")

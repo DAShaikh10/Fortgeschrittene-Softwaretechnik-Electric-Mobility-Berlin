@@ -220,3 +220,22 @@ class DemandAnalysisAggregate:
         """
 
         self._domain_events.clear()
+
+    def to_dict(self) -> dict:
+        """
+        Convert aggregate to dictionary representation for presentation layer.
+        
+        Returns:
+            dict: Dictionary with aggregate data
+        """
+        return {
+            "postal_code": self.postal_code.value,
+            "population": self.population,
+            "station_count": self.station_count,
+            "demand_priority": self.demand_priority.level.value,
+            "residents_per_station": self.demand_priority.residents_per_station,
+            "urgency_score": self.demand_priority.get_urgency_score(),
+            "is_high_priority": self.is_high_priority(),
+            "needs_expansion": self.needs_infrastructure_expansion(),
+            "coverage_assessment": self.get_coverage_assessment(),
+        }

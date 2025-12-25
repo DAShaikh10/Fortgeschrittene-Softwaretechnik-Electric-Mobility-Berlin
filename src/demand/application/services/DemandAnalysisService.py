@@ -35,7 +35,7 @@ class DemandAnalysisService(BaseService):
     ):
         super().__init__(repository, event_bus)
 
-    def analyze_demand(self, postal_code: str, population: int, station_count: int) -> Dict:
+    def analyze_demand(self, postal_code: str, population: int, station_count: int) -> DemandAnalysisAggregate:
         """
         Use case: Analyze demand for a specific postal code area.
 
@@ -45,7 +45,7 @@ class DemandAnalysisService(BaseService):
             station_count: Number of charging stations
 
         Returns:
-            Dict: Analysis results including priority and recommendations
+            DemandAnalysisAggregate: Aggregate with demand analysis results
 
         Raises:
             InvalidPostalCodeError: If postal code is invalid
@@ -71,10 +71,10 @@ class DemandAnalysisService(BaseService):
         # 5. Publish domain events
         self._publish_events(aggregate)
 
-        # 6. Return analysis results
-        return self._aggregate_to_dict(aggregate)
+        # 6. Return aggregate
+        return aggregate
 
-    def analyze_multiple_areas(self, areas: List[Dict[str, any]]) -> List[Dict]:
+    def analyze_multiple_areas(self, areas: List[Dict[str, any]]) -> List[DemandAnalysisAggregate]:
         """
         Use case: Analyze demand for multiple postal code areas.
 
@@ -82,7 +82,7 @@ class DemandAnalysisService(BaseService):
             areas: List of dicts with 'postal_code', 'population', 'station_count'
 
         Returns:
-            List[Dict]: Analysis results for all areas
+            List[DemandAnalysisAggregate]: Analysis results for all areas
         """
 
         results = []
@@ -101,23 +101,23 @@ class DemandAnalysisService(BaseService):
 
         return results
 
-    def get_high_priority_areas(self) -> List[Dict]:
+    def get_high_priority_areas(self) -> List[DemandAnalysisAggregate]:
         """
         Use case: Get all high-priority areas requiring attention.
 
         Returns:
-            List[Dict]: High-priority areas sorted by urgency
+            List[DemandAnalysisAggregate]: High-priority areas sorted by urgency
         """
 
         all_analyses = self._repository.find_all()
-        high_priority = [self._aggregate_to_dict(agg) for agg in all_analyses if agg.is_high_priority()]
+        high_priority = [agg for agg in all_analyses if agg.is_high_priority()]
 
         # Sort by urgency score (descending)
-        high_priority.sort(key=lambda x: x["urgency_score"], reverse=True)
+        high_priority.sort(key=lambda x: x.demand_priority.get_urgency_score(), reverse=True)
 
         return high_priority
 
-    def get_demand_analysis(self, postal_code: str) -> Optional[Dict]:
+    def get_demand_analysis(self, postal_code: str) -> Optional[DemandAnalysisAggregate]:
         """
         Use case: Retrieve demand analysis for a specific postal code.
 
@@ -125,18 +125,13 @@ class DemandAnalysisService(BaseService):
             postal_code: Postal code to retrieve
 
         Returns:
-            Optional[Dict]: Analysis results or None if not found
+            Optional[DemandAnalysisAggregate]: Analysis aggregate or None if not found
         """
 
         postal_code_vo = PostalCode(postal_code)
-        aggregate = self._repository.find_by_postal_code(postal_code_vo)
+        return self._repository.find_by_postal_code(postal_code_vo)
 
-        if aggregate is None:
-            return None
-
-        return self._aggregate_to_dict(aggregate)
-
-    def update_demand_analysis(self, postal_code: str, population: int = None, station_count: int = None) -> Dict:
+    def update_demand_analysis(self, postal_code: str, population: int = None, station_count: int = None) -> DemandAnalysisAggregate:
         """
         Use case: Update existing demand analysis with new data.
 
@@ -146,12 +141,11 @@ class DemandAnalysisService(BaseService):
             station_count: New station count (optional)
 
         Returns:
-            Dict: Updated analysis results
+            DemandAnalysisAggregate: Updated analysis aggregate
 
         Raises:
             ValueError: If analysis not found or invalid parameters
         """
-
         postal_code_vo = PostalCode(postal_code)
         aggregate = self._repository.find_by_postal_code(postal_code_vo)
 
@@ -171,7 +165,7 @@ class DemandAnalysisService(BaseService):
         # Publish events
         self._publish_events(aggregate)
 
-        return self._aggregate_to_dict(aggregate)
+        return aggregate
 
     def get_recommendations(self, postal_code: str, target_ratio: float = 2000.0) -> Dict:
         """
@@ -203,25 +197,4 @@ class DemandAnalysisService(BaseService):
             "coverage_assessment": aggregate.get_coverage_assessment(),
         }
 
-    def _aggregate_to_dict(self, aggregate: DemandAnalysisAggregate) -> Dict:
-        """
-        Transform aggregate to dictionary for application layer.
 
-        Args:
-            aggregate: DemandAnalysisAggregate to transform
-
-        Returns:
-            Dict: Dictionary representation of the aggregate
-        """
-
-        return {
-            "postal_code": aggregate.postal_code.value,
-            "population": aggregate.population,
-            "station_count": aggregate.station_count,
-            "demand_priority": aggregate.demand_priority.level.value,
-            "residents_per_station": aggregate.demand_priority.residents_per_station,
-            "urgency_score": aggregate.demand_priority.get_urgency_score(),
-            "is_high_priority": aggregate.is_high_priority(),
-            "needs_expansion": aggregate.needs_infrastructure_expansion(),
-            "coverage_assessment": aggregate.get_coverage_assessment(),
-        }
