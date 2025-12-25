@@ -6,12 +6,12 @@ from typing import List, Dict, Optional
 
 from src.shared.domain.events import DomainEventBus
 from src.shared.domain.value_objects import PostalCode
-from src.demand.infrastructure.repositories import DemandAnalysisRepository
+from src.shared.application.services import BaseService
 from src.demand.domain.aggregates import DemandAnalysisAggregate
-from src.demand.domain.value_objects import DemandPriority
+from src.demand.infrastructure.repositories import DemandAnalysisRepository
 
 
-class DemandAnalysisService:
+class DemandAnalysisService(BaseService):
     """
     Application Service for calculating charging infrastructure demand.
 
@@ -20,7 +20,7 @@ class DemandAnalysisService:
     2. Calculate priority
     3. Publish events
     4. Return analysis results
-    
+
     Responsibilities:
     - Orchestrate use cases
     - Coordinate with repository
@@ -33,12 +33,9 @@ class DemandAnalysisService:
         repository: DemandAnalysisRepository,
         event_bus: DomainEventBus,
     ):
-        self._repository = repository
-        self._event_bus = event_bus
+        super().__init__(repository, event_bus)
 
-    def analyze_demand(
-        self, postal_code: str, population: int, station_count: int
-    ) -> Dict:
+    def analyze_demand(self, postal_code: str, population: int, station_count: int) -> Dict:
         """
         Use case: Analyze demand for a specific postal code area.
 
@@ -77,9 +74,7 @@ class DemandAnalysisService:
         # 6. Return analysis results
         return self._aggregate_to_dict(aggregate)
 
-    def analyze_multiple_areas(
-        self, areas: List[Dict[str, any]]
-    ) -> List[Dict]:
+    def analyze_multiple_areas(self, areas: List[Dict[str, any]]) -> List[Dict]:
         """
         Use case: Analyze demand for multiple postal code areas.
 
@@ -115,16 +110,10 @@ class DemandAnalysisService:
         """
 
         all_analyses = self._repository.find_all()
-        high_priority = [
-            self._aggregate_to_dict(agg)
-            for agg in all_analyses
-            if agg.is_high_priority()
-        ]
+        high_priority = [self._aggregate_to_dict(agg) for agg in all_analyses if agg.is_high_priority()]
 
         # Sort by urgency score (descending)
-        high_priority.sort(
-            key=lambda x: x["urgency_score"], reverse=True
-        )
+        high_priority.sort(key=lambda x: x["urgency_score"], reverse=True)
 
         return high_priority
 
@@ -147,9 +136,7 @@ class DemandAnalysisService:
 
         return self._aggregate_to_dict(aggregate)
 
-    def update_demand_analysis(
-        self, postal_code: str, population: int = None, station_count: int = None
-    ) -> Dict:
+    def update_demand_analysis(self, postal_code: str, population: int = None, station_count: int = None) -> Dict:
         """
         Use case: Update existing demand analysis with new data.
 
@@ -215,20 +202,6 @@ class DemandAnalysisService:
             "current_ratio": aggregate.get_residents_per_station(),
             "coverage_assessment": aggregate.get_coverage_assessment(),
         }
-
-    def _publish_events(self, aggregate: DemandAnalysisAggregate):
-        """
-        Publish all domain events from the aggregate.
-
-        Args:
-            aggregate: Aggregate with events to publish
-        """
-
-        events = aggregate.get_domain_events()
-        for event in events:
-            self._event_bus.publish(event)
-
-        aggregate.clear_domain_events()
 
     def _aggregate_to_dict(self, aggregate: DemandAnalysisAggregate) -> Dict:
         """

@@ -33,7 +33,7 @@ class PostalCodeResidentService(BaseService):
             List of PostalCode value objects.
         """
 
-        postal_codes: List[PostalCode] = self.repository.get_all_postal_codes()
+        postal_codes: List[PostalCode] = self._repository.get_all_postal_codes()
         if sort:
             postal_codes.sort(key=lambda plz: plz.value)
 
@@ -50,7 +50,7 @@ class PostalCodeResidentService(BaseService):
         Returns:
             ResidentDataAggregate: The resident data aggregate for the given postal code.
         """
-        residents_count: int = self.repository.get_residents_count(postal_code)
+        residents_count: int = self._repository.get_residents_count(postal_code)
 
         resident_data = ResidentDataAggregate(postal_code=postal_code, population=residents_count)
 

@@ -26,9 +26,7 @@ class ChargingStationService(BaseService):
             event_bus: Domain event bus.
         """
 
-        super().__init__(repository)
-
-        self._event_bus = event_bus
+        super().__init__(repository, event_bus)
 
     def search_by_postal_code(self, postal_code: PostalCode) -> PostalCodeAreaAggregate:
         """
@@ -44,20 +42,17 @@ class ChargingStationService(BaseService):
             PostalCodeAreaAggregate: Aggregate containing stations and coverage information.
         """
 
-        area = PostalCodeAreaAggregate(postal_code=postal_code)
+        aggregate = PostalCodeAreaAggregate(postal_code=postal_code)
 
-        stations: List[ChargingStation] = self.repository.find_stations_by_postal_code(postal_code)
+        stations: List[ChargingStation] = self._repository.find_stations_by_postal_code(postal_code)
         for station in stations:
-            area.add_station(station)
+            aggregate.add_station(station)
 
-        area.perform_search(search_parameters={"postal_code": postal_code.value})
+        aggregate.perform_search(search_parameters={"postal_code": postal_code.value})
 
-        for event in area.get_domain_events():
-            self._event_bus.publish(event)
+        self._publish_events(aggregate)
 
-        area.clear_events()
-
-        return area
+        return aggregate
 
     def find_stations_by_postal_code(self, postal_code: PostalCode) -> List[ChargingStation]:
         """
@@ -73,4 +68,4 @@ class ChargingStationService(BaseService):
             List[ChargingStation]: Collection of charging station entities in the area.
                                    Returns empty list if no stations found.
         """
-        return self.repository.find_stations_by_postal_code(postal_code)
+        return self._repository.find_stations_by_postal_code(postal_code)

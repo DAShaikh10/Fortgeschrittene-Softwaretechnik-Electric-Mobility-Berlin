@@ -13,7 +13,7 @@ class DemandAnalysisRepository(ABC):
     """
     Abstract base class for DemandAnalysisRepository.
     Defines the interface for accessing demand analysis data.
-    
+
     Repository Pattern: Provides collection-like interface for aggregates.
     Encapsulates data access logic and persistence details.
     """
@@ -26,7 +26,6 @@ class DemandAnalysisRepository(ABC):
         Args:
             aggregate: DemandAnalysisAggregate to save
         """
-        pass
 
     @abstractmethod
     def find_by_postal_code(self, postal_code: PostalCode) -> Optional[DemandAnalysisAggregate]:
@@ -39,7 +38,6 @@ class DemandAnalysisRepository(ABC):
         Returns:
             Optional[DemandAnalysisAggregate]: Found aggregate or None
         """
-        pass
 
     @abstractmethod
     def find_all(self) -> List[DemandAnalysisAggregate]:
@@ -49,7 +47,6 @@ class DemandAnalysisRepository(ABC):
         Returns:
             List[DemandAnalysisAggregate]: All saved aggregates
         """
-        pass
 
     @abstractmethod
     def delete(self, postal_code: PostalCode) -> bool:
@@ -62,7 +59,6 @@ class DemandAnalysisRepository(ABC):
         Returns:
             bool: True if deleted, False if not found
         """
-        pass
 
     @abstractmethod
     def exists(self, postal_code: PostalCode) -> bool:
@@ -75,7 +71,6 @@ class DemandAnalysisRepository(ABC):
         Returns:
             bool: True if exists, False otherwise
         """
-        pass
 
     @abstractmethod
     def count(self) -> int:
@@ -85,4 +80,3 @@ class DemandAnalysisRepository(ABC):
         Returns:
             int: Total count
         """
-        pass

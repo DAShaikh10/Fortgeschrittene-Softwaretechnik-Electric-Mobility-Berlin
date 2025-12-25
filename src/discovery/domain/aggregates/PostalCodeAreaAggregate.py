@@ -7,11 +7,12 @@ from dataclasses import dataclass, field
 
 from src.shared.domain.entities import ChargingStation
 from src.shared.domain.value_objects import PostalCode
+from src.shared.domain.aggregates.BaseAggregate import BaseAggregate
 from src.shared.domain.events import DomainEvent, StationSearchPerformedEvent
 
 
 @dataclass
-class PostalCodeAreaAggregate:
+class PostalCodeAreaAggregate(BaseAggregate):
     """
     Aggregate Root: Represents a postal code area with its charging infrastructure.
     """
@@ -116,20 +117,3 @@ class PostalCodeAreaAggregate:
                 search_parameters=search_parameters,
             )
         )
-
-    def get_domain_events(self) -> List[DomainEvent]:
-        """
-        Return collected domain events.
-
-        Returns:
-            List[DomainEvent]: List of domain events.
-        """
-
-        return self._domain_events.copy()
-
-    def clear_events(self):
-        """
-        Clear events after publishing.
-        """
-
-        self._domain_events.clear()
