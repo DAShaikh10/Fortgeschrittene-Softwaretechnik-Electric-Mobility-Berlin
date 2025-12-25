@@ -169,12 +169,11 @@ class DemandAnalysisAggregate:
 
         if ratio > 10000:
             return "CRITICAL"
-        elif ratio > 5000:
+        if ratio > 5000:
             return "POOR"
-        elif ratio > 2000:
+        if ratio > 2000:
             return "ADEQUATE"
-        else:
-            return "GOOD"
+        return "GOOD"
 
     def calculate_recommended_stations(self, target_ratio: float = 2000.0) -> int:
         """

@@ -13,14 +13,15 @@ import streamlit
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+import pandas as pd
+
+
 from streamlit_folium import folium_static
 
 from src.shared.domain.events import DomainEventBus
-from src.shared.domain.entities import ChargingStation
 from src.shared.domain.value_objects import GeoLocation, PostalCode
 from src.shared.application.services import ChargingStationService, GeoLocationService, PostalCodeResidentService
 from src.demand.application.services import DemandAnalysisService
-from src.discovery.domain.aggregates import PostalCodeAreaAggregate
 
 
 class StreamlitApp:
@@ -205,7 +206,6 @@ class StreamlitApp:
             This feature is planned for future implementation.
         """
         # TODO: Implement residents visualization using population data
-        pass
 
     def _render_charging_stations_layer(self, folium_map: folium.Map, selected_postal_code: str):
         """
@@ -364,11 +364,13 @@ class StreamlitApp:
             postal_code_area = self.charging_station_service.search_by_postal_code(postal_code)
 
             if resident_data and postal_code_area:
-                areas_data.append({
-                    "postal_code": postal_code.value,
-                    "population": resident_data.get_population(),
-                    "station_count": postal_code_area.get_station_count(),
-                })
+                areas_data.append(
+                    {
+                        "postal_code": postal_code.value,
+                        "population": resident_data.get_population(),
+                        "station_count": postal_code_area.get_station_count(),
+                    }
+                )
 
         # Perform batch analysis
         if areas_data:
@@ -389,14 +391,12 @@ class StreamlitApp:
                         streamlit.metric("Population", f"{analysis['population']:,}")
 
                     with col2:
-                        streamlit.metric("Charging Stations", analysis['station_count'])
+                        streamlit.metric("Charging Stations", analysis["station_count"])
 
                     with col3:
-                        priority_color = {
-                            "High": "🔴",
-                            "Medium": "🟡",
-                            "Low": "🟢"
-                        }.get(analysis['demand_priority'], "⚪")
+                        priority_color = {"High": "🔴", "Medium": "🟡", "Low": "🟢"}.get(
+                            analysis["demand_priority"], "⚪"
+                        )
                         streamlit.metric("Priority", f"{priority_color} {analysis['demand_priority']}")
 
                     with col4:
@@ -413,7 +413,7 @@ class StreamlitApp:
                         streamlit.info(f"**Urgency Score**\n\n{analysis['urgency_score']:.0f}/100")
 
                     with col_assess3:
-                        expansion_status = "✅ Yes" if analysis['needs_expansion'] else "❌ No"
+                        expansion_status = "✅ Yes" if analysis["needs_expansion"] else "❌ No"
                         streamlit.info(f"**Needs Expansion**\n\n{expansion_status}")
 
                     # Recommendations
@@ -424,24 +424,24 @@ class StreamlitApp:
                         selected_postal_code, target_ratio=2000.0
                     )
 
-                    if recommendations['recommended_additional_stations'] > 0:
+                    if recommendations["recommended_additional_stations"] > 0:
                         streamlit.warning(
                             f"🚨 **Action Needed**: This area requires approximately "
                             f"**{recommendations['recommended_additional_stations']} additional charging stations** "
                             f"to meet the target ratio of 2,000 residents per station."
                         )
                     else:
-                        streamlit.success(
-                            "✅ This area has adequate charging infrastructure coverage."
-                        )
+                        streamlit.success("✅ This area has adequate charging infrastructure coverage.")
 
-                    streamlit.markdown(f"""
+                    streamlit.markdown(
+                        f"""
                     **Infrastructure Status:**
                     - Current stations: {recommendations['current_stations']}
                     - Recommended total: {recommendations['recommended_total_stations']}
                     - Current ratio: {recommendations['current_ratio']:.0f} residents/station
                     - Target ratio: {recommendations['target_ratio']:.0f} residents/station
-                    """)
+                    """
+                    )
                 else:
                     streamlit.warning(f"No analysis data available for {selected_postal_code}")
 
@@ -456,44 +456,51 @@ class StreamlitApp:
                 streamlit.markdown(f"**🔴 {len(high_priority_areas)} High Priority Areas Identified**")
 
                 # Display high priority areas
-                import pandas as pd
                 high_priority_df = pd.DataFrame(high_priority_areas)
-                high_priority_df = high_priority_df[[
-                    'postal_code', 'population', 'station_count',
-                    'residents_per_station', 'urgency_score', 'coverage_assessment'
-                ]]
-                high_priority_df.columns = [
-                    'Postal Code', 'Population', 'Stations',
-                    'Residents/Station', 'Urgency Score', 'Coverage'
+                high_priority_df = high_priority_df[
+                    [
+                        "postal_code",
+                        "population",
+                        "station_count",
+                        "residents_per_station",
+                        "urgency_score",
+                        "coverage_assessment",
+                    ]
                 ]
-                high_priority_df = high_priority_df.sort_values('Urgency Score', ascending=False)
+                high_priority_df.columns = [
+                    "Postal Code",
+                    "Population",
+                    "Stations",
+                    "Residents/Station",
+                    "Urgency Score",
+                    "Coverage",
+                ]
+                high_priority_df = high_priority_df.sort_values("Urgency Score", ascending=False)
 
-                streamlit.dataframe(
-                    high_priority_df,
-                    use_container_width=True,
-                    hide_index=True
-                )
+                streamlit.dataframe(high_priority_df, use_container_width=True, hide_index=True)
 
             # Display overview table with color-coded priority visualization
             streamlit.markdown("---")
             streamlit.subheader("📊 All Areas Analysis")
 
-            import pandas as pd
             results_df = pd.DataFrame(results)
-            results_df = results_df[[
-                'postal_code', 'population', 'station_count',
-                'demand_priority', 'residents_per_station', 'coverage_assessment'
-            ]]
-            results_df.columns = [
-                'Postal Code', 'Population', 'Stations',
-                'Priority', 'Residents/Station', 'Coverage'
+            results_df = results_df[
+                [
+                    "postal_code",
+                    "population",
+                    "station_count",
+                    "demand_priority",
+                    "residents_per_station",
+                    "coverage_assessment",
+                ]
             ]
+            results_df.columns = ["Postal Code", "Population", "Stations", "Priority", "Residents/Station", "Coverage"]
 
             # Sort by priority level and then by residents per station ratio
-            priority_order = {'High': 0, 'Medium': 1, 'Low': 2}
-            results_df['priority_rank'] = results_df['Priority'].map(priority_order)
-            results_df = results_df.sort_values(['priority_rank', 'Residents/Station'], ascending=[True, False])
-            results_df = results_df.drop('priority_rank', axis=1)
+            priority_order = {"High": 0, "Medium": 1, "Low": 2}
+            results_df["priority_rank"] = results_df["Priority"].map(priority_order)
+            results_df = results_df.sort_values(["priority_rank", "Residents/Station"], ascending=[True, False])
+            results_df = results_df.drop("priority_rank", axis=1)
 
             # Apply professional color scheme for enhanced readability
             def highlight_priority(row):
@@ -512,20 +519,15 @@ class StreamlitApp:
                     List of CSS style strings for each cell in the row.
                 """
 
-                if row['Priority'] == 'High':
-                    return ['background-color: #ff6b6b; color: white; font-weight: bold'] * len(row)
-                elif row['Priority'] == 'Medium':
+                if row["Priority"] == "High":
+                    return ["background-color: #ff6b6b; color: white; font-weight: bold"] * len(row)
+                if row['Priority'] == 'Medium':
                     return ['background-color: #ffd93d; color: black; font-weight: bold'] * len(row)
-                else:
-                    return ['background-color: #6bcf7f; color: white; font-weight: bold'] * len(row)
+                return ['background-color: #6bcf7f; color: white; font-weight: bold'] * len(row)
 
             styled_df = results_df.style.apply(highlight_priority, axis=1)
 
-            streamlit.dataframe(
-                styled_df,
-                use_container_width=True,
-                hide_index=True
-            )
+            streamlit.dataframe(styled_df, use_container_width=True, hide_index=True)
 
             # Summary statistics
             streamlit.markdown("---")
@@ -533,9 +535,9 @@ class StreamlitApp:
 
             col_stat1, col_stat2, col_stat3 = streamlit.columns(3)
 
-            high_count = len([r for r in results if r['demand_priority'] == 'High'])
-            medium_count = len([r for r in results if r['demand_priority'] == 'Medium'])
-            low_count = len([r for r in results if r['demand_priority'] == 'Low'])
+            high_count = len([r for r in results if r["demand_priority"] == "High"])
+            medium_count = len([r for r in results if r["demand_priority"] == "Medium"])
+            low_count = len([r for r in results if r["demand_priority"] == "Low"])
 
             with col_stat1:
                 streamlit.metric("🔴 High Priority Areas", high_count)

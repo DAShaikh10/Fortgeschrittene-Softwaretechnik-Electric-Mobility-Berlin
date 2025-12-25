@@ -116,12 +116,11 @@ class DemandPriority:
         """
         if self.residents_per_station >= 10000:
             return 100.0  # Critical infrastructure shortage
-        elif self.residents_per_station >= 5000:
+        if self.residents_per_station >= 5000:
             return 75.0   # High demand area
-        elif self.residents_per_station >= 2000:
+        if self.residents_per_station >= 2000:
             return 50.0   # Moderate demand
-        else:
-            return 25.0   # Adequate coverage
+        return 25.0   # Adequate coverage
 
     def __str__(self) -> str:
         return f"{self.level.value} ({self.residents_per_station:.0f} residents/station)"

@@ -23,9 +23,7 @@ class GeoLocationService(BaseService):
             event_bus (DomainEventBus): Domain event bus.
         """
 
-        super().__init__(repository)
-
-        self._event_bus = event_bus
+        super().__init__(repository, event_bus)
 
     def get_geolocation_data_for_postal_code(self, postal_code: PostalCode) -> GeoLocation:
         """
@@ -38,4 +36,4 @@ class GeoLocationService(BaseService):
             GeoLocation: Geographic location data for the given postal code or None if not found.
         """
 
-        return self.repository.fetch_geolocation_data(postal_code)
+        return self._repository.fetch_geolocation_data(postal_code)
