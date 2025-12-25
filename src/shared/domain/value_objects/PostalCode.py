@@ -1,5 +1,5 @@
 """
-Shared Domain Valeu Object - Postal Code
+Shared Domain Value Object - Postal Code
 """
 
 from dataclasses import dataclass

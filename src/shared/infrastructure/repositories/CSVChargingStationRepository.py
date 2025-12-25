@@ -50,10 +50,12 @@ class CSVChargingStationRepository(ChargingStationRepository, CSVRepository):
             inplace=True,  # In-place and hence no reassignment needed.
         )
 
-        # Ensure string type for comparison and replace ',' with '.' for decimal consistency.
+        # Normalize data types and decimal separators for consistent processing.
+        # German CSV format uses comma as decimal separator; convert to period for Python float parsing.
         self._df["PLZ"] = self._df["PLZ"].astype(str)
         self._df["Breitengrad"] = self._df["Breitengrad"].astype(str).str.replace(",", ".")
         self._df["Längengrad"] = self._df["Längengrad"].astype(str).str.replace(",", ".")
+        self._df["KW"] = self._df["KW"].astype(str).str.replace(",", ".")
 
     def find_stations_by_postal_code(self, postal_code: PostalCode) -> List[ChargingStation]:
         """

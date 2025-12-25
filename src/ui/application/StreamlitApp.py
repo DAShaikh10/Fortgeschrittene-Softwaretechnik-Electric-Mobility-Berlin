@@ -116,9 +116,6 @@ class StreamlitApp:
         streamlit.sidebar.header("📊 Layer Selection")
         streamlit.sidebar.radio("Select Layer", layer_options)
 
-        streamlit.sidebar.markdown("---")
-        streamlit.sidebar.checkbox("📈 Show Demand Analysis", value=False)
-
     # TODO: Needs rework. This is AI generated :)
     def _render_about(self) -> None:
         """Render about/information view."""
@@ -190,74 +187,307 @@ class StreamlitApp:
 
         return [52.52, 13.40], 10
 
-    def _render_residents_layer(self):
+    def _render_residents_layer(self, folium_map: folium.Map):
         """
-        Add residents heatmap layer to the map.
+        Render population density heatmap layer on the map.
+
+        Args:
+            folium_map (folium.Map): The Folium map object to add layer to.
+
+        Note:
+            This feature is planned for future implementation.
         """
+        # TODO: Implement residents visualization using population data
+        pass
 
-    def _render_charging_stations_layer(self, selected_postal_code: str):
+    def _render_charging_stations_layer(self, folium_map: folium.Map, selected_postal_code: str):
         """
-        Add charging stations heatmap layer to the map.
+        Render charging station markers on the map for the selected area.
+
+        This method visualizes individual charging stations as interactive markers
+        with popup information including postal code and power capacity.
+
+        Args:
+            folium_map (folium.Map): The Folium map object to add markers to.
+            selected_postal_code (str): The postal code to display stations for.
+
+        Behavior:
+            - For specific postal code: Displays all stations in that area
+            - For "All areas": Shows informational message (avoid map clutter)
+
+        Raises:
+            Displays error message in UI if station data cannot be loaded.
         """
-
-        areas = None
-        if selected_postal_code not in ("", "All areas"):
-            areas = PostalCodeAreaAggregate(postal_code=PostalCode(selected_postal_code))
-        else:
-            areas = self.charging_station_service.get_stations_for_all_postal_codes()
-
-        stations: List[ChargingStation] = self.charging_station_service.find_stations_by_postal_code(
-            PostalCode(selected_postal_code)
-        )
-        for station in stations:
-            areas.add_station(station)
-
-        # TODO: Adjust using actual aggregate or data.
-        min_station_count = 0
-        max_station_count = 0
-        color_map = folium.LinearColormap(
-            colors=["yellow", "red"],
-            vmin=min_station_count,
-            vmax=max_station_count,
-        )
-
-        for _, row in areas.iterrows():
-            is_selected = selected_postal_code not in ("", "All areas") and row["PLZ"] == selected_postal_code
-            folium.GeoJson(
-                row["geometry"],
-                style_function=lambda _, color=color_map(row["Number"]), is_sel=is_selected: {
-                    "fillColor": color,
-                    "color": "blue" if is_sel else "black",
-                    "weight": 4 if is_sel else 1,
-                    "fillOpacity": 0.9 if is_sel else 0.7,
-                },
-                tooltip=f"PLZ: {row['PLZ']}, Number: {row['Number']}" + (" ⭐ SELECTED" if is_selected else ""),
-            ).add_to(map)
-
-            color_map.add_to(map)
+        try:
+            if selected_postal_code and selected_postal_code not in ("", "All areas"):
+                # Retrieve stations for the selected postal code area
+                postal_code_obj = PostalCode(selected_postal_code)
+                area = self.charging_station_service.search_by_postal_code(postal_code_obj)
+                
+                # Create interactive map marker for each charging station
+                for station in area.stations:
+                    folium.CircleMarker(
+                        location=[station.latitude, station.longitude],
+                        radius=5,
+                        popup=f"PLZ: {station.postal_code.value}<br>Power: {station.power_kw} kW",
+                        color="green",
+                        fill=True,
+                        fillColor="green",
+                        fillOpacity=0.7,
+                    ).add_to(folium_map)
+            else:
+                # Prevent map clutter when viewing all areas
+                streamlit.info("Select a specific postal code to view charging stations on the map.")
+        except Exception as e:
+            # Handle and display any errors gracefully in the UI
+            streamlit.error(f"Error loading charging stations: {e}")
 
     def _render_map_view(self, selected_postal_code: str, layer_selection: str):
         """
-        Render map view with charging stations and residents.
+        Render interactive map view with user-selected data layers.
 
+        Creates a Folium map centered on the selected area and overlays
+        the chosen visualization layer (residents or charging stations).
+
+        Args:
+            selected_postal_code (str): Postal code to center map on.
+            layer_selection (str): Layer type to display ("Residents" or "All Charging Stations").
         """
-
+        # Calculate optimal map center and zoom level for selected area
         map_center, map_zoom = self._get_map_center_and_zoom(selected_postal_code)
         folium_map = folium.Map(location=map_center, zoom_start=map_zoom)
 
-        # Render selected layer.
+        # Render the appropriate data layer based on user selection
         if layer_selection == "Residents":
-            self._render_residents_layer()
+            self._render_residents_layer(folium_map)
         elif layer_selection == "All Charging Stations":
-            self._render_charging_stations_layer(selected_postal_code)
-        # else:
-        #     if self.dfr_by_kw and layer_selection in self.dfr_by_kw:
-        #         self._render_kw_layer(map, self.dfr_by_kw[layer_selection], layer_selection, selected_postal_code)
+            self._render_charging_stations_layer(folium_map, selected_postal_code)
 
+        # Display the map in Streamlit with responsive dimensions
         folium_static(folium_map, width=1400, height=800)
 
-    def _render_demand_analysis(self, a):
-        pass
+    def _render_demand_analysis(self, selected_postal_code: str):
+        """
+        Render comprehensive demand analysis dashboard with priority assessment.
+
+        This method implements the complete demand analysis view, providing:
+        - Detailed metrics for individual postal code areas
+        - Infrastructure recommendations based on demand priority
+        - Comprehensive overview table for all areas
+        - Summary statistics with visual priority indicators
+
+        The analysis uses the Demand bounded context to calculate priority levels
+        based on population-to-station ratios, following industry best practices.
+
+        Args:
+            selected_postal_code (str): The postal code selected for detailed analysis.
+                                       Use "All areas" for overview only.
+
+        Analysis Workflow:
+            1. Collect population and station data for all areas
+            2. Perform batch demand analysis via DemandAnalysisService
+            3. Display detailed metrics for selected area (if applicable)
+            4. Show high-priority areas requiring immediate attention
+            5. Present complete overview with color-coded priorities
+            6. Provide summary statistics
+        """
+        streamlit.header("📊 EV Charging Infrastructure Demand Analysis")
+        streamlit.markdown("*Analyzing population density and charging station coverage*")
+
+        # Retrieve all postal codes for comprehensive analysis
+        postal_codes = self.postal_code_residents_service.get_all_postal_codes(sort=True)
+
+        # Collect data for demand analysis from both resident and station services
+        areas_data = []
+        for postal_code in postal_codes:
+            resident_data = self.postal_code_residents_service.get_resident_data(postal_code)
+            postal_code_area = self.charging_station_service.search_by_postal_code(postal_code)
+
+            if resident_data and postal_code_area:
+                areas_data.append({
+                    "postal_code": postal_code.value,
+                    "population": resident_data.get_population(),
+                    "station_count": postal_code_area.get_station_count(),
+                })
+
+        # Perform batch analysis
+        if areas_data:
+            results = self.demand_analysis_service.analyze_multiple_areas(areas_data)
+
+            # If specific postal code selected, show detailed analysis
+            if selected_postal_code and selected_postal_code != "All areas":
+                streamlit.subheader(f"🔍 Detailed Analysis: {selected_postal_code}")
+
+                # Get specific analysis
+                analysis = self.demand_analysis_service.get_demand_analysis(selected_postal_code)
+
+                if analysis:
+                    # Display metrics in columns
+                    col1, col2, col3, col4 = streamlit.columns(4)
+
+                    with col1:
+                        streamlit.metric("Population", f"{analysis['population']:,}")
+
+                    with col2:
+                        streamlit.metric("Charging Stations", analysis['station_count'])
+
+                    with col3:
+                        priority_color = {
+                            "High": "🔴",
+                            "Medium": "🟡",
+                            "Low": "🟢"
+                        }.get(analysis['demand_priority'], "⚪")
+                        streamlit.metric("Priority", f"{priority_color} {analysis['demand_priority']}")
+
+                    with col4:
+                        streamlit.metric("Residents/Station", f"{analysis['residents_per_station']:.0f}")
+
+                    # Coverage assessment
+                    streamlit.markdown("---")
+                    col_assess1, col_assess2, col_assess3 = streamlit.columns(3)
+
+                    with col_assess1:
+                        streamlit.info(f"**Coverage Assessment**\n\n{analysis['coverage_assessment']}")
+
+                    with col_assess2:
+                        streamlit.info(f"**Urgency Score**\n\n{analysis['urgency_score']:.0f}/100")
+
+                    with col_assess3:
+                        expansion_status = "✅ Yes" if analysis['needs_expansion'] else "❌ No"
+                        streamlit.info(f"**Needs Expansion**\n\n{expansion_status}")
+
+                    # Recommendations
+                    streamlit.markdown("---")
+                    streamlit.subheader("💡 Recommendations")
+
+                    recommendations = self.demand_analysis_service.get_recommendations(
+                        selected_postal_code, target_ratio=2000.0
+                    )
+
+                    if recommendations['recommended_additional_stations'] > 0:
+                        streamlit.warning(
+                            f"🚨 **Action Needed**: This area requires approximately "
+                            f"**{recommendations['recommended_additional_stations']} additional charging stations** "
+                            f"to meet the target ratio of 2,000 residents per station."
+                        )
+                    else:
+                        streamlit.success(
+                            "✅ This area has adequate charging infrastructure coverage."
+                        )
+
+                    streamlit.markdown(f"""
+                    **Infrastructure Status:**
+                    - Current stations: {recommendations['current_stations']}
+                    - Recommended total: {recommendations['recommended_total_stations']}
+                    - Current ratio: {recommendations['current_ratio']:.0f} residents/station
+                    - Target ratio: {recommendations['target_ratio']:.0f} residents/station
+                    """)
+                else:
+                    streamlit.warning(f"No analysis data available for {selected_postal_code}")
+
+            # Show overview table
+            streamlit.markdown("---")
+            streamlit.subheader("📋 Overview: All Postal Code Areas")
+
+            # Get high priority areas
+            high_priority_areas = self.demand_analysis_service.get_high_priority_areas()
+
+            if high_priority_areas:
+                streamlit.markdown(f"**🔴 {len(high_priority_areas)} High Priority Areas Identified**")
+
+                # Display high priority areas
+                import pandas as pd
+                high_priority_df = pd.DataFrame(high_priority_areas)
+                high_priority_df = high_priority_df[[
+                    'postal_code', 'population', 'station_count',
+                    'residents_per_station', 'urgency_score', 'coverage_assessment'
+                ]]
+                high_priority_df.columns = [
+                    'Postal Code', 'Population', 'Stations',
+                    'Residents/Station', 'Urgency Score', 'Coverage'
+                ]
+                high_priority_df = high_priority_df.sort_values('Urgency Score', ascending=False)
+
+                streamlit.dataframe(
+                    high_priority_df,
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+            # Display overview table with color-coded priority visualization
+            streamlit.markdown("---")
+            streamlit.subheader("📊 All Areas Analysis")
+
+            import pandas as pd
+            results_df = pd.DataFrame(results)
+            results_df = results_df[[
+                'postal_code', 'population', 'station_count',
+                'demand_priority', 'residents_per_station', 'coverage_assessment'
+            ]]
+            results_df.columns = [
+                'Postal Code', 'Population', 'Stations',
+                'Priority', 'Residents/Station', 'Coverage'
+            ]
+
+            # Sort by priority level and then by residents per station ratio
+            priority_order = {'High': 0, 'Medium': 1, 'Low': 2}
+            results_df['priority_rank'] = results_df['Priority'].map(priority_order)
+            results_df = results_df.sort_values(['priority_rank', 'Residents/Station'], ascending=[True, False])
+            results_df = results_df.drop('priority_rank', axis=1)
+
+            # Apply professional color scheme for enhanced readability
+            def highlight_priority(row):
+                """
+                Apply color-coded styling to table rows based on demand priority.
+
+                Color Scheme:
+                    - High Priority: Dark red (#ff6b6b) with white bold text
+                    - Medium Priority: Gold (#ffd93d) with black bold text
+                    - Low Priority: Green (#6bcf7f) with white bold text
+
+                Args:
+                    row: DataFrame row to style.
+
+                Returns:
+                    List of CSS style strings for each cell in the row.
+                """
+
+                if row['Priority'] == 'High':
+                    return ['background-color: #ff6b6b; color: white; font-weight: bold'] * len(row)
+                elif row['Priority'] == 'Medium':
+                    return ['background-color: #ffd93d; color: black; font-weight: bold'] * len(row)
+                else:
+                    return ['background-color: #6bcf7f; color: white; font-weight: bold'] * len(row)
+
+            styled_df = results_df.style.apply(highlight_priority, axis=1)
+
+            streamlit.dataframe(
+                styled_df,
+                use_container_width=True,
+                hide_index=True
+            )
+
+            # Summary statistics
+            streamlit.markdown("---")
+            streamlit.subheader("📈 Summary Statistics")
+
+            col_stat1, col_stat2, col_stat3 = streamlit.columns(3)
+
+            high_count = len([r for r in results if r['demand_priority'] == 'High'])
+            medium_count = len([r for r in results if r['demand_priority'] == 'Medium'])
+            low_count = len([r for r in results if r['demand_priority'] == 'Low'])
+
+            with col_stat1:
+                streamlit.metric("🔴 High Priority Areas", high_count)
+
+            with col_stat2:
+                streamlit.metric("🟡 Medium Priority Areas", medium_count)
+
+            with col_stat3:
+                streamlit.metric("🟢 Low Priority Areas", low_count)
+
+        else:
+            streamlit.warning("No data available for demand analysis.")
 
     def _render_main_content(self):
         """
@@ -266,11 +496,11 @@ class StreamlitApp:
 
         # Get session state.
         selected_plz = streamlit.session_state.get("selected_plz", "All areas")
-        show_demand = streamlit.session_state.get("show_demand", True)
+        layer_selection = streamlit.session_state.get("layer_selection", "All Charging Stations")
 
         main_tab, demand_analysis_tab, about_tab = streamlit.tabs(["🗺️ Map View", "📊 Demand Analysis", "ℹ️ About"])
         with main_tab:
-            self._render_map_view(selected_plz, show_demand)
+            self._render_map_view(selected_plz, layer_selection)
 
         with demand_analysis_tab:
             self._render_demand_analysis(selected_plz)

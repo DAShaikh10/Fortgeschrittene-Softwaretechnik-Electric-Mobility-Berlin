@@ -59,12 +59,18 @@ class ChargingStationService(BaseService):
 
         return area
 
-    def get_stations_for_all_postal_codes(self) -> List[PostalCodeAreaAggregate]:
+    def find_stations_by_postal_code(self, postal_code: PostalCode) -> List[ChargingStation]:
         """
-        Get All Stations for All Postal Codes.
+        Retrieve all charging stations located within a specific postal code area.
+
+        This method provides a simple query interface for retrieving station entities
+        without the full aggregate context. Useful for lightweight data access scenarios.
+
+        Args:
+            postal_code (PostalCode): The postal code value object to query.
 
         Returns:
-            List of PostalCodeAreaAggregate with stations for all postal codes.
+            List[ChargingStation]: Collection of charging station entities in the area.
+                                   Returns empty list if no stations found.
         """
-
-        self.repository.get_stations_for_all_postal_codes()
+        return self.repository.find_stations_by_postal_code(postal_code)
