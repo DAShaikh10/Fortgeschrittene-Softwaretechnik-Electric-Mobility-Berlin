@@ -2,10 +2,12 @@
 Base CSV Repository Module.
 """
 
+from abc import ABC
+
 import pandas as pd
 
 
-class CSVRepository:
+class CSVRepository(ABC):
     """
     Base class for CSV-based repositories.
     Provides common functionality for loading CSV files.
