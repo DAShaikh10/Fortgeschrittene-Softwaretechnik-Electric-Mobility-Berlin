@@ -38,6 +38,7 @@ class StreamlitApp:
         demand_analysis_service: DemandAnalysisService,
         power_capacity_service: PowerCapacityService,
         event_bus: DomainEventBus,
+        valid_plzs: list[int],
     ):
         """
         Initialize EVision Berlin Streamlit application.
@@ -49,6 +50,7 @@ class StreamlitApp:
             demand_analysis_service (DemandAnalysisService): Service for demand analysis.
             power_capacity_service (PowerCapacityService): Service for power capacity analysis.
             event_bus (DomainEventBus): Domain event bus.
+            valid_plzs (list[int]): List of valid Berlin postal codes for validation.
         """
 
         self.postal_code_residents_service = postal_code_residents_service
@@ -57,6 +59,38 @@ class StreamlitApp:
         self.demand_analysis_service = demand_analysis_service
         self.power_capacity_service = power_capacity_service
         self.event_bus = event_bus
+        self.valid_plzs = valid_plzs
+
+    def _validate_plz_input(self, plz_input: str) -> tuple[bool, str]:
+        """
+        Validates a postal code input string against Berlin requirements.
+
+        Clean Code Principle: Single Responsibility (Validation Logic).
+
+        Args:
+            plz_input (str): The raw input string from the user.
+
+        Returns:
+            tuple[bool, str]: A tuple containing (is_valid, error_message).
+        """
+        # 1. Handle empty input (User reset the search -> "All areas")
+        if not plz_input:
+            return True, ""
+
+        # 2. Check format: Digits only
+        if not plz_input.isdigit():
+            return False, "⚠️ Invalid Format: Input must contain only digits."
+
+        # 3. Check format: Length (German PLZ are 5 digits)
+        if len(plz_input) != 5:
+            return False, "⚠️ Invalid Format: Postal code must be exactly 5 digits."
+
+        # 4. Check domain validity: Is it in Berlin?
+        plz_int = int(plz_input)
+        if plz_int not in self.valid_plzs:
+            return False, f"⚠️ Out of Scope: PLZ {plz_input} is not within the Berlin area."
+
+        return True, ""
 
     def _handle_search(self, selected_plz: str):
         """
@@ -68,11 +102,10 @@ class StreamlitApp:
         Returns:
             Dict of options for sidebar.
         """
-
-        # TODO: Add validation failure case.
         postal_code_area = None
         resident_data = None
-        if selected_plz != "All areas":
+        
+        if selected_plz and selected_plz != "All areas":
             postal_code_object = PostalCode(selected_plz)
 
             # Use Case: Search stations by postal code (returns aggregate).
@@ -94,22 +127,40 @@ class StreamlitApp:
         streamlit.sidebar.markdown("---")
         streamlit.sidebar.subheader("📍 Search by Postal Code")
 
-        # Query: Get all available postal codes
-        postal_codes = self.postal_code_residents_service.get_all_postal_codes(sort=True)
-        postal_code_options = ["All areas"] + PostalCode.get_values(postal_codes)
-        selected_plz = streamlit.sidebar.selectbox(
-            "Select Postal Code:", options=postal_code_options, key="postal_code_search"
+        # Replace selectbox with text_input for flexible entry and validation
+        plz_input = streamlit.sidebar.text_input(
+            "Enter Postal Code:", 
+            key="postal_code_input",
+            help="Enter a 5-digit Berlin Postal Code (e.g., 10117) or leave empty for all areas."
         )
 
-        # Store in session state.
-        streamlit.session_state["selected_plz"] = selected_plz
+        # Perform Validation
+        is_valid, error_msg = self._validate_plz_input(plz_input)
+        
+        selected_plz = "All areas"  # Default
 
-        postal_code_area, resident_data = self._handle_search(selected_plz)
-        if postal_code_area and resident_data:
-            info_parts = []
-            info_parts.append(f"👥 Pop: {resident_data.get_population():,}")
-            info_parts.append(f"⚡ Stations: {postal_code_area.get_station_count()}")
-            streamlit.sidebar.info("\n\n".join(info_parts))
+        if not is_valid:
+            streamlit.sidebar.error(error_msg)
+            # Stop processing search if invalid
+            postal_code_area = None
+            resident_data = None
+        else:
+            if plz_input:
+                selected_plz = plz_input
+            
+            # Store in session state.
+            streamlit.session_state["selected_plz"] = selected_plz
+
+            postal_code_area, resident_data = self._handle_search(selected_plz)
+            
+            if postal_code_area and resident_data:
+                info_parts = []
+                info_parts.append(f"👥 Pop: {resident_data.get_population():,}")
+                info_parts.append(f"⚡ Stations: {postal_code_area.get_station_count()}")
+                streamlit.sidebar.info("\n\n".join(info_parts))
+            elif selected_plz != "All areas":
+                # Handle edge case where PLZ is valid geodata but has no resident/station data
+                streamlit.sidebar.warning(f"PLZ {selected_plz} is valid, but no data available.")
 
         # Visualization mode view options.
         streamlit.sidebar.markdown("---")

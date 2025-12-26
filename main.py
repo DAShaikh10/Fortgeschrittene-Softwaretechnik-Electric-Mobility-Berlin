@@ -6,7 +6,6 @@ for analyzing electric vehicle charging infrastructure in Berlin.
 """
 
 import os
-
 from pathlib import Path
 
 from config import pdict  # Serves as the project configuration dictionary.
@@ -19,7 +18,12 @@ from src.shared.infrastructure.repositories import (
     CSVGeoDataRepository,
     CSVPopulationRepository,
 )
-from src.shared.application.services import ChargingStationService, GeoLocationService, PostalCodeResidentService, PowerCapacityService
+from src.shared.application.services import (
+    ChargingStationService, 
+    GeoLocationService, 
+    PostalCodeResidentService, 
+    PowerCapacityService
+)
 from src.demand.application.services import DemandAnalysisService
 from src.demand.domain.events import DemandAnalysisCalculatedEvent, HighDemandAreaIdentifiedEvent
 from src.demand.infrastructure.repositories import InMemoryDemandAnalysisRepository
@@ -30,12 +34,10 @@ logger = get_logger(__name__)
 def setup_repositories():
     """
     Setup all repository instances.
-
     Returns:
         Tuple of (charging_station_repo, geo_data_repo, population_repo, demand_analysis_repo)
     """
-
-    # Determine the current working directory so that the rest of the code can use relative paths correctly.
+    # Determine the current working directory.
     cwd = Path(os.getcwd())
     dataset_folder: str | None = cwd / pdict["dataset_folder"]
 
@@ -57,14 +59,6 @@ def setup_services(
 ):
     """
     Setup all application services.
-
-    Args:
-        charging_station_repo: Repository for charging stations.
-        geo_data_repo: Repository for geographic data.
-        population_repo: Repository for population data.
-        demand_analysis_repo: Repository for demand analyses.
-        event_bus: Domain event bus.
-
     Returns:
         Tuple of (postal_code_residents_service, charging_station_service, geolocation_service, demand_analysis_service, power_capacity_service)
     """
@@ -92,11 +86,7 @@ def setup_services(
 def setup_event_handlers(event_bus: DomainEventBus):
     """
     Setup event handlers for domain events.
-
-    Args:
-        event_bus: Domain event bus to register handlers with.
     """
-
     # Subscribe handlers.
     event_bus.subscribe(StationSearchPerformedEvent, StationSearchPerformedEvent.log_station_search)
     event_bus.subscribe(DemandAnalysisCalculatedEvent, DemandAnalysisCalculatedEvent.log_demand_calculation)
@@ -105,16 +95,8 @@ def setup_event_handlers(event_bus: DomainEventBus):
 
 def main():
     """
-    Main: Prepares EVision Berlin Streamlit Application for visualizing electric charging stations
-    & residents in Berlin with power categories and search functionality.
-
-    This function orchestrates the application using the DDD / TDD architecture:
-    1. Sets up infrastructure. (repositories)
-    2. Sets up application services.
-    3. Configures event bus and handlers.
-    4. Launches the Streamlit UI.
+    Main: Prepares EVision Berlin Streamlit Application.
     """
-
     # Setup logging configuration.
     setup_logging()
 
@@ -126,19 +108,26 @@ def main():
     event_bus = DomainEventBus()
 
     try:
-        # Setup repositories.
+        # 1. Setup repositories.
         logger.info("\n[1/4] Setting up repositories...")
         charging_station_repo, geo_data_repo, population_repo, demand_analysis_repo = setup_repositories()
 
-        # Setup services.
+        # 2. Setup services.
         logger.info("[2/4] Setting up application services...")
         postal_code_residents_service, charging_station_service, geolocation_service, demand_analysis_service, power_capacity_service = (
             setup_services(charging_station_repo, geo_data_repo, population_repo, demand_analysis_repo, event_bus)
         )
 
-        # Set up event handlers
+        # 3. Configure event handlers.
         logger.info("[3/4] Configuring event handlers...")
         setup_event_handlers(event_bus)
+
+        # 4. Prepare Validation Data (Source of Truth)
+        # Furthermore, we retrieve the authoritative list of valid Berlin PLZs from the 
+        # geolocation service to ensure the UI validation matches the underlying data.
+        # Note: Ensure `get_all_plzs()` is implemented in your GeoLocationService.
+        valid_berlin_plzs = geolocation_service.get_all_plzs()
+        logger.info(f"Loaded {len(valid_berlin_plzs)} valid postal codes for validation.")
 
         logger.info("EVision Berlin Application Preparation Complete!")
 
@@ -153,6 +142,7 @@ def main():
             demand_analysis_service=demand_analysis_service,
             power_capacity_service=power_capacity_service,
             event_bus=event_bus,
+            valid_plzs=valid_berlin_plzs  # <--- NEW: Inject the validation list here
         )
         app.run()
 
