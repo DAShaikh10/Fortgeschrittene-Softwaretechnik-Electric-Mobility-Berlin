@@ -39,9 +39,7 @@ class CSVGeoDataRepository(GeoDataRepository, CSVRepository):
         """
         # Convert PLZ to string for consistent comparison with PostalCode value object
         self._df["PLZ"] = self._df["PLZ"].astype(str)
-        logger.info(
-            "Transformed PLZ column to string type. DataFrame shape: %s", self._df.shape
-        )
+        logger.info("Transformed PLZ column to string type. DataFrame shape: %s", self._df.shape)
 
     def fetch_geolocation_data(self, postal_code: PostalCode):
         """
@@ -53,14 +51,10 @@ class CSVGeoDataRepository(GeoDataRepository, CSVRepository):
         Returns:
             GeoLocation: Geographic location data for the given postal code or None if not found.
         """
-        logger.info(
-            "CSVGeoDataRepository: Fetching geolocation for PLZ: %s", postal_code.value
-        )
+        logger.info("CSVGeoDataRepository: Fetching geolocation for PLZ: %s", postal_code.value)
         logger.info("DataFrame shape: %s", self._df.shape)
         logger.info("DataFrame columns: %s", self._df.columns.tolist())
-        logger.info(
-            "Available PLZ values (first 10): %s", self._df['PLZ'].head(10).tolist()
-        )
+        logger.info("Available PLZ values (first 10): %s", self._df["PLZ"].head(10).tolist())
 
         result = self._df[self._df["PLZ"] == postal_code.value]
         logger.info("Query result shape: %s", result.shape)

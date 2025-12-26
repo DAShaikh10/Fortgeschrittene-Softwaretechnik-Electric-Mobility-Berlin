@@ -6,8 +6,11 @@ from typing import Dict
 from dataclasses import dataclass, field
 
 from src.shared.domain.value_objects import PostalCode
+from src.shared.infrastructure.logging_config import get_logger
 
 from .DomainEvent import DomainEvent
+
+logger = get_logger(__name__)
 
 
 @dataclass(frozen=True)
@@ -31,6 +34,7 @@ class StationSearchPerformedEvent(DomainEvent):
             event (StationSearchPerformedEvent): The event instance to log.
         """
 
-        print(
-            f"[EVENT] - StationSearchPerformedEvent - Station search performed for postal code: {event.postal_code.value}"
+        logger.info(
+            "[EVENT] - StationSearchPerformedEvent - Station search performed for postal code: %s",
+            event.postal_code.value,
         )

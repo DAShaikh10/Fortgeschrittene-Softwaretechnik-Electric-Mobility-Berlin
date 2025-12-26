@@ -7,8 +7,11 @@ from typing import List, Dict, Optional
 from src.shared.domain.events import DomainEventBus
 from src.shared.domain.value_objects import PostalCode
 from src.shared.application.services import BaseService
+from src.shared.infrastructure.logging_config import get_logger
 from src.demand.domain.aggregates import DemandAnalysisAggregate
 from src.demand.infrastructure.repositories import DemandAnalysisRepository
+
+logger = get_logger(__name__)
 
 
 class DemandAnalysisService(BaseService):
@@ -96,7 +99,7 @@ class DemandAnalysisService(BaseService):
                 results.append(result)
             except Exception as e:
                 # Log error but continue processing other areas
-                print(f"Error analyzing {area.get('postal_code', 'unknown')}: {e}")
+                logger.error("Error analyzing %s: %s", area.get("postal_code", "unknown"), e, exc_info=True)
                 continue
 
         return results

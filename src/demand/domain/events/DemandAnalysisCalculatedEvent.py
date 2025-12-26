@@ -5,6 +5,9 @@ Demand Domain Event: Demand Analysis Calculated.
 from dataclasses import dataclass
 
 from src.shared.domain.events import DomainEvent
+from src.shared.infrastructure.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 @dataclass(frozen=True)
@@ -30,6 +33,7 @@ class DemandAnalysisCalculatedEvent(DomainEvent):
             event (DemandAnalysisCalculatedEvent): The event instance to log.
         """
 
-        print(
-            f"[EVENT] - DemandAnalysisCalculatedEvent - Demand analysis calculated for postal code: {event.postal_code}"
+        logger.info(
+            "[EVENT] - DemandAnalysisCalculatedEvent - Demand analysis calculated for postal code: %s",
+            event.postal_code,
         )

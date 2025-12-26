@@ -10,6 +10,8 @@ import os
 from pathlib import Path
 
 from config import pdict  # Serves as the project configuration dictionary.
+from src.shared.infrastructure.logging_config import get_logger, setup_logging
+
 from src.ui.application import StreamlitApp
 from src.shared.domain.events import DomainEventBus, StationSearchPerformedEvent
 from src.shared.infrastructure.repositories import (
@@ -21,6 +23,8 @@ from src.shared.application.services import ChargingStationService, GeoLocationS
 from src.demand.application.services import DemandAnalysisService
 from src.demand.domain.events import DemandAnalysisCalculatedEvent, HighDemandAreaIdentifiedEvent
 from src.demand.infrastructure.repositories import InMemoryDemandAnalysisRepository
+
+logger = get_logger(__name__)
 
 
 def setup_repositories():
@@ -36,7 +40,6 @@ def setup_repositories():
     dataset_folder: str | None = cwd / pdict["dataset_folder"]
 
     # Initialize repositories with data.
-    # TODO: Improve error handling.
     charging_station_repo = CSVChargingStationRepository(os.path.join(dataset_folder, pdict["file_lstations"]))
     geo_data_repo = CSVGeoDataRepository(os.path.join(dataset_folder, pdict["file_geodat_plz"]))
     population_repo = CSVPopulationRepository(os.path.join(dataset_folder, pdict["file_residents"]))
@@ -92,9 +95,6 @@ def setup_event_handlers(event_bus: DomainEventBus):
     """
 
     # Subscribe handlers.
-
-    # TODO: POSSIBLY move logs to file using logging module?
-    # TODO: Add more event handlers as needed.
     event_bus.subscribe(StationSearchPerformedEvent, StationSearchPerformedEvent.log_station_search)
     event_bus.subscribe(DemandAnalysisCalculatedEvent, DemandAnalysisCalculatedEvent.log_demand_calculation)
     event_bus.subscribe(HighDemandAreaIdentifiedEvent, HighDemandAreaIdentifiedEvent.log_high_demand_area)
@@ -112,47 +112,48 @@ def main():
     4. Launches the Streamlit UI.
     """
 
-    print("=" * 80)
-    print("Preparing EVision Berlin Application ...")
-    print("=" * 80)
+    # Setup logging configuration.
+    setup_logging()
+
+    logger.info("=" * 80)
+    logger.info("Preparing EVision Berlin Application ...")
+    logger.info("=" * 80)
 
     # Initialize Domain Event Bus.
     event_bus = DomainEventBus()
 
-    # Setup repositories.
-    print("\n[1/4] Setting up repositories...")
-    charging_station_repo, geo_data_repo, population_repo, demand_analysis_repo = setup_repositories()
+    try:
+        # Setup repositories.
+        logger.info("\n[1/4] Setting up repositories...")
+        charging_station_repo, geo_data_repo, population_repo, demand_analysis_repo = setup_repositories()
 
-    # Setup services.
-    print("[2/4] Setting up application services...")
-    postal_code_residents_service, charging_station_service, geolocation_service, demand_analysis_service = (
-        setup_services(charging_station_repo, geo_data_repo, population_repo, demand_analysis_repo, event_bus)
-    )
+        # Setup services.
+        logger.info("[2/4] Setting up application services...")
+        postal_code_residents_service, charging_station_service, geolocation_service, demand_analysis_service = (
+            setup_services(charging_station_repo, geo_data_repo, population_repo, demand_analysis_repo, event_bus)
+        )
 
-    # Set up event handlers
-    print("[3/4] Configuring event handlers...")
-    setup_event_handlers(event_bus)
+        # Set up event handlers
+        logger.info("[3/4] Configuring event handlers...")
+        setup_event_handlers(event_bus)
 
-    # Run data quality analysis (legacy)
-    # TODO: Add DDD for this OR.
-    # print("[4/4] Running data quality analysis...")
-    # run_data_quality_analysis(population_repo, charging_station_repo)
+        logger.info("EVision Berlin Application Preparation Complete!")
 
-    print("EVision Berlin Application Preparation Complete!")
+        # Launch Streamlit UI.
+        logger.info("\n[LAUNCH] Starting EVision Berlin Streamlit application...")
+        logger.info("=" * 80)
 
-    # Launch Streamlit UI.
-    print("\n[LAUNCH] Starting EVision Berlin Streamlit application...")
-    print("=" * 80)
+        app = StreamlitApp(
+            postal_code_residents_service=postal_code_residents_service,
+            charging_station_service=charging_station_service,
+            geolocation_service=geolocation_service,
+            demand_analysis_service=demand_analysis_service,
+            event_bus=event_bus,
+        )
+        app.run()
 
-    app = StreamlitApp(
-        postal_code_residents_service=postal_code_residents_service,
-        charging_station_service=charging_station_service,
-        geolocation_service=geolocation_service,
-        demand_analysis_service=demand_analysis_service,
-        event_bus=event_bus,
-    )
-
-    app.run()
+    except Exception as exception:
+        logger.error("An error occurred during application setup: %s", exception, exc_info=True)
 
 
 if __name__ == "__main__":

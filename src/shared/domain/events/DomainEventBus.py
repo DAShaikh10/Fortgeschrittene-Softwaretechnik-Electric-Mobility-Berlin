@@ -4,7 +4,11 @@ Shared Domain Event Bus Module.
 
 from typing import Callable, Dict, List, Type
 
+from src.shared.infrastructure.logging_config import get_logger
+
 from .DomainEvent import DomainEvent
+
+logger = get_logger(__name__)
 
 
 class DomainEventBus:
@@ -43,8 +47,7 @@ class DomainEventBus:
                 try:
                     handler(event)
                 except Exception as e:
-                    # In production, this should be logged
-                    print(f"Error handling event {event_type.__name__}: {e}")
+                    logger.error("Error handling event %s: %s", event_type.__name__, e, exc_info=True)
 
 
 # Singleton instance for application-wide event bus.

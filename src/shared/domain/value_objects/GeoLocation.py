@@ -2,9 +2,9 @@
 GeoLocation Value Object Module.
 """
 
-from dataclasses import dataclass, field
-from typing import Any, TYPE_CHECKING
 import logging
+from typing import Any, TYPE_CHECKING
+from dataclasses import dataclass, field
 
 import geopandas as gpd
 
@@ -19,10 +19,10 @@ if TYPE_CHECKING:
 def _process_boundary(boundary_wkt: str) -> gpd.GeoDataFrame:
     """
     Process WKT boundary string into a GeoDataFrame.
-    
+
     Args:
         boundary_wkt: WKT string representation of the boundary geometry
-        
+
     Returns:
         GeoDataFrame with the boundary geometry
     """
@@ -48,7 +48,7 @@ class GeoLocation:
     This entity encapsulates geographic information such as coordinates and boundaries.
     """
 
-    postal_code: 'PostalCode'
+    postal_code: "PostalCode"
     boundary: Any = field(default=None, repr=False)
 
     def __post_init__(self):
@@ -57,9 +57,7 @@ class GeoLocation:
         """
         logger.info("GeoLocation __post_init__ called for postal_code: %s", self.postal_code)
         logger.info("Initial boundary type: %s", type(self.boundary))
-        boundary_preview = (
-            str(self.boundary)[:200] if self.boundary else 'None'
-        )
+        boundary_preview = str(self.boundary)[:200] if self.boundary else "None"
         logger.info("Initial boundary value (first 200 chars): %s", boundary_preview)
 
         # Process the boundary if it's a WKT string
@@ -69,16 +67,11 @@ class GeoLocation:
             logger.info("Processed boundary type: %s", type(processed_boundary))
             if processed_boundary is not None:
                 logger.info("Processed boundary shape: %s", processed_boundary.shape)
-                logger.info(
-                    "Processed boundary columns: %s",
-                    processed_boundary.columns.tolist()
-                )
+                logger.info("Processed boundary columns: %s", processed_boundary.columns.tolist())
             # Use object.__setattr__ because the dataclass is frozen
-            object.__setattr__(self, 'boundary', processed_boundary)
+            object.__setattr__(self, "boundary", processed_boundary)
         # Validate
-        if self.boundary is None or (
-            isinstance(self.boundary, gpd.GeoDataFrame) and self.boundary.empty
-        ):
+        if self.boundary is None or (isinstance(self.boundary, gpd.GeoDataFrame) and self.boundary.empty):
             logger.error("GeoLocation validation failed - boundary is None or empty")
             raise InvalidGeoLocationError("Geo Location boundary cannot be None or empty.")
 
@@ -88,7 +81,7 @@ class GeoLocation:
     def empty(self) -> bool:
         """
         Check if the GeoLocation has an empty boundary.
-        
+
         Returns:
             True if boundary is None or empty, False otherwise
         """

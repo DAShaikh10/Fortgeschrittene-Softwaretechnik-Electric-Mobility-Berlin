@@ -12,11 +12,7 @@ from streamlit_folium import folium_static
 
 from src.shared.domain.events import DomainEventBus
 from src.shared.domain.value_objects import GeoLocation, PostalCode
-from src.shared.application.services import (
-    ChargingStationService,
-    GeoLocationService,
-    PostalCodeResidentService
-)
+from src.shared.application.services import ChargingStationService, GeoLocationService, PostalCodeResidentService
 from src.demand.application.services import DemandAnalysisService
 
 # Configure logging
@@ -228,98 +224,56 @@ class StreamlitApp:
         """
         try:
             if selected_postal_code and selected_postal_code not in ("", "All areas"):
-                logger.info(
-                    "=== Starting to render charging stations layer for PLZ: %s ===",
-                    selected_postal_code
-                )
+                logger.info("=== Starting to render charging stations layer for PLZ: %s ===", selected_postal_code)
                 postal_code_obj = PostalCode(selected_postal_code)
 
                 # Get and render the postal code boundary area
                 logger.info("Fetching geolocation data for %s...", selected_postal_code)
-                plz_geometry = self.geolocation_service.get_geolocation_data_for_postal_code(
-                    postal_code_obj
-                )
+                plz_geometry = self.geolocation_service.get_geolocation_data_for_postal_code(postal_code_obj)
 
                 logger.info("plz_geometry is None: %s", plz_geometry is None)
                 if plz_geometry is not None:
                     logger.info("plz_geometry type: %s", type(plz_geometry))
-                    logger.info(
-                        "plz_geometry.boundary is None: %s",
-                        plz_geometry.boundary is None
-                    )
+                    logger.info("plz_geometry.boundary is None: %s", plz_geometry.boundary is None)
                     if plz_geometry.boundary is not None:
-                        logger.info(
-                            "plz_geometry.boundary type: %s",
-                            type(plz_geometry.boundary)
-                        )
-                        logger.info(
-                            "plz_geometry.boundary shape: %s",
-                            plz_geometry.boundary.shape
-                        )
-                        logger.info(
-                            "plz_geometry.boundary columns: %s",
-                            plz_geometry.boundary.columns.tolist()
-                        )
-                        logger.info(
-                            "First few rows:\n%s",
-                            plz_geometry.boundary.head()
-                        )
+                        logger.info("plz_geometry.boundary type: %s", type(plz_geometry.boundary))
+                        logger.info("plz_geometry.boundary shape: %s", plz_geometry.boundary.shape)
+                        logger.info("plz_geometry.boundary columns: %s", plz_geometry.boundary.columns.tolist())
+                        logger.info("First few rows:\n%s", plz_geometry.boundary.head())
                 if plz_geometry is not None and plz_geometry.boundary is not None:
                     try:
                         # Convert the boundary GeoDataFrame to GeoJSON format
                         # The boundary is stored as a GeoDataFrame, access its geometry
                         logger.info("Converting boundary to GeoJSON...")
                         boundary_geojson = json.loads(plz_geometry.boundary.to_json())
-                        logger.info(
-                            "GeoJSON conversion successful. Type: %s",
-                            type(boundary_geojson)
-                        )
-                        geojson_keys = (
-                            boundary_geojson.keys()
-                            if isinstance(boundary_geojson, dict)
-                            else 'Not a dict'
-                        )
+                        logger.info("GeoJSON conversion successful. Type: %s", type(boundary_geojson))
+                        geojson_keys = boundary_geojson.keys() if isinstance(boundary_geojson, dict) else "Not a dict"
                         logger.info("GeoJSON keys: %s", geojson_keys)
-                        logger.info(
-                            "GeoJSON content (first 500 chars): %s",
-                            str(boundary_geojson)[:500]
-                        )
+                        logger.info("GeoJSON content (first 500 chars): %s", str(boundary_geojson)[:500])
                         # Add the postal code boundary as a shaded area
                         logger.info("Adding GeoJSON to folium map...")
                         folium.GeoJson(
                             boundary_geojson,
                             name=f"Postal Code {selected_postal_code}",
                             style_function=lambda x: {
-                                'fillColor': '#3186cc',
-                                'color': '#0066cc',
-                                'weight': 2,
-                                'fillOpacity': 0.5,
+                                "fillColor": "#3186cc",
+                                "color": "#0066cc",
+                                "weight": 2,
+                                "fillOpacity": 0.5,
                             },
                             tooltip=f"Postal Code: {selected_postal_code}",
                         ).add_to(folium_map)
                         logger.info("✓ Postal code boundary added to map successfully!")
-                        streamlit.success(
-                            f"✓ Postal code {selected_postal_code} boundary rendered"
-                        )
+                        streamlit.success(f"✓ Postal code {selected_postal_code} boundary rendered")
                     except Exception as boundary_error:
-                        logger.error(
-                            "Error rendering boundary: %s", boundary_error, exc_info=True
-                        )
-                        streamlit.error(
-                            f"Error rendering postal code boundary: {boundary_error}"
-                        )
+                        logger.error("Error rendering boundary: %s", boundary_error, exc_info=True)
+                        streamlit.error(f"Error rendering postal code boundary: {boundary_error}")
                 else:
-                    boundary_info = (
-                        plz_geometry.boundary if plz_geometry else 'N/A'
-                    )
+                    boundary_info = plz_geometry.boundary if plz_geometry else "N/A"
                     logger.warning(
-                        "Cannot render boundary - plz_geometry: %s, boundary: %s",
-                        plz_geometry,
-                        boundary_info
+                        "Cannot render boundary - plz_geometry: %s, boundary: %s", plz_geometry, boundary_info
                     )
-                    streamlit.warning(
-                        f"No boundary data available for postal code {selected_postal_code}"
-                    )
+                    streamlit.warning(f"No boundary data available for postal code {selected_postal_code}")
 
                 # Retrieve stations for the selected postal code area
                 logger.info("Fetching charging stations for %s...", selected_postal_code)
@@ -337,9 +291,7 @@ class StreamlitApp:
                         fillColor="green",
                         fillOpacity=0.8,
                     ).add_to(folium_map)
-                logger.info(
-                    "✓ Added %d charging station markers to map", len(area.stations)
-                )
+                logger.info("✓ Added %d charging station markers to map", len(area.stations))
             else:
                 # Prevent map clutter when viewing all areas
                 streamlit.info("Select a specific postal code to view charging stations on the map.")
