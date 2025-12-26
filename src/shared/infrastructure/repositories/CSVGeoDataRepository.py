@@ -70,3 +70,24 @@ class CSVGeoDataRepository(GeoDataRepository, CSVRepository):
         geo_location = GeoLocation(postal_code=postal_code, boundary=boundary)
         logger.info("✓ GeoLocation created successfully")
         return geo_location
+
+    def get_all_postal_codes(self) -> list[int]:
+        """
+        Retrieve all unique postal codes available in the dataset.
+        
+        This serves as the 'Source of Truth' for validation in the UI.
+
+        Returns:
+            list[int]: List of valid postal code integers.
+        """
+        try:
+            if "PLZ" in self._df.columns:
+                # We cast to int because the UI validation logic expects integers,
+                # even though we store them as strings internally for consistency.
+                return self._df["PLZ"].astype(int).unique().tolist()
+            else:
+                logger.error("Column 'PLZ' not found in GeoData repository.")
+                return []
+        except Exception as e:
+            logger.error(f"Error retrieving all postal codes: {e}")
+            return []
