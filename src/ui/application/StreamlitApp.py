@@ -14,7 +14,12 @@ from streamlit_folium import folium_static
 from docs import ABOUT_SECTION
 from src.shared.domain.events import DomainEventBus
 from src.shared.domain.value_objects import GeoLocation, PostalCode
-from src.shared.application.services import ChargingStationService, GeoLocationService, PostalCodeResidentService, PowerCapacityService
+from src.shared.application.services import (
+    ChargingStationService,
+    GeoLocationService,
+    PostalCodeResidentService,
+    PowerCapacityService,
+)
 from src.demand.application.services import DemandAnalysisService
 
 # Configure logging
@@ -104,7 +109,7 @@ class StreamlitApp:
         """
         postal_code_area = None
         resident_data = None
-        
+
         if selected_plz and selected_plz != "All areas":
             postal_code_object = PostalCode(selected_plz)
 
@@ -129,14 +134,14 @@ class StreamlitApp:
 
         # Replace selectbox with text_input for flexible entry and validation
         plz_input = streamlit.sidebar.text_input(
-            "Enter Postal Code:", 
+            "Enter Postal Code:",
             key="postal_code_input",
             help="Enter a 5-digit Berlin Postal Code (e.g., 10117) or leave empty for all areas."
         )
 
         # Perform Validation
         is_valid, error_msg = self._validate_plz_input(plz_input)
-        
+
         selected_plz = "All areas"  # Default
 
         if not is_valid:
@@ -147,12 +152,12 @@ class StreamlitApp:
         else:
             if plz_input:
                 selected_plz = plz_input
-            
+
             # Store in session state.
             streamlit.session_state["selected_plz"] = selected_plz
 
             postal_code_area, resident_data = self._handle_search(selected_plz)
-            
+
             if postal_code_area and resident_data:
                 info_parts = []
                 info_parts.append(f"👥 Pop: {resident_data.get_population():,}")
@@ -165,14 +170,14 @@ class StreamlitApp:
         # Visualization mode view options.
         streamlit.sidebar.markdown("---")
         view_mode = streamlit.sidebar.radio("Visualization Mode", ["Basic View", "Power Capacity (KW) View"])
-        
+
         # Check if view mode changed
         previous_view_mode = streamlit.session_state.get("view_mode", "Basic View")
         view_mode_changed = previous_view_mode != view_mode
-        
+
         # Store view mode in session state
         streamlit.session_state["view_mode"] = view_mode
-        
+
         if view_mode == "Basic View":
             layer_options = ["Residents", "All Charging Stations"]
             # Reset layer selection if switching from Power Capacity view
@@ -183,14 +188,14 @@ class StreamlitApp:
             # Reset layer selection if switching to Power Capacity view
             if view_mode_changed:
                 streamlit.session_state["layer_selection"] = "Power Capacity"
-            
+
             # Add capacity range filter for Power Capacity view
             streamlit.sidebar.markdown("---")
             streamlit.sidebar.subheader("⚡ Capacity Range Filter")
-            
+
             # Get current capacity filter or default to "All"
             current_capacity_filter = streamlit.session_state.get("capacity_filter", "All")
-            
+
             capacity_filter = streamlit.sidebar.radio(
                 "Filter by Capacity:",
                 ["All", "Low", "Medium", "High"],
@@ -200,16 +205,16 @@ class StreamlitApp:
             streamlit.session_state["capacity_filter"] = capacity_filter
 
         streamlit.sidebar.header("📊 Layer Selection")
-        
+
         # Get current layer selection or use the first option as default
         current_layer = streamlit.session_state.get("layer_selection", layer_options[0])
-        
+
         # Ensure current_layer is in layer_options, otherwise use first option
         if current_layer not in layer_options:
             current_layer = layer_options[0]
-        
+
         layer_selection = streamlit.sidebar.radio(
-            "Select Layer", 
+            "Select Layer",
             layer_options,
             index=layer_options.index(current_layer)
         )
@@ -264,7 +269,7 @@ class StreamlitApp:
                 if plz_geometry is not None and plz_geometry.boundary is not None and resident_data:
                     try:
                         population = resident_data.get_population()
-                        
+
                         # Convert the boundary GeoDataFrame to GeoJSON format
                         logger.info("Converting boundary to GeoJSON...")
                         boundary_geojson = json.loads(plz_geometry.boundary.to_json())
@@ -283,7 +288,7 @@ class StreamlitApp:
                             },
                             tooltip=f"Postal Code: {selected_postal_code}<br>👥 Population: {population:,}",
                         ).add_to(folium_map)
-                        
+
                         logger.info("✓ Postal code boundary with population data added to map successfully!")
                         streamlit.success(
                             f"✓ Postal Code {selected_postal_code}: Population {population:,}"
@@ -321,48 +326,48 @@ class StreamlitApp:
         try:
             # Get all postal codes
             postal_codes = self.postal_code_residents_service.get_all_postal_codes(sort=True)
-            
+
             # Calculate power capacity for all postal codes
             capacity_df = self.power_capacity_service.get_power_capacity_by_postal_code(postal_codes)
-            
+
             # Classify capacity ranges
             range_definitions, capacity_df = self.power_capacity_service.classify_capacity_ranges(capacity_df)
-            
+
             # Apply capacity filter
             if capacity_filter != "All":
                 capacity_df = self.power_capacity_service.filter_by_capacity_category(capacity_df, capacity_filter)
-            
+
             if capacity_df.empty:
                 streamlit.warning(f"No postal codes found in the '{capacity_filter}' capacity range.")
                 return
-            
+
             max_capacity = capacity_df['total_capacity_kw'].max()
-            
+
             # Display capacity range information
-            if selected_postal_code == "All areas" or selected_postal_code == "":
+            if selected_postal_code in ("All areas", ""):
                 streamlit.info(
                     f"**Power Capacity Ranges:**\n\n"
                     f"🟦 Low: {range_definitions['Low'][0]:.0f} - {range_definitions['Low'][1]:.0f} kW\n\n"
                     f"🔵 Medium: {range_definitions['Medium'][0]:.0f} - {range_definitions['Medium'][1]:.0f} kW\n\n"
                     f"🔷 High: {range_definitions['High'][0]:.0f} - {range_definitions['High'][1]:.0f} kW"
                 )
-            
+
             # Render postal code areas with capacity coloring
             if selected_postal_code and selected_postal_code not in ("", "All areas"):
                 # Render specific postal code area
                 postal_code_obj = PostalCode(selected_postal_code)
                 plz_geometry = self.geolocation_service.get_geolocation_data_for_postal_code(postal_code_obj)
-                
+
                 # Get capacity data for this postal code
                 plz_capacity = capacity_df[capacity_df['postal_code'] == selected_postal_code]
-                
+
                 if plz_geometry is not None and plz_geometry.boundary is not None and not plz_capacity.empty:
                     capacity_value = plz_capacity.iloc[0]['total_capacity_kw']
                     station_count = plz_capacity.iloc[0]['station_count']
                     capacity_category = plz_capacity.iloc[0]['capacity_category']
-                    
+
                     color = self.power_capacity_service.get_color_for_capacity(capacity_value, max_capacity)
-                    
+
                     boundary_geojson = json.loads(plz_geometry.boundary.to_json())
                     folium.GeoJson(
                         boundary_geojson,
@@ -380,7 +385,7 @@ class StreamlitApp:
                             f"Category: {capacity_category}"
                         ),
                     ).add_to(folium_map)
-                    
+
                     streamlit.success(
                         f"✓ Postal Code {selected_postal_code}: {capacity_value:.0f} kW "
                         f"({station_count} stations) - **{capacity_category}** capacity"
@@ -395,15 +400,15 @@ class StreamlitApp:
                     capacity = row['total_capacity_kw']
                     station_count = row['station_count']
                     category = row['capacity_category']
-                    
+
                     postal_code_obj = PostalCode(plz)
                     plz_geometry = self.geolocation_service.get_geolocation_data_for_postal_code(postal_code_obj)
-                    
+
                     if plz_geometry is not None and plz_geometry.boundary is not None:
                         try:
                             color = self.power_capacity_service.get_color_for_capacity(capacity, max_capacity)
                             boundary_geojson = json.loads(plz_geometry.boundary.to_json())
-                            
+
                             folium.GeoJson(
                                 boundary_geojson,
                                 name=f"PLZ {plz}",
@@ -422,14 +427,14 @@ class StreamlitApp:
                             ).add_to(folium_map)
                             areas_rendered += 1
                         except Exception as e:
-                            logger.warning(f"Could not render postal code {plz}: {e}")
-                
+                            logger.warning("Could not render postal code %s: %s", plz, e)
+
                 streamlit.success(
                     f"✓ Rendered {areas_rendered} postal code areas with power capacity visualization"
                 )
-                
+
         except Exception as e:
-            logger.error(f"Error rendering power capacity layer: {e}", exc_info=True)
+            logger.error("Error rendering power capacity layer: %s", e, exc_info=True)
             streamlit.error(f"Error rendering power capacity layer: {e}")
 
     def _render_charging_stations_layer(self, folium_map: folium.Map, selected_postal_code: str):
@@ -529,7 +534,7 @@ class StreamlitApp:
             logger.error("Error loading charging stations: %s", e, exc_info=True)
             streamlit.error(f"Error loading charging stations: {e}")
 
-    def _render_map_view(self, selected_postal_code: str, layer_selection: str, view_mode: str = "Basic View"):
+    def _render_map_view(self, selected_postal_code: str, layer_selection: str):
         """
         Render interactive map view with user-selected data layers.
 
@@ -539,7 +544,6 @@ class StreamlitApp:
         Args:
             selected_postal_code (str): Postal code to center map on.
             layer_selection (str): Layer type to display ("Residents", "All Charging Stations", or "Power Capacity").
-            view_mode (str): Visualization mode ("Basic View" or "Power Capacity (KW) View").
         """
         # Calculate optimal map center and zoom level for selected area
         map_center, map_zoom = self._get_map_center_and_zoom(selected_postal_code)
@@ -619,7 +623,7 @@ class StreamlitApp:
                     if plz_geometry is not None and plz_geometry.boundary is not None:
                         # Get color based on priority level
                         fill_color = priority_colors.get(priority, "#cccccc")
-                        
+
                         # Add border emphasis if this is the selected postal code
                         border_color = "#000000" if plz == selected_postal_code else "#666666"
                         border_weight = 3 if plz == selected_postal_code else 1
@@ -655,11 +659,11 @@ class StreamlitApp:
                         ).add_to(folium_map)
                         areas_rendered += 1
                 except Exception as e:
-                    logger.warning(f"Could not render demand map for postal code: {e}")
+                    logger.warning("Could not render demand map for postal code: %s", e)
                     logger.exception(e)
 
         except Exception as e:
-            logger.error(f"Error rendering demand analysis map: {e}", exc_info=True)
+            logger.error("Error rendering demand analysis map: %s", e, exc_info=True)
             streamlit.error(f"Error rendering demand analysis map: {e}")
 
     def _render_demand_analysis(self, selected_postal_code: str):
@@ -929,7 +933,7 @@ class StreamlitApp:
         # Get session state.
         selected_plz = streamlit.session_state.get("selected_plz", "All areas")
         view_mode = streamlit.session_state.get("view_mode", "Basic View")
-        
+
         # Get layer selection with appropriate default based on view mode
         if view_mode == "Power Capacity (KW) View":
             layer_selection = streamlit.session_state.get("layer_selection", "Power Capacity")
@@ -938,7 +942,7 @@ class StreamlitApp:
 
         main_tab, demand_analysis_tab, about_tab = streamlit.tabs(["🗺️ Map View", "📊 Demand Analysis", "ℹ️ About"])
         with main_tab:
-            self._render_map_view(selected_plz, layer_selection, view_mode)
+            self._render_map_view(selected_plz, layer_selection)
 
         with demand_analysis_tab:
             self._render_demand_analysis(selected_plz)

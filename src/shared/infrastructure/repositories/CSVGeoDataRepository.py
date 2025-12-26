@@ -82,11 +82,11 @@ class CSVGeoDataRepository(GeoDataRepository, CSVRepository):
         """
         try:
             if "PLZ" in self._df.columns:
-                
+
                 return self._df["PLZ"].astype(int).unique().tolist()
-            else:
-                logger.error("Column 'PLZ' not found in GeoData repository.")
-                return []
+
+            logger.error("Column 'PLZ' not found in GeoData repository.")
+            return []
         except Exception as e:
-            logger.error(f"Error retrieving all postal codes: {e}")
+            logger.error("Error retrieving all postal codes: %s", e)
             return []

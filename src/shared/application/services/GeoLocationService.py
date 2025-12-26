@@ -48,6 +48,6 @@ class GeoLocationService(BaseService):
             list[int]: A list of valid postal code integers.
         """
         # Assuming the repository (CSVGeoDataRepository) has access to the full list.
-        # If your repository implementation is generic, ensure it exposes a method 
+        # If your repository implementation is generic, ensure it exposes a method
         # to retrieve all unique keys/PLZs.
         return self._repository.get_all_postal_codes()

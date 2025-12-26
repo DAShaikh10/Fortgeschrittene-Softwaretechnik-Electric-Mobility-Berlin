@@ -37,7 +37,7 @@ class PowerCapacityService:
 
         for postal_code in postal_codes:
             stations = self._repository.find_stations_by_postal_code(postal_code)
-            
+
             if stations:
                 total_capacity = sum(station.power_kw for station in stations)
                 capacity_data.append({
@@ -75,7 +75,7 @@ class PowerCapacityService:
 
         # Filter out zero capacity areas for classification
         non_zero_capacity = capacity_df[capacity_df['total_capacity_kw'] > 0]['total_capacity_kw']
-        
+
         if len(non_zero_capacity) == 0:
             return {
                 'Low': (0, 0),
@@ -99,12 +99,11 @@ class PowerCapacityService:
         def classify_capacity(capacity):
             if capacity == 0:
                 return 'None'
-            elif capacity <= q33:
+            if capacity <= q33:
                 return 'Low'
-            elif capacity <= q66:
+            if capacity <= q66:
                 return 'Medium'
-            else:
-                return 'High'
+            return 'High'
 
         capacity_df = capacity_df.copy()
         capacity_df['capacity_category'] = capacity_df['total_capacity_kw'].apply(classify_capacity)
@@ -132,7 +131,7 @@ class PowerCapacityService:
         # Color gradient from light blue to dark blue
         # Light: #e3f2fd (RGB: 227, 242, 253)
         # Dark: #0d47a1 (RGB: 13, 71, 161)
-        
+
         r = int(227 - (227 - 13) * normalized)
         g = int(242 - (242 - 71) * normalized)
         b = int(253 - (253 - 161) * normalized)
@@ -152,6 +151,5 @@ class PowerCapacityService:
         """
         if category == 'All':
             return capacity_df
-        
-        return capacity_df[capacity_df['capacity_category'] == category]
 
+        return capacity_df[capacity_df['capacity_category'] == category]

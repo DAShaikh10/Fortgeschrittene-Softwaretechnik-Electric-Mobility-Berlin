@@ -19,9 +19,9 @@ from src.shared.infrastructure.repositories import (
     CSVPopulationRepository,
 )
 from src.shared.application.services import (
-    ChargingStationService, 
-    GeoLocationService, 
-    PostalCodeResidentService, 
+    ChargingStationService,
+    GeoLocationService,
+    PostalCodeResidentService,
     PowerCapacityService
 )
 from src.demand.application.services import DemandAnalysisService
@@ -42,9 +42,13 @@ def setup_repositories():
     dataset_folder: str | None = cwd / pdict["dataset_folder"]
 
     # Initialize repositories with data.
-    charging_station_repo = CSVChargingStationRepository(os.path.join(dataset_folder, pdict["file_lstations"]))
+    charging_station_repo = CSVChargingStationRepository(
+        os.path.join(dataset_folder, pdict["file_lstations"])
+    )
     geo_data_repo = CSVGeoDataRepository(os.path.join(dataset_folder, pdict["file_geodat_plz"]))
-    population_repo = CSVPopulationRepository(os.path.join(dataset_folder, pdict["file_residents"]))
+    population_repo = CSVPopulationRepository(
+        os.path.join(dataset_folder, pdict["file_residents"])
+    )
     demand_analysis_repo = InMemoryDemandAnalysisRepository()
 
     return charging_station_repo, geo_data_repo, population_repo, demand_analysis_repo
@@ -60,7 +64,8 @@ def setup_services(
     """
     Setup all application services.
     Returns:
-        Tuple of (postal_code_residents_service, charging_station_service, geolocation_service, demand_analysis_service, power_capacity_service)
+        Tuple of (postal_code_residents_service, charging_station_service,
+        geolocation_service, demand_analysis_service, power_capacity_service)
     """
     # Station Discovery service.
     charging_station_service = ChargingStationService(repository=charging_station_repo, event_bus=event_bus)
@@ -80,7 +85,13 @@ def setup_services(
     # Power Capacity service.
     power_capacity_service = PowerCapacityService(charging_station_repository=charging_station_repo)
 
-    return postal_code_residents_service, charging_station_service, geolocation_service, demand_analysis_service, power_capacity_service
+    return (
+        postal_code_residents_service,
+        charging_station_service,
+        geolocation_service,
+        demand_analysis_service,
+        power_capacity_service,
+    )
 
 
 def setup_event_handlers(event_bus: DomainEventBus):
@@ -114,8 +125,14 @@ def main():
 
         # 2. Setup services.
         logger.info("[2/4] Setting up application services...")
-        postal_code_residents_service, charging_station_service, geolocation_service, demand_analysis_service, power_capacity_service = (
-            setup_services(charging_station_repo, geo_data_repo, population_repo, demand_analysis_repo, event_bus)
+        (
+            postal_code_residents_service,
+            charging_station_service,
+            geolocation_service,
+            demand_analysis_service,
+            power_capacity_service,
+        ) = setup_services(
+            charging_station_repo, geo_data_repo, population_repo, demand_analysis_repo, event_bus
         )
 
         # 3. Configure event handlers.
@@ -123,11 +140,13 @@ def main():
         setup_event_handlers(event_bus)
 
         # 4. Prepare Validation Data (Source of Truth)
-        # Furthermore, we retrieve the authoritative list of valid Berlin PLZs from the 
+        # Furthermore, we retrieve the authoritative list of valid Berlin PLZs from the
         # geolocation service to ensure the UI validation matches the underlying data.
         # Note: Ensure `get_all_plzs()` is implemented in your GeoLocationService.
         valid_berlin_plzs = geolocation_service.get_all_plzs()
-        logger.info(f"Loaded {len(valid_berlin_plzs)} valid postal codes for validation.")
+        logger.info(
+            "Loaded %d valid postal codes for validation.", len(valid_berlin_plzs)
+        )
 
         logger.info("EVision Berlin Application Preparation Complete!")
 
