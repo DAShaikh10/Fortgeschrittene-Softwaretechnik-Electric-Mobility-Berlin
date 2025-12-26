@@ -308,26 +308,69 @@ def preprop_resid(dfr: pd.DataFrame, dfg: gpd.GeoDataFrame, pdict: dict) -> gpd.
 
 
 # -----------------------------------------------------------------------------
+# ...existing code...
 def setup_sidebar_search(dframe1: gpd.GeoDataFrame, dframe2: gpd.GeoDataFrame):
     """
     Setup postal code search in sidebar and return selected PLZ with info.
-    """
 
+    - Provides a selectbox of PLZ present in the datasets.
+    - Allows manual PLZ entry with validation limited to Berlin postal codes (10115-14199).
+    - Manual entry overrides selectbox selection.
+    """
     st.sidebar.markdown("---")
     st.sidebar.subheader("📍 Search by Postal Code")
 
-    all_plz = sorted(set(dframe1["PLZ"].tolist() + dframe2["PLZ"].tolist()))
+    # Ensure PLZ lists are ints for consistent comparison
+    plz_list_1 = [int(x) for x in dframe1["PLZ"].tolist()] if "PLZ" in dframe1.columns else []
+    plz_list_2 = [int(x) for x in dframe2["PLZ"].tolist()] if "PLZ" in dframe2.columns else []
 
-    search_plz = st.sidebar.selectbox(
+    all_plz = sorted(set(plz_list_1 + plz_list_2))
+
+    # Selectbox of known PLZ (from datasets)
+    search_select = st.sidebar.selectbox(
         "Select PLZ:", options=[""] + all_plz, format_func=lambda x: "All areas" if x == "" else str(int(x))
     )
 
+    # Manual PLZ input (overrides the selectbox if provided)
+    manual_input = st.sidebar.text_input("Or enter PLZ manually (Berlin only)", value="").strip()
+
+    # Validation rules for Berlin PLZ
+    def is_valid_berlin_plz(val: int) -> bool:
+        return 10115 <= val <= 14199
+
+    search_plz = ""
     plz_info = {}
+
+    # If manual input provided, validate it
+    if manual_input != "":
+        try:
+            manual_plz = int(manual_input)
+            if not is_valid_berlin_plz(manual_plz):
+                st.sidebar.error("Invalid postal code — enter a Berlin PLZ between 10115 and 14199.")
+            else:
+                # Accept manual PLZ even if not present in datasets (but warn)
+                if manual_plz not in all_plz:
+                    st.sidebar.warning("PLZ is a valid Berlin code but not present in dataset; results may be empty.")
+                search_plz = manual_plz
+        except ValueError:
+            st.sidebar.error("Postal code must be a 5-digit number (e.g. 10115).")
+    else:
+        # No manual input -> use selectbox value
+        if search_select != "":
+            search_plz = int(search_select)
+
+    # Build small info preview if PLZ exists in provided data
     if search_plz != "":
-        if search_plz in dframe1["PLZ"].values:
-            plz_info["stations"] = int(dframe1[dframe1["PLZ"] == search_plz].iloc[0]["Number"])
-        if search_plz in dframe2["PLZ"].values:
-            plz_info["population"] = int(dframe2[dframe2["PLZ"] == search_plz].iloc[0]["Einwohner"])
+        if int(search_plz) in plz_list_1:
+            try:
+                plz_info["stations"] = int(dframe1[dframe1["PLZ"].astype(int) == int(search_plz)].iloc[0]["Number"])
+            except Exception:
+                pass
+        if int(search_plz) in plz_list_2:
+            try:
+                plz_info["population"] = int(dframe2[dframe2["PLZ"].astype(int) == int(search_plz)].iloc[0]["Einwohner"])
+            except Exception:
+                pass
 
         if plz_info:
             info_parts = []
@@ -338,6 +381,7 @@ def setup_sidebar_search(dframe1: gpd.GeoDataFrame, dframe2: gpd.GeoDataFrame):
             st.sidebar.info("\n\n".join(info_parts))
 
     return search_plz, plz_info
+# ...existing code...
 
 
 # -----------------------------------------------------------------------------
