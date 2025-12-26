@@ -19,7 +19,7 @@ from src.shared.infrastructure.repositories import (
     CSVGeoDataRepository,
     CSVPopulationRepository,
 )
-from src.shared.application.services import ChargingStationService, GeoLocationService, PostalCodeResidentService
+from src.shared.application.services import ChargingStationService, GeoLocationService, PostalCodeResidentService, PowerCapacityService
 from src.demand.application.services import DemandAnalysisService
 from src.demand.domain.events import DemandAnalysisCalculatedEvent, HighDemandAreaIdentifiedEvent
 from src.demand.infrastructure.repositories import InMemoryDemandAnalysisRepository
@@ -66,7 +66,7 @@ def setup_services(
         event_bus: Domain event bus.
 
     Returns:
-        Tuple of (postal_code_residents_service, charging_station_service, geolocation_service, demand_analysis_service)
+        Tuple of (postal_code_residents_service, charging_station_service, geolocation_service, demand_analysis_service, power_capacity_service)
     """
     # Station Discovery service.
     charging_station_service = ChargingStationService(repository=charging_station_repo, event_bus=event_bus)
@@ -83,7 +83,10 @@ def setup_services(
         event_bus=event_bus,
     )
 
-    return postal_code_residents_service, charging_station_service, geolocation_service, demand_analysis_service
+    # Power Capacity service.
+    power_capacity_service = PowerCapacityService(charging_station_repository=charging_station_repo)
+
+    return postal_code_residents_service, charging_station_service, geolocation_service, demand_analysis_service, power_capacity_service
 
 
 def setup_event_handlers(event_bus: DomainEventBus):
@@ -129,7 +132,7 @@ def main():
 
         # Setup services.
         logger.info("[2/4] Setting up application services...")
-        postal_code_residents_service, charging_station_service, geolocation_service, demand_analysis_service = (
+        postal_code_residents_service, charging_station_service, geolocation_service, demand_analysis_service, power_capacity_service = (
             setup_services(charging_station_repo, geo_data_repo, population_repo, demand_analysis_repo, event_bus)
         )
 
@@ -148,6 +151,7 @@ def main():
             charging_station_service=charging_station_service,
             geolocation_service=geolocation_service,
             demand_analysis_service=demand_analysis_service,
+            power_capacity_service=power_capacity_service,
             event_bus=event_bus,
         )
         app.run()
