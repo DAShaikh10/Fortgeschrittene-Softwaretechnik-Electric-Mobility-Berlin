@@ -12,6 +12,42 @@ import numpy as np
 from streamlit_folium import folium_static
 from branca.colormap import LinearColormap
 
+# ==========================================
+# NEW: Validation Logic (Clean Code Principle: SRP)
+# ==========================================
+def validate_plz_input(plz_input: str, valid_plz_list: list[int]) -> tuple[bool, str]:
+    """
+    Validates a postal code input string against Berlin requirements.
+
+    Args:
+        plz_input (str): The raw input string from the user.
+        valid_plz_list (list[int]): List of valid integer PLZs in Berlin.
+
+    Returns:
+        tuple[bool, str]: A tuple containing:
+            - bool: True if valid (or empty/reset), False if invalid.
+            - str: Error message if invalid, empty string otherwise.
+    """
+    # 1. Handle empty input (User reset the search)
+    if not plz_input:
+        return True, ""
+
+    # 2. Check format: Digits only
+    if not plz_input.isdigit():
+        return False, "⚠️ Invalid Format: Input must contain only digits."
+
+    # 3. Check format: Length (German PLZ are 5 digits)
+    if len(plz_input) != 5:
+        return False, "⚠️ Invalid Format: Postal code must be exactly 5 digits."
+
+    # 4. Check domain validity: Is it in Berlin?
+    # Convert to int for comparison with the dataset
+    plz_int = int(plz_input)
+    if plz_int not in valid_plz_list:
+        return False, f"⚠️ Out of Scope: PLZ {plz_input} is not within the Berlin area."
+
+    return True, ""
+#-----------------------------------------------------------------------------
 
 def sort_by_plz_add_geometry(dfr: pd.DataFrame, dfg: pd.DataFrame, pdict: dict) -> gpd.GeoDataFrame:
     """
@@ -309,68 +345,38 @@ def preprop_resid(dfr: pd.DataFrame, dfg: gpd.GeoDataFrame, pdict: dict) -> gpd.
 
 # -----------------------------------------------------------------------------
 # ...existing code...
-def setup_sidebar_search(dframe1: gpd.GeoDataFrame, dframe2: gpd.GeoDataFrame):
+def setup_sidebar_search(dframe1: gpd.GeoDataFrame, dframe2: gpd.GeoDataFrame, valid_plzs: list[int]):
     """
-    Setup postal code search in sidebar and return selected PLZ with info.
-
-    - Provides a selectbox of PLZ present in the datasets.
-    - Allows manual PLZ entry with validation limited to Berlin postal codes (10115-14199).
-    - Manual entry overrides selectbox selection.
+    Setup postal code search in sidebar with validation and return selected PLZ.
+    Replaces selectbox with text_input for flexible entry.
     """
     st.sidebar.markdown("---")
     st.sidebar.subheader("📍 Search by Postal Code")
 
-    # Ensure PLZ lists are ints for consistent comparison
-    plz_list_1 = [int(x) for x in dframe1["PLZ"].tolist()] if "PLZ" in dframe1.columns else []
-    plz_list_2 = [int(x) for x in dframe2["PLZ"].tolist()] if "PLZ" in dframe2.columns else []
-
-    all_plz = sorted(set(plz_list_1 + plz_list_2))
-
-    # Selectbox of known PLZ (from datasets)
-    search_select = st.sidebar.selectbox(
-        "Select PLZ:", options=[""] + all_plz, format_func=lambda x: "All areas" if x == "" else str(int(x))
+    # Use text_input to allow user to type freely (enabling validation feedback)
+    search_input = st.sidebar.text_input(
+        "Enter PLZ:", 
+        help="Enter a 5-digit Berlin Postal Code (e.g., 10117)"
     )
 
-    # Manual PLZ input (overrides the selectbox if provided)
-    manual_input = st.sidebar.text_input("Or enter PLZ manually (Berlin only)", value="").strip()
+    # Perform Validation
+    is_valid, error_msg = validate_plz_input(search_input, valid_plzs)
 
-    # Validation rules for Berlin PLZ
-    def is_valid_berlin_plz(val: int) -> bool:
-        return 10115 <= val <= 14199
-
-    search_plz = ""
     plz_info = {}
+    search_plz = "" # Default to empty (no search)
 
-    # If manual input provided, validate it
-    if manual_input != "":
-        try:
-            manual_plz = int(manual_input)
-            if not is_valid_berlin_plz(manual_plz):
-                st.sidebar.error("Invalid postal code — enter a Berlin PLZ between 10115 and 14199.")
-            else:
-                # Accept manual PLZ even if not present in datasets (but warn)
-                if manual_plz not in all_plz:
-                    st.sidebar.warning("PLZ is a valid Berlin code but not present in dataset; results may be empty.")
-                search_plz = manual_plz
-        except ValueError:
-            st.sidebar.error("Postal code must be a 5-digit number (e.g. 10115).")
-    else:
-        # No manual input -> use selectbox value
-        if search_select != "":
-            search_plz = int(search_select)
-
-    # Build small info preview if PLZ exists in provided data
-    if search_plz != "":
-        if int(search_plz) in plz_list_1:
-            try:
-                plz_info["stations"] = int(dframe1[dframe1["PLZ"].astype(int) == int(search_plz)].iloc[0]["Number"])
-            except Exception:
-                pass
-        if int(search_plz) in plz_list_2:
-            try:
-                plz_info["population"] = int(dframe2[dframe2["PLZ"].astype(int) == int(search_plz)].iloc[0]["Einwohner"])
-            except Exception:
-                pass
+    if not is_valid:
+        # User Feedback: Show error directly in sidebar
+        st.sidebar.error(error_msg)
+    elif search_input:
+        # If valid and not empty, convert to int for data matching
+        search_plz = int(search_input)
+        
+        # Retrieve Info (Keep existing logic)
+        if search_plz in dframe1["PLZ"].values:
+            plz_info["stations"] = int(dframe1[dframe1["PLZ"] == search_plz].iloc[0]["Number"])
+        if search_plz in dframe2["PLZ"].values:
+            plz_info["population"] = int(dframe2[dframe2["PLZ"] == search_plz].iloc[0]["Einwohner"])
 
         if plz_info:
             info_parts = []
@@ -379,9 +385,10 @@ def setup_sidebar_search(dframe1: gpd.GeoDataFrame, dframe2: gpd.GeoDataFrame):
             if "stations" in plz_info:
                 info_parts.append(f"⚡ Stations: {plz_info['stations']}")
             st.sidebar.info("\n\n".join(info_parts))
+        else:
+            st.sidebar.warning("Valid Berlin PLZ, but no data available in current datasets.")
 
     return search_plz, plz_info
-# ...existing code...
 
 
 # -----------------------------------------------------------------------------
@@ -680,15 +687,14 @@ def display_methodology():
 # -----------------------------------------------------------------------------
 @ht.timer
 def make_streamlit_electric_charging_resid(
-    dfr1: gpd.GeoDataFrame, dfr2: gpd.GeoDataFrame, dfr_by_kw: dict = None, demand_analysis: gpd.GeoDataFrame = None
+    dfr1: gpd.GeoDataFrame, 
+    dfr2: gpd.GeoDataFrame, 
+    valid_berlin_plzs: list[int],  # <--- NEW ARGUMENT
+    dfr_by_kw: dict = None, 
+    demand_analysis: gpd.GeoDataFrame = None
 ):
     """
     Main Streamlit app displaying interactive maps of Berlin's EV infrastructure.
-
-    Shows heatmaps of charging stations and population density with options to:
-    - Filter by power capacity
-    - Search specific postal codes
-    - View demand priority analysis
     """
     dframe1 = dfr1.copy()
     dframe2 = dfr2.copy()
@@ -698,9 +704,14 @@ def make_streamlit_electric_charging_resid(
 
     # Sidebar setup.
     st.sidebar.header("🔍 View Options")
-    search_plz, _ = setup_sidebar_search(dframe1, dframe2)
+    
+    # Pass valid PLZ list to search setup
+    search_plz, _ = setup_sidebar_search(dframe1, dframe2, valid_berlin_plzs)
+    
     _, layer_selection = setup_view_mode_selection(dfr_by_kw)
 
+    # ... (Rest of the function remains the same: Demand toggle, Map creation, etc.) ...
+    
     # Demand analysis toggle.
     show_demand = False
     if demand_analysis is not None:
@@ -724,12 +735,15 @@ def make_streamlit_electric_charging_resid(
 
     # Show demand analysis if enabled
     if show_demand and demand_analysis is not None:
+        # ... (Keep existing demand analysis logic) ...
+        # [Use existing code block for demand analysis display here]
         st.markdown("---")
         st.header("📊 Demand Priority Analysis")
 
         # Filter by selected PLZ if applicable
         filtered_demand = demand_analysis.copy()
         if search_plz != "":
+            # Ensure search_plz matches the type in dataframe (int)
             plz_filtered = demand_analysis[demand_analysis["PLZ"] == search_plz]
             if not plz_filtered.empty:
                 st.info(f"📍 Showing analysis for PLZ: **{int(search_plz)}**")
