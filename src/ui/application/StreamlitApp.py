@@ -557,11 +557,117 @@ class StreamlitApp:
         # Display the map in Streamlit with responsive dimensions
         folium_static(folium_map, width=1400, height=800)
 
+    def _render_demand_map(self, folium_map: folium.Map, selected_postal_code: str):
+        """
+        Render demand analysis map with color-coded priority levels for all postal codes.
+
+        This method visualizes demand priority across Berlin by coloring postal code areas:
+        - High Priority (Red): > 5000 residents per station
+        - Medium Priority (Yellow/Gold): 2000-5000 residents per station
+        - Low Priority (Green): < 2000 residents per station
+
+        Args:
+            folium_map (folium.Map): The Folium map object to add the visualization to.
+            selected_postal_code (str): Currently selected postal code (used for highlighting).
+        """
+        try:
+            # Get all postal codes for analysis
+            postal_codes = self.postal_code_residents_service.get_all_postal_codes(sort=True)
+
+            # Collect data and perform demand analysis
+            areas_data = []
+            for postal_code in postal_codes:
+                resident_data = self.postal_code_residents_service.get_resident_data(postal_code)
+                postal_code_area = self.charging_station_service.search_by_postal_code(postal_code)
+
+                if resident_data and postal_code_area:
+                    areas_data.append(
+                        {
+                            "postal_code": postal_code.value,
+                            "population": resident_data.get_population(),
+                            "station_count": postal_code_area.get_station_count(),
+                        }
+                    )
+
+            if not areas_data:
+                streamlit.warning("No data available for demand map visualization.")
+                return
+
+            # Perform batch analysis
+            results = self.demand_analysis_service.analyze_multiple_areas(areas_data)
+
+            # Define color mapping for priorities
+            priority_colors = {
+                "High": "#ff6b6b",    # Red for high priority
+                "Medium": "#ffd93d",  # Gold/Yellow for medium priority
+                "Low": "#6bcf7f"      # Green for low priority
+            }
+
+            areas_rendered = 0
+
+            # Render each postal code area with color-coded priority
+            for analysis in results:
+                try:
+                    # Extract postal code value (analysis.postal_code is a PostalCode object)
+                    plz = analysis.postal_code.value if hasattr(analysis.postal_code, 'value') else str(analysis.postal_code)
+                    priority = analysis.demand_priority.level.value
+                    postal_code_obj = PostalCode(plz)
+
+                    # Get geometry for the postal code
+                    plz_geometry = self.geolocation_service.get_geolocation_data_for_postal_code(postal_code_obj)
+
+                    if plz_geometry is not None and plz_geometry.boundary is not None:
+                        # Get color based on priority level
+                        fill_color = priority_colors.get(priority, "#cccccc")
+                        
+                        # Add border emphasis if this is the selected postal code
+                        border_color = "#000000" if plz == selected_postal_code else "#666666"
+                        border_weight = 3 if plz == selected_postal_code else 1
+
+                        # Convert boundary to GeoJSON
+                        boundary_geojson = json.loads(plz_geometry.boundary.to_json())
+
+                        # Get urgency score from demand priority
+                        urgency_score = analysis.demand_priority.get_urgency_score()
+                        residents_per_station = analysis.demand_priority.residents_per_station
+
+                        # Create tooltip with demand analysis info
+                        tooltip_html = (
+                            f"<b>Postal Code: {plz}</b><br>"
+                            f"Priority: {priority}<br>"
+                            f"Population: {analysis.population:,}<br>"
+                            f"Stations: {analysis.station_count}<br>"
+                            f"Residents/Station: {residents_per_station:.0f}<br>"
+                            f"Urgency Score: {urgency_score:.0f}/100"
+                        )
+
+                        # Add GeoJSON layer to map
+                        folium.GeoJson(
+                            boundary_geojson,
+                            name=f"PLZ {plz} - {priority}",
+                            style_function=lambda x, color=fill_color, border=border_color, weight=border_weight: {
+                                "fillColor": color,
+                                "color": border,
+                                "weight": weight,
+                                "fillOpacity": 0.7,
+                            },
+                            tooltip=tooltip_html,
+                        ).add_to(folium_map)
+                        areas_rendered += 1
+                except Exception as e:
+                    logger.warning(f"Could not render demand map for postal code: {e}")
+                    logger.exception(e)
+
+        except Exception as e:
+            logger.error(f"Error rendering demand analysis map: {e}", exc_info=True)
+            streamlit.error(f"Error rendering demand analysis map: {e}")
+
     def _render_demand_analysis(self, selected_postal_code: str):
         """
         Render comprehensive demand analysis dashboard with priority assessment.
 
         This method implements the complete demand analysis view, providing:
+        - Interactive map with color-coded priority levels
         - Detailed metrics for individual postal code areas
         - Infrastructure recommendations based on demand priority
         - Comprehensive overview table for all areas
@@ -575,15 +681,39 @@ class StreamlitApp:
                                        Use "All areas" for overview only.
 
         Analysis Workflow:
-            1. Collect population and station data for all areas
-            2. Perform batch demand analysis via DemandAnalysisService
-            3. Display detailed metrics for selected area (if applicable)
-            4. Show high-priority areas requiring immediate attention
-            5. Present complete overview with color-coded priorities
-            6. Provide summary statistics
+            1. Display interactive map with color-coded priorities
+            2. Collect population and station data for all areas
+            3. Perform batch demand analysis via DemandAnalysisService
+            4. Display detailed metrics for selected area (if applicable)
+            5. Show high-priority areas requiring immediate attention
+            6. Present complete overview with color-coded priorities
+            7. Provide summary statistics
         """
         streamlit.header("📊 EV Charging Infrastructure Demand Analysis")
         streamlit.markdown("*Analyzing population density and charging station coverage*")
+
+        # Render demand priority map
+        streamlit.subheader("🗺️ Demand Priority Map")
+
+        # Create map centered on Berlin
+        center, zoom = self._get_map_center_and_zoom(selected_postal_code)
+        demand_map = folium.Map(location=center, zoom_start=zoom, tiles="OpenStreetMap")
+
+
+        # Display legend below the map
+        col1, col2, col3 = streamlit.columns([2, 2, 2])
+        with col1:
+            streamlit.markdown("🔴 **High Priority** - >5000 residents/station")
+        with col2:
+            streamlit.markdown("🟡 **Medium Priority** - 2000-5000 residents/station")
+        with col3:
+            streamlit.markdown("🟢 **Low Priority** - <2000 residents/station")
+
+        # Render the demand analysis layer
+        self._render_demand_map(demand_map, selected_postal_code)
+
+        # Display the map
+        folium_static(demand_map, width=1400, height=600)
 
         # Retrieve all postal codes for comprehensive analysis
         postal_codes = self.postal_code_residents_service.get_all_postal_codes(sort=True)
