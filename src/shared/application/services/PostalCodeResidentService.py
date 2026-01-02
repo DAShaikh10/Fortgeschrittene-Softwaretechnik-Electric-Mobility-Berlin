@@ -5,8 +5,7 @@ Shared Application Service for Postal Code Resident Data.
 from typing import List
 
 from src.shared.domain.events import DomainEventBus
-from src.shared.domain.value_objects import PostalCode
-from src.shared.domain.aggregates import PopulationData
+from src.shared.domain.value_objects import PostalCode, PopulationData
 from src.shared.infrastructure.repositories import PopulationRepository
 
 from .BaseService import BaseService

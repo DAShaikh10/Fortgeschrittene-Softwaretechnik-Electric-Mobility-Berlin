@@ -2,14 +2,13 @@
 CSV-based implementation of GeoDataRepository.
 """
 
-import logging
-
+from src.shared.infrastructure.logging_config import get_logger
 from src.shared.domain.value_objects import PostalCode, GeoLocation
 
 from .CSVRepository import CSVRepository
 from .GeoDataRepository import GeoDataRepository
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class CSVGeoDataRepository(GeoDataRepository, CSVRepository):
@@ -73,7 +72,7 @@ class CSVGeoDataRepository(GeoDataRepository, CSVRepository):
     def get_all_postal_codes(self) -> list[int]:
         """
         Retrieve all unique postal codes available in the dataset.
-        
+
         This serves as the 'Source of Truth' for validation in the UI.
 
         Returns:

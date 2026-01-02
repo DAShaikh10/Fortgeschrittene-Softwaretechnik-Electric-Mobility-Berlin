@@ -2,15 +2,15 @@
 GeoLocation Value Object Module.
 """
 
-import logging
 from typing import Any, TYPE_CHECKING
 from dataclasses import dataclass, field
 
 import geopandas as gpd
 
+from src.shared.infrastructure.logging_config import get_logger
 from src.shared.domain.exceptions import InvalidGeoLocationError
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from src.shared.domain.value_objects.PostalCode import PostalCode
@@ -43,9 +43,9 @@ def _process_boundary(boundary_wkt: str) -> gpd.GeoDataFrame:
 @dataclass(frozen=True)
 class GeoLocation:
     """
-    Entity: Represents geographic location data.
+    Value Object: Represents geographic location data.
 
-    This entity encapsulates geographic information such as coordinates and boundaries.
+    This value object encapsulates geographic information such as coordinates and boundaries.
     """
 
     postal_code: "PostalCode"

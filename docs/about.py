@@ -24,9 +24,8 @@ ABOUT_SECTION = """
         - **Repositories**: `InMemoryDemandAnalysisRepository` - demand data storage
 
     3. **Shared Kernel**
-        - **Value Objects**: `PostalCode`, `GeoLocation` - shared across contexts
+        - **Value Objects**: `PostalCode`, `GeoLocation`, `PopulationData` - shared across contexts
         - **Domain Events**: `DomainEventBus`, `StationSearchPerformedEvent` - event-driven architecture
-        - **Aggregates**: `ResidentDataAggregate` - population data management
         - **Services**: `PostalCodeResidentService` - resident data operations
         - **Exceptions**: `InvalidPostalCodeError`, `InvalidGeoLocationError` - domain validation
 
