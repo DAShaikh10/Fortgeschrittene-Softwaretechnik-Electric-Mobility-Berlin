@@ -25,9 +25,9 @@ class DemandAnalysisEventHandler:
         logger.info(
             "[EVENT] Demand analysis calculated for postal code: %s | "
             "Priority: %s | Population: %d | Stations: %d | Residents/Station: %.1f",
-            event.postal_code,
-            event.demand_priority,
+            event.postal_code.value,
+            event.demand_priority.level.value,
             event.population,
             event.station_count,
-            event.residents_per_station,
+            event.demand_priority.residents_per_station,
         )

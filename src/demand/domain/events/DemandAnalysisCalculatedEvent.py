@@ -3,8 +3,13 @@ Demand Domain Event: Demand Analysis Calculated.
 """
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from src.shared.domain.events import DomainEvent
+
+if TYPE_CHECKING:
+    from src.shared.domain.value_objects import PostalCode
+    from src.demand.domain.value_objects import DemandPriority
 
 
 @dataclass(frozen=True)
@@ -20,10 +25,11 @@ class DemandAnalysisCalculatedEvent(DomainEvent):
 
     This is a pure data class representing something that happened in the domain.
     Event handlers are in the application layer (event_handlers/).
+
+    Uses rich domain types instead of primitives for type safety and domain integrity.
     """
 
-    postal_code: str
+    postal_code: "PostalCode"
     population: int
     station_count: int
-    demand_priority: str  # "High", "Medium", "Low"
-    residents_per_station: float
+    demand_priority: "DemandPriority"

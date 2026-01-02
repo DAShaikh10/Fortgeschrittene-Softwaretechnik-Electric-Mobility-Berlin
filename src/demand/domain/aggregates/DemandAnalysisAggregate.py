@@ -122,18 +122,17 @@ class DemandAnalysisAggregate(BaseAggregate):
 
         # Emit domain event.
         event = DemandAnalysisCalculatedEvent(
-            postal_code=self.postal_code.value,
+            postal_code=self.postal_code,
             population=self.population,
             station_count=self.station_count,
-            demand_priority=priority.level.value,
-            residents_per_station=priority.residents_per_station,
+            demand_priority=priority,
         )
         self._add_domain_event(event)
 
         # Emit high demand event if priority is high.
         if priority.is_high_priority():
             high_demand_event = HighDemandAreaIdentifiedEvent(
-                postal_code=self.postal_code.value,
+                postal_code=self.postal_code,
                 population=self.population,
                 station_count=self.station_count,
                 urgency_score=priority.get_urgency_score(),
