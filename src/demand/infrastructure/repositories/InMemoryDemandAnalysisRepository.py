@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 
 from src.shared.domain.value_objects import PostalCode
 from src.demand.domain.aggregates import DemandAnalysisAggregate
+
 from .DemandAnalysisRepository import DemandAnalysisRepository
 
 
@@ -13,7 +14,7 @@ class InMemoryDemandAnalysisRepository(DemandAnalysisRepository):
     """
     In Memory implementation of DemandAnalysisRepository.
     Stores demand analysis data in memory for quick access during runtime.
-    
+
     Use case: Testing, prototyping, or single-session applications.
     """
 
@@ -119,8 +120,4 @@ class InMemoryDemandAnalysisRepository(DemandAnalysisRepository):
         Returns:
             List[DemandAnalysisAggregate]: Matching aggregates
         """
-        return [
-            agg
-            for agg in self._storage.values()
-            if agg.demand_priority.level.value == priority_level
-        ]
+        return [agg for agg in self._storage.values() if agg.demand_priority.level.value == priority_level]
