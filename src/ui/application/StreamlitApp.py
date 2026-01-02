@@ -12,6 +12,8 @@ import pandas as pd
 from streamlit_folium import folium_static
 
 from docs import ABOUT_SECTION
+
+from src.shared.infrastructure.logging_config import get_logger
 from src.shared.domain.events import DomainEventBus
 from src.shared.domain.value_objects import GeoLocation, PostalCode
 from src.shared.application.services import (
@@ -22,9 +24,7 @@ from src.shared.application.services import (
 )
 from src.demand.application.services import DemandAnalysisService
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class StreamlitApp:

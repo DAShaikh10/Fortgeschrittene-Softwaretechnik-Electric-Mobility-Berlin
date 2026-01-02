@@ -4,10 +4,11 @@ Demand Application Service for Demand Analysis.
 
 from typing import List, Dict, Optional
 
+from src.shared.infrastructure.logging_config import get_logger
+
 from src.shared.domain.events import DomainEventBus
 from src.shared.domain.value_objects import PostalCode
 from src.shared.application.services import BaseService
-from src.shared.infrastructure.logging_config import get_logger
 from src.demand.domain.aggregates import DemandAnalysisAggregate
 from src.demand.infrastructure.repositories import DemandAnalysisRepository
 
@@ -55,26 +56,23 @@ class DemandAnalysisService(BaseService):
             ValueError: If population or station count is negative
         """
 
-        # 1. Create value objects (validation happens here)
+        # Create value objects (validation happens here)
         postal_code_vo = PostalCode(postal_code)
 
-        # 2. Create or retrieve aggregate
-        aggregate = DemandAnalysisAggregate(
+        # Create aggregate using factory method (priority calculated automatically)
+        aggregate = DemandAnalysisAggregate.create(
             postal_code=postal_code_vo,
             population=population,
             station_count=station_count,
         )
 
-        # 3. Calculate demand priority (generates events)
+        # Calculate demand priority (generates events)
         aggregate.calculate_demand_priority()
 
-        # 4. Save aggregate
         self._repository.save(aggregate)
 
-        # 5. Publish domain events
         self._publish_events(aggregate)
 
-        # 6. Return aggregate
         return aggregate
 
     def analyze_multiple_areas(self, areas: List[Dict[str, any]]) -> List[DemandAnalysisAggregate]:
@@ -194,9 +192,9 @@ class DemandAnalysisService(BaseService):
 
         return {
             "postal_code": postal_code,
-            "current_stations": aggregate.station_count,
+            "current_stations": aggregate.get_station_count(),
             "recommended_additional_stations": additional_stations,
-            "recommended_total_stations": aggregate.station_count + additional_stations,
+            "recommended_total_stations": aggregate.get_station_count() + additional_stations,
             "target_ratio": target_ratio,
             "current_ratio": aggregate.get_residents_per_station(),
             "coverage_assessment": aggregate.get_coverage_assessment(),

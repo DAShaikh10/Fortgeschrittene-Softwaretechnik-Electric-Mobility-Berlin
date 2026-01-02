@@ -41,13 +41,8 @@ class GeoLocationService(BaseService):
     def get_all_plzs(self) -> list[int]:
         """
         Retrieve all valid postal codes available in the geographic dataset.
-        
-        This serves as the 'Source of Truth' for validation in the UI.
 
         Returns:
             list[int]: A list of valid postal code integers.
         """
-        # Assuming the repository (CSVGeoDataRepository) has access to the full list.
-        # If your repository implementation is generic, ensure it exposes a method
-        # to retrieve all unique keys/PLZs.
         return self._repository.get_all_postal_codes()

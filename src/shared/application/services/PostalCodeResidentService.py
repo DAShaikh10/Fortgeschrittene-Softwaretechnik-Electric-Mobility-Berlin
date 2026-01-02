@@ -6,7 +6,7 @@ from typing import List
 
 from src.shared.domain.events import DomainEventBus
 from src.shared.domain.value_objects import PostalCode
-from src.shared.domain.aggregates import ResidentDataAggregate
+from src.shared.domain.aggregates import PopulationData
 from src.shared.infrastructure.repositories import PopulationRepository
 
 from .BaseService import BaseService
@@ -37,21 +37,23 @@ class PostalCodeResidentService(BaseService):
         if sort:
             postal_codes.sort(key=lambda plz: plz.value)
 
-        # TODO: Maybe create a DTO for this?
         return postal_codes
 
-    def get_resident_data(self, postal_code: PostalCode) -> ResidentDataAggregate:
+    def get_resident_data(self, postal_code: PostalCode) -> PopulationData:
         """
-        Returns ResidentData aggregate with business logic
+        Retrieve population data for a specific postal code area.
+
+        Returns a PopulationData value object containing the population count
+        along with helper methods for density categorization and demand calculations.
 
         Args:
             postal_code (PostalCode): The postal code to get resident data for.
 
         Returns:
-            ResidentDataAggregate: The resident data aggregate for the given postal code.
+            PopulationData: Immutable value object with population data and business logic.
         """
         residents_count: int = self._repository.get_residents_count(postal_code)
 
-        resident_data = ResidentDataAggregate(postal_code=postal_code, population=residents_count)
+        population_data = PopulationData(postal_code=postal_code, population=residents_count)
 
-        return resident_data
+        return population_data
