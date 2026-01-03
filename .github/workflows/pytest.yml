@@ -1,0 +1,71 @@
+name: Pytest
+
+on:
+  push:
+    branches: [main, task/prof-selcan-ipek-ugay, pytest-workflow]
+  pull_request:
+    branches: [main, task/prof-selcan-ipek-ugay, pytest-workflow]
+
+# Security: Restrict workflow permissions to minimum required.
+permissions:
+  contents: read
+  checks: write # Required for publishing test results.
+  pull-requests: write # Required for PR comments.
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+
+    steps:
+      # Security: Harden the runner environment.
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      # Security: Use verified action with commit SHA.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Security: Install dependencies with hash verification.
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-tools
+          pip-compile --generate-hashes requirements.txt -o requirements-lock.txt
+          pip install --require-hashes -r requirements-lock.txt
+
+      # Security: Run tests in isolated environment with JUnit XML output.
+      - name: Run tests with pytest
+        run: |
+          pytest tests/ -v --tb=short --junitxml=pytest-results.xml
+        env:
+          # Security: Prevent tests from accessing sensitive environment variables.
+          PYTHONDONTWRITEBYTECODE: 1
+          PYTHONUTF8: 1
+          PYTHONPATH: ${{ github.workspace }}
+
+      # Publish test results with enhanced summary.
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: pytest-results.xml
+          check_name: Test Results (Python ${{ matrix.python-version }})
+          comment_title: 🧪 Test Results Summary
+          comment_mode: always
+          report_individual_runs: true
+          deduplicate_classes_by_file_name: false
+          check_run_annotations: all tests, skipped tests
+          compare_to_earlier_commit: true
+          pull_request_build: commit
+          test_changes_limit: 10
+          fail_on: nothing # Don't fail the workflow, just report
