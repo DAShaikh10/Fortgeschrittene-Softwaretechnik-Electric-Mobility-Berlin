@@ -2,9 +2,9 @@ name: Pytest
 
 on:
   push:
-    branches: [main, task/prof-selcan-ipek-ugay, pytest-workflow]
+    branches: [main, task/prof-selcan-ipek-ugay]
   pull_request:
-    branches: [main, task/prof-selcan-ipek-ugay, pytest-workflow]
+    branches: [main, task/prof-selcan-ipek-ugay]
 
 # Security: Restrict workflow permissions to minimum required.
 permissions:

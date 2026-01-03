@@ -1,0 +1,108 @@
+name: Code Coverage
+
+on:
+  push:
+    branches: [main, task/prof-selcan-ipek-ugay, coverage-workflow]
+  pull_request:
+    branches: [main, task/prof-selcan-ipek-ugay, coverage-workflow]
+
+# Security: Restrict workflow permissions to minimum required.
+permissions:
+  contents: read
+  pull-requests: write # Required for PR comments.
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+
+    steps:
+      # Security: Harden the runner environment.
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      # Security: Use verified action.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Security: Install dependencies with hash verification.
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-tools
+          pip-compile --generate-hashes requirements.txt -o requirements-lock.txt
+          pip install --require-hashes -r requirements-lock.txt
+
+      # Security: Run coverage in isolated environment.
+      - name: Run tests with coverage
+        run: |
+          pytest tests/ -v --cov=src --cov-report=xml --cov-report=term-missing --cov-report=html --cov-report=term
+        env:
+          # Security: Prevent code from writing bytecode or accessing sensitive data.
+          PYTHONDONTWRITEBYTECODE: 1
+          PYTHONUTF8: 1
+          PYTHONPATH: ${{ github.workspace }}
+
+      # Generate coverage summary for workflow.
+      - name: Generate Coverage Summary
+        if: always()
+        run: |
+          echo "## 📊 Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Coverage by Module" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          coverage report --format=markdown >> $GITHUB_STEP_SUMMARY || coverage report >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          COVERAGE=$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); print(f\"{float(root.attrib['line-rate']) * 100:.2f}\")")
+          echo "**Total Coverage: ${COVERAGE}%**" >> $GITHUB_STEP_SUMMARY
+
+      # Security: Validate coverage meets minimum threshold.
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); print(float(root.attrib['line-rate']) * 100)")
+          echo "Current coverage: $COVERAGE%"
+          THRESHOLD=80
+          if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
+            echo "❌ Coverage $COVERAGE% is below threshold $THRESHOLD%"
+            exit 1
+          else
+            echo "✅ Coverage $COVERAGE% meets threshold $THRESHOLD%"
+          fi
+
+      # Security: Upload coverage reports as artifacts (no sensitive data).
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports-${{ matrix.python-version }}
+          path: |
+            coverage.xml
+            htmlcov/
+            .coverage
+          retention-days: 30
+
+      # Security: Generate coverage badge (read-only operation).
+      - name: Coverage Badge
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: tj-actions/coverage-badge-py@v2
+        with:
+          output: coverage.svg
+
+      # Security: Add coverage summary as PR comment (only for PRs).
+      - name: Coverage comment
+        if: github.event_name == 'pull_request'
+        uses: py-cov-action/python-coverage-comment-action@v3
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+          MINIMUM_GREEN: 90
+          MINIMUM_ORANGE: 80
