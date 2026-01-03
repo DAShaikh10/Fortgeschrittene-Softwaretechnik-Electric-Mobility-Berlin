@@ -1,7 +1,6 @@
 """
 Unit Tests for BaseService.
 
-Tests follow TDD principles and aim for 100% code coverage.
 Test categories:
 - Initialization tests
 - Event publishing tests

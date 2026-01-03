@@ -1,7 +1,6 @@
 """
 Unit Tests for ChargingStationService.
 
-Tests follow TDD principles and aim for 100% code coverage.
 Test categories:
 - Initialization tests
 - Search by postal code tests
