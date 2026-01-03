@@ -18,6 +18,7 @@ import pytest
 
 from src.shared.application.services import PowerCapacityService
 from src.shared.domain.entities import ChargingStation
+from src.shared.domain.exceptions import InvalidPostalCodeError
 from src.shared.domain.value_objects import PostalCode
 from src.shared.infrastructure.repositories import ChargingStationRepository
 
@@ -543,3 +544,225 @@ class TestPowerCapacityServiceIntegration:
 
         # Verify all colors are valid
         assert all(c.startswith('#') and len(c) == 7 for c in colors)
+
+
+class TestPostalCodeBoundedContextInPowerCapacityService:
+    """Test postal code bounded context rules in PowerCapacityService context.
+    
+    Bounded Context Rules:
+    - Postal Code Format: Numeric and exactly 5 digits
+    - Region Support: Must start with 10, 12, 13, or 14
+    """
+
+    def test_service_accepts_valid_postal_codes_all_regions(
+        self, power_capacity_service, mock_repository
+    ):
+        """Test that service accepts postal codes from all valid regions."""
+        valid_postal_codes = [
+            PostalCode("10115"),  # Region 10
+            PostalCode("12115"),  # Region 12
+            PostalCode("13115"),  # Region 13
+            PostalCode("14115"),  # Region 14
+        ]
+        
+        mock_repository.find_stations_by_postal_code.return_value = []
+        
+        result = power_capacity_service.get_power_capacity_by_postal_code(valid_postal_codes)
+        
+        assert len(result) == 4
+        assert all(isinstance(plz, PostalCode) for plz in valid_postal_codes)
+
+    def test_service_rejects_invalid_postal_codes_at_creation(
+        self, power_capacity_service
+    ):
+        """Test that invalid postal codes are rejected before service usage."""
+        # Invalid postal codes should fail at PostalCode creation, not in service
+        with pytest.raises(InvalidPostalCodeError, match="must start with 10, 12, 13, or 14"):
+            PostalCode("99999")  # Invalid starting digits
+        
+        with pytest.raises(InvalidPostalCodeError, match="exactly 5 digits"):
+            PostalCode("1011")  # Wrong length
+        
+        with pytest.raises(InvalidPostalCodeError, match="must be numeric"):
+            PostalCode("1011a")  # Non-numeric
+
+    def test_service_works_with_valid_postal_codes_starting_with_10(
+        self, power_capacity_service, mock_repository, mock_charging_station_1
+    ):
+        """Test that service works with postal codes starting with 10."""
+        valid_codes = [
+            PostalCode("10001"),  # Minimum boundary (must be > 10000)
+            PostalCode("10115"),
+            PostalCode("10999"),  # Maximum for 10 prefix
+        ]
+        
+        mock_repository.find_stations_by_postal_code.return_value = [mock_charging_station_1]
+        
+        for postal_code in valid_codes:
+            result = power_capacity_service.get_power_capacity_by_postal_code([postal_code])
+            assert len(result) == 1
+            assert result.iloc[0]['postal_code'] == postal_code.value
+
+    def test_service_works_with_valid_postal_codes_starting_with_12(
+        self, power_capacity_service, mock_repository, mock_charging_station_1
+    ):
+        """Test that service works with postal codes starting with 12."""
+        valid_codes = [
+            PostalCode("12000"),
+            PostalCode("12115"),
+            PostalCode("12999"),
+        ]
+        
+        mock_repository.find_stations_by_postal_code.return_value = [mock_charging_station_1]
+        
+        for postal_code in valid_codes:
+            result = power_capacity_service.get_power_capacity_by_postal_code([postal_code])
+            assert len(result) == 1
+            assert result.iloc[0]['postal_code'] == postal_code.value
+
+    def test_service_works_with_valid_postal_codes_starting_with_13(
+        self, power_capacity_service, mock_repository, mock_charging_station_1
+    ):
+        """Test that service works with postal codes starting with 13."""
+        valid_codes = [
+            PostalCode("13000"),
+            PostalCode("13115"),
+            PostalCode("13999"),
+        ]
+        
+        mock_repository.find_stations_by_postal_code.return_value = [mock_charging_station_1]
+        
+        for postal_code in valid_codes:
+            result = power_capacity_service.get_power_capacity_by_postal_code([postal_code])
+            assert len(result) == 1
+            assert result.iloc[0]['postal_code'] == postal_code.value
+
+    def test_service_works_with_valid_postal_codes_starting_with_14(
+        self, power_capacity_service, mock_repository, mock_charging_station_1
+    ):
+        """Test that service works with postal codes starting with 14."""
+        valid_codes = [
+            PostalCode("14000"),
+            PostalCode("14115"),
+            PostalCode("14199"),  # Maximum for 14 prefix (must be < 14200)
+        ]
+        
+        mock_repository.find_stations_by_postal_code.return_value = [mock_charging_station_1]
+        
+        for postal_code in valid_codes:
+            result = power_capacity_service.get_power_capacity_by_postal_code([postal_code])
+            assert len(result) == 1
+            assert result.iloc[0]['postal_code'] == postal_code.value
+
+    def test_service_validates_postal_code_format_numeric_only(
+        self, power_capacity_service
+    ):
+        """Test that postal code format enforces numeric-only requirement."""
+        # Invalid non-numeric codes should fail at PostalCode creation
+        invalid_codes = ["1011a", "10-15", "10.15", "10 15"]
+        
+        for code in invalid_codes:
+            with pytest.raises(InvalidPostalCodeError, match="must be numeric"):
+                PostalCode(code)
+
+    def test_service_validates_postal_code_format_exactly_five_digits(
+        self, power_capacity_service
+    ):
+        """Test that postal code format enforces exactly 5 digits requirement."""
+        # Invalid lengths should fail at PostalCode creation
+        invalid_codes = {
+            "1011": "exactly 5 digits",    # 4 digits
+            "101155": "exactly 5 digits",  # 6 digits
+            "10": "exactly 5 digits",     # 2 digits
+        }
+        
+        for code, expected_error in invalid_codes.items():
+            with pytest.raises(InvalidPostalCodeError, match=expected_error):
+                PostalCode(code)
+
+    def test_service_validates_region_support_all_valid_prefixes(
+        self, power_capacity_service, mock_repository, mock_charging_station_1
+    ):
+        """Test that all valid region prefixes (10, 12, 13, 14) are supported."""
+        valid_prefixes = {
+            "10": [PostalCode("10001"), PostalCode("10115"), PostalCode("10999")],
+            "12": [PostalCode("12000"), PostalCode("12115"), PostalCode("12999")],
+            "13": [PostalCode("13000"), PostalCode("13115"), PostalCode("13999")],
+            "14": [PostalCode("14000"), PostalCode("14115"), PostalCode("14199")],
+        }
+        
+        mock_repository.find_stations_by_postal_code.return_value = [mock_charging_station_1]
+        
+        for prefix, postal_codes in valid_prefixes.items():
+            for postal_code in postal_codes:
+                assert postal_code.value.startswith(prefix)
+                result = power_capacity_service.get_power_capacity_by_postal_code([postal_code])
+                assert len(result) == 1
+                assert result.iloc[0]['postal_code'] == postal_code.value
+
+    def test_service_rejects_invalid_region_prefixes(
+        self, power_capacity_service
+    ):
+        """Test that invalid region prefixes are rejected."""
+        invalid_prefixes = ["09", "11", "15", "20", "99"]
+        
+        for prefix in invalid_prefixes:
+            invalid_code = prefix + "000"
+            with pytest.raises(InvalidPostalCodeError, match="must start with 10, 12, 13, or 14"):
+                PostalCode(invalid_code)
+
+    def test_service_handles_boundary_conditions(
+        self, power_capacity_service
+    ):
+        """Test boundary conditions for postal code validation."""
+        # Test codes at and outside boundaries
+        invalid_codes = [
+            "10000",  # At lower boundary (must be > 10000)
+            "14200",  # At upper boundary (must be < 14200)
+            "14201",  # Just above boundary
+        ]
+        
+        for code in invalid_codes:
+            with pytest.raises(InvalidPostalCodeError):
+                PostalCode(code)
+
+    def test_service_works_with_mixed_valid_regions(
+        self, power_capacity_service, mock_repository, mock_charging_station_1
+    ):
+        """Test that service works with postal codes from multiple valid regions."""
+        postal_codes = [
+            PostalCode("10115"),  # Region 10
+            PostalCode("12115"),  # Region 12
+            PostalCode("13115"),  # Region 13
+            PostalCode("14115"),  # Region 14
+        ]
+        
+        mock_repository.find_stations_by_postal_code.return_value = [mock_charging_station_1]
+        
+        result = power_capacity_service.get_power_capacity_by_postal_code(postal_codes)
+        
+        assert len(result) == 4
+        assert set(result['postal_code']) == {"10115", "12115", "13115", "14115"}
+
+    def test_postal_code_validation_in_service_workflow(
+        self, power_capacity_service, mock_repository, mock_station_list
+    ):
+        """Test that postal code validation works correctly in service workflow."""
+        # Valid postal codes should work in service
+        valid_codes = [
+            PostalCode("10115"),
+            PostalCode("12115"),
+            PostalCode("13115"),
+            PostalCode("14115"),
+        ]
+        
+        mock_repository.find_stations_by_postal_code.return_value = mock_station_list
+        
+        capacity_df = power_capacity_service.get_power_capacity_by_postal_code(valid_codes)
+        
+        assert len(capacity_df) == 4
+        # Verify all postal codes are valid format
+        for postal_code in valid_codes:
+            assert len(postal_code.value) == 5
+            assert postal_code.value.isdigit()
+            assert postal_code.value.startswith(("10", "12", "13", "14"))
