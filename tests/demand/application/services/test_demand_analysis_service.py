@@ -136,7 +136,7 @@ class TestAnalyzeDemandUseCase:
         saved_aggregate = mock_repository.save.call_args[0][0]
         assert saved_aggregate.postal_code.value == "10115"
 
-    def test_analyze_demand_publishes_events(self, demand_analysis_service, mock_repository, mock_event_bus):
+    def test_analyze_demand_publishes_events(self, demand_analysis_service, mock_event_bus):
         """Test that analyze_demand publishes domain events."""
         demand_analysis_service.analyze_demand("10115", 30000, 5)
 
@@ -148,20 +148,20 @@ class TestAnalyzeDemandUseCase:
         with pytest.raises(InvalidPostalCodeError):
             demand_analysis_service.analyze_demand("99999", 10000, 5)
 
-    def test_analyze_demand_with_zero_stations(self, demand_analysis_service, mock_repository):
+    def test_analyze_demand_with_zero_stations(self, demand_analysis_service):
         """Test analyzing demand with zero stations (critical shortage)."""
         result = demand_analysis_service.analyze_demand("10115", 50000, 0)
 
         assert result.get_station_count() == 0
         assert result.demand_priority.level == PriorityLevel.HIGH
 
-    def test_analyze_demand_with_low_priority_area(self, demand_analysis_service, mock_repository):
+    def test_analyze_demand_with_low_priority_area(self, demand_analysis_service):
         """Test analyzing demand for low priority area (adequate coverage)."""
         result = demand_analysis_service.analyze_demand("10115", 10000, 10)
 
         assert result.demand_priority.level == PriorityLevel.LOW
 
-    def test_analyze_demand_with_medium_priority_area(self, demand_analysis_service, mock_repository):
+    def test_analyze_demand_with_medium_priority_area(self, demand_analysis_service):
         """Test analyzing demand for medium priority area."""
         result = demand_analysis_service.analyze_demand("10115", 15000, 5)
 
@@ -171,7 +171,7 @@ class TestAnalyzeDemandUseCase:
 class TestAnalyzeMultipleAreasUseCase:
     """Test analyze_multiple_areas use case."""
 
-    def test_analyze_multiple_areas_returns_list_of_aggregates(self, demand_analysis_service, mock_repository):
+    def test_analyze_multiple_areas_returns_list_of_aggregates(self, demand_analysis_service):
         """Test that analyze_multiple_areas returns list of aggregates."""
         areas = [
             {"postal_code": "10115", "population": 30000, "station_count": 5},
@@ -197,7 +197,7 @@ class TestAnalyzeMultipleAreasUseCase:
         assert len(results) == 3
         assert mock_repository.save.call_count == 3
 
-    def test_analyze_multiple_areas_continues_on_error(self, demand_analysis_service, mock_repository):
+    def test_analyze_multiple_areas_continues_on_error(self, demand_analysis_service):
         """Test that processing continues when one area has an error."""
         areas = [
             {"postal_code": "10115", "population": 25000, "station_count": 4},

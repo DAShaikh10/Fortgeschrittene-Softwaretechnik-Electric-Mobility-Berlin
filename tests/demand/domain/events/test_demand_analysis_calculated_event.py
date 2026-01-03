@@ -2,6 +2,7 @@
 # pylint: disable=redefined-outer-name
 
 from dataclasses import FrozenInstanceError
+from datetime import datetime
 
 import pytest
 
@@ -97,7 +98,7 @@ class TestDemandAnalysisCalculatedEventInitialization:
 class TestDemandAnalysisCalculatedEventImmutability:
     """Test immutability of frozen dataclass."""
 
-    def test_cannot_modify_postal_code(self, demand_calculated_event, valid_postal_code):
+    def test_cannot_modify_postal_code(self, demand_calculated_event):
         """Test that postal code cannot be modified."""
         with pytest.raises(FrozenInstanceError):
             demand_calculated_event.postal_code = PostalCode("12345")
@@ -112,9 +113,7 @@ class TestDemandAnalysisCalculatedEventImmutability:
         with pytest.raises(FrozenInstanceError):
             demand_calculated_event.station_count = 10
 
-    def test_cannot_modify_demand_priority(
-        self, demand_calculated_event, valid_demand_priority
-    ):
+    def test_cannot_modify_demand_priority(self, demand_calculated_event):
         """Test that demand priority cannot be modified."""
         new_priority = DemandPriority(
             level=PriorityLevel.LOW, residents_per_station=1000.0
@@ -175,8 +174,6 @@ class TestDemandAnalysisCalculatedEventData:
 
     def test_event_timestamp_is_datetime(self, demand_calculated_event):
         """Test that timestamp is a datetime object."""
-        from datetime import datetime
-
         assert isinstance(demand_calculated_event.occurred_at, datetime)
 
     def test_event_data_preservation(
@@ -305,9 +302,7 @@ class TestDemandAnalysisCalculatedEventIntegration:
 
     def test_event_workflow_high_priority_area(self, valid_postal_code):
         """Test event creation for high priority area."""
-        priority = DemandPriority.calculate_priority(
-            population=DemandPriority.calculate_priority.__code__.co_consts[0],
-        ) if False else DemandPriority(
+        priority = DemandPriority(
             level=PriorityLevel.HIGH, residents_per_station=7500.0
         )
         event = DemandAnalysisCalculatedEvent(

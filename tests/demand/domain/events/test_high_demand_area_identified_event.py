@@ -2,6 +2,7 @@
 # pylint: disable=redefined-outer-name
 
 from dataclasses import FrozenInstanceError
+from datetime import datetime
 
 import pytest
 
@@ -103,7 +104,7 @@ class TestHighDemandAreaIdentifiedEventInitialization:
 class TestHighDemandAreaIdentifiedEventImmutability:
     """Test immutability of frozen dataclass."""
 
-    def test_cannot_modify_postal_code(self, high_demand_event, valid_postal_code):
+    def test_cannot_modify_postal_code(self, high_demand_event):
         """Test that postal code cannot be modified."""
         with pytest.raises(FrozenInstanceError):
             high_demand_event.postal_code = PostalCode("12345")
@@ -172,8 +173,6 @@ class TestHighDemandAreaIdentifiedEventData:
 
     def test_event_timestamp_is_datetime(self, high_demand_event):
         """Test that timestamp is a datetime object."""
-        from datetime import datetime
-
         assert isinstance(high_demand_event.occurred_at, datetime)
 
     def test_event_data_preservation(self, valid_postal_code):
