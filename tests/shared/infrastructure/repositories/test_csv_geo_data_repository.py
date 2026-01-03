@@ -1,5 +1,9 @@
-import pytest
+"""Tests for CSV Geo Data Repository."""
+# pylint: disable=redefined-outer-name
+
 from unittest.mock import patch, MagicMock
+
+import pytest
 import pandas as pd
 
 from src.shared.infrastructure.repositories.CSVGeoDataRepository import CSVGeoDataRepository
@@ -47,10 +51,10 @@ def test_fetch_geolocation_data_found(mock_read_csv, mock_geo_location_cls, repo
     mock_read_csv.return_value = mock_df
 
     repo = CSVGeoDataRepository(file_path)
-    
+
     mock_postal = MagicMock(spec=PostalCode)
     mock_postal.value = "10115"
-    
+
     # Setup GeoLocation Mock return
     expected_geo_loc = MagicMock()
     mock_geo_location_cls.return_value = expected_geo_loc
@@ -58,7 +62,7 @@ def test_fetch_geolocation_data_found(mock_read_csv, mock_geo_location_cls, repo
     result = repo.fetch_geolocation_data(mock_postal)
 
     assert result == expected_geo_loc
-    
+
     mock_geo_location_cls.assert_called_once()
     call_args = mock_geo_location_cls.call_args[1]
     assert call_args['postal_code'] == mock_postal
@@ -74,7 +78,7 @@ def test_fetch_geolocation_data_not_found(mock_read_csv, repo_setup):
     mock_read_csv.return_value = mock_df
 
     repo = CSVGeoDataRepository(file_path)
-    
+
     mock_postal = MagicMock(spec=PostalCode)
     mock_postal.value = "99999"
 

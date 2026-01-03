@@ -1,6 +1,9 @@
-import pytest
-from datetime import datetime
+"""Tests for Domain Event."""
+# pylint: disable=missing-class-docstring
+
 from dataclasses import FrozenInstanceError
+from datetime import datetime
+import pytest
 
 from src.shared.domain.events.DomainEvent import DomainEvent
 
@@ -19,7 +22,7 @@ def test_immutability():
     Test that DomainEvent attributes cannot be modified (frozen=True).
     """
     event = DomainEvent()
-    
+
     with pytest.raises(FrozenInstanceError):
         event.event_id = "new-id"
 
@@ -39,8 +42,8 @@ def test_custom_values():
     """
     custom_id = "12345"
     custom_date = datetime(2025, 1, 1)
-    
+
     event = DomainEvent(event_id=custom_id, occurred_at=custom_date)
-    
+
     assert event.event_id == custom_id
     assert event.occurred_at == custom_date

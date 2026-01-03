@@ -1,3 +1,6 @@
+"""Tests for IDomainEventPublisher."""
+# pylint: disable=abstract-class-instantiated,missing-class-docstring
+
 import pytest
 from src.shared.domain.events.IDomainEventPublisher import IDomainEventPublisher
 
@@ -17,7 +20,7 @@ def test_concrete_implementation():
             pass
         def publish(self, event):
             pass
-    
+
     publisher = ConcretePublisher()
     assert isinstance(publisher, IDomainEventPublisher)
 
@@ -29,6 +32,6 @@ def test_incomplete_implementation():
         def publish(self, event):
             pass
         # Missing subscribe method
-    
+
     with pytest.raises(TypeError):
         IncompletePublisher()

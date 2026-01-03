@@ -1,5 +1,9 @@
-import pytest
+"""Tests for CSV Charging Station Repository."""
+# pylint: disable=redefined-outer-name,use-implicit-booleaness-not-comparison
+
 from unittest.mock import patch, MagicMock
+
+import pytest
 import pandas as pd
 
 from src.shared.infrastructure.repositories.CSVChargingStationRepository import CSVChargingStationRepository
@@ -28,7 +32,7 @@ def test_initialization_and_transform(mock_read_csv, repo_setup):
     Test that the repository initializes and transforms data correctly.
     """
     raw_data, file_path = repo_setup
-    
+
     # Create a real DataFrame to be returned by the mock
     mock_df = pd.DataFrame(raw_data)
     mock_read_csv.return_value = mock_df
@@ -40,11 +44,11 @@ def test_initialization_and_transform(mock_read_csv, repo_setup):
     assert "PLZ" in repo._df.columns
     assert "KW" in repo._df.columns
     assert "Breitengrad" in repo._df.columns
-    
+
     # Check if columns were renamed and values transformed (commas to dots)
     assert repo._df.iloc[0]["Breitengrad"] == "52.5323"
     assert repo._df.iloc[0]["KW"] == "22.0"
-    
+
     # Verify read_csv was called with correct parameters (skiprows, etc.)
     mock_read_csv.assert_called_once()
     _, kwargs = mock_read_csv.call_args
@@ -61,7 +65,7 @@ def test_find_stations_by_postal_code_found(mock_read_csv, repo_setup):
     mock_read_csv.return_value = mock_df
 
     repo = CSVChargingStationRepository(file_path)
-    
+
     # Mock PostalCode
     mock_postal = MagicMock(spec=PostalCode)
     mock_postal.value = "10115"
@@ -70,7 +74,7 @@ def test_find_stations_by_postal_code_found(mock_read_csv, repo_setup):
 
     assert len(stations) == 2
     assert isinstance(stations[0], ChargingStation)
-    
+
     # Verify attributes of the first station
     # Note: The order depends on DataFrame order, which is preserved here
     assert stations[0].latitude == 52.5323
@@ -88,7 +92,7 @@ def test_find_stations_by_postal_code_not_found(mock_read_csv, repo_setup):
     mock_read_csv.return_value = mock_df
 
     repo = CSVChargingStationRepository(file_path)
-    
+
     mock_postal = MagicMock(spec=PostalCode)
     mock_postal.value = "99999"  # Postal code not in data
 

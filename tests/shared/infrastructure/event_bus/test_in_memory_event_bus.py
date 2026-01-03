@@ -1,5 +1,9 @@
-import pytest
+"""Tests for In-Memory Event Bus."""
+# pylint: disable=redefined-outer-name,missing-class-docstring
+
 from unittest.mock import MagicMock, patch
+
+import pytest
 from src.shared.infrastructure.event_bus.InMemoryEventBus import InMemoryEventBus
 from src.shared.domain.events.DomainEvent import DomainEvent
 
@@ -32,12 +36,12 @@ def test_subscribe_and_publish(event_bus):
     # We must attach a __name__ to the mock because the EventBus logger uses it
     mock_handler = MagicMock()
     mock_handler.__name__ = "test_handler"
-    
+
     event_bus.subscribe(SampleEvent, mock_handler)
-    
+
     event = SampleEvent()
     event_bus.publish(event)
-    
+
     mock_handler.assert_called_once_with(event)
 
 def test_publish_no_subscribers(event_bus):
@@ -54,16 +58,16 @@ def test_multiple_subscribers(event_bus):
     """
     handler1 = MagicMock()
     handler1.__name__ = "handler1"
-    
+
     handler2 = MagicMock()
     handler2.__name__ = "handler2"
-    
+
     event_bus.subscribe(SampleEvent, handler1)
     event_bus.subscribe(SampleEvent, handler2)
-    
+
     event = SampleEvent()
     event_bus.publish(event)
-    
+
     handler1.assert_called_once_with(event)
     handler2.assert_called_once_with(event)
 
@@ -73,21 +77,21 @@ def test_different_event_types(event_bus):
     """
     handler_test = MagicMock()
     handler_test.__name__ = "handler_test"
-    
+
     handler_another = MagicMock()
     handler_another.__name__ = "handler_another"
-    
+
     event_bus.subscribe(SampleEvent, handler_test)
     event_bus.subscribe(AnotherSampleEvent, handler_another)
-    
+
     event1 = SampleEvent()
     event2 = AnotherSampleEvent()
-    
+
     # Publish first event type
     event_bus.publish(event1)
     handler_test.assert_called_once_with(event1)
     handler_another.assert_not_called()
-    
+
     # Publish second event type
     event_bus.publish(event2)
     handler_another.assert_called_once_with(event2)
@@ -98,22 +102,22 @@ def test_handler_error_isolation(event_bus):
     """
     failing_handler = MagicMock(side_effect=Exception("Handler crashed"))
     failing_handler.__name__ = "failing_handler"
-    
+
     working_handler = MagicMock()
     working_handler.__name__ = "working_handler"
-    
+
     event_bus.subscribe(SampleEvent, failing_handler)
     event_bus.subscribe(SampleEvent, working_handler)
-    
+
     event = SampleEvent()
-    
+
     # We expect the error to be logged, but not raised to crash the app
     with patch("src.shared.infrastructure.event_bus.InMemoryEventBus.logger") as mock_logger:
         event_bus.publish(event)
-        
+
         failing_handler.assert_called_once_with(event)
         working_handler.assert_called_once_with(event)
-        
+
         # Verify the error was logged
         mock_logger.error.assert_called_once()
         args, _ = mock_logger.error.call_args
@@ -125,16 +129,16 @@ def test_prevent_duplicate_subscription(event_bus):
     """
     handler = MagicMock()
     handler.__name__ = "handler"
-    
+
     event_bus.subscribe(SampleEvent, handler)
     event_bus.subscribe(SampleEvent, handler) # Duplicate subscription
-    
+
     # Check internal state
     # pylint: disable=protected-access
     assert len(event_bus._subscribers[SampleEvent]) == 1
-    
+
     event = SampleEvent()
     event_bus.publish(event)
-    
+
     # Handler should still only be called once
     handler.assert_called_once_with(event)

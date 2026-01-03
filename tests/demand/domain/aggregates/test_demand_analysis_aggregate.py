@@ -15,7 +15,7 @@ Test categories:
 import pytest
 
 from src.demand.domain.aggregates import DemandAnalysisAggregate
-from src.demand.domain.value_objects import DemandPriority
+from src.demand.domain.value_objects import DemandPriority, Population, StationCount
 from src.demand.application.enums import PriorityLevel
 from src.demand.domain.events import (
     DemandAnalysisCalculatedEvent,
@@ -166,8 +166,6 @@ class TestDemandAnalysisAggregateInvariantValidation:
 
     def test_create_raises_error_for_none_priority(self, valid_postal_code):
         """Test that None priority raises ValueError (requires factory method)."""
-        from src.demand.domain.value_objects import Population, StationCount
-        
         with pytest.raises(ValueError, match="Demand priority must be provided"):
             DemandAnalysisAggregate(
                 postal_code=valid_postal_code,

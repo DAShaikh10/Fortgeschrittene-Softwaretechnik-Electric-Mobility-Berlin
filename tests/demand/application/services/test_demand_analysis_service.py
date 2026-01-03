@@ -13,6 +13,8 @@ Test categories:
 - Error handling tests
 """
 
+# pylint: disable=redefined-outer-name,unused-argument
+
 # pylint: disable=redefined-outer-name
 
 from unittest.mock import Mock, patch
@@ -130,7 +132,7 @@ class TestAnalyzeDemandUseCase:
 
     def test_analyze_demand_saves_aggregate_to_repository(self, demand_analysis_service, mock_repository):
         """Test that analyze_demand saves aggregate to repository."""
-        result = demand_analysis_service.analyze_demand("10115", 25000, 3)
+        demand_analysis_service.analyze_demand("10115", 25000, 3)
 
         mock_repository.save.assert_called_once()
         saved_aggregate = mock_repository.save.call_args[0][0]
@@ -138,7 +140,7 @@ class TestAnalyzeDemandUseCase:
 
     def test_analyze_demand_publishes_events(self, demand_analysis_service, mock_repository, mock_event_bus):
         """Test that analyze_demand publishes domain events."""
-        result = demand_analysis_service.analyze_demand("10115", 30000, 5)
+        demand_analysis_service.analyze_demand("10115", 30000, 5)
 
         # Should publish events from the aggregate
         mock_event_bus.publish.assert_called()
