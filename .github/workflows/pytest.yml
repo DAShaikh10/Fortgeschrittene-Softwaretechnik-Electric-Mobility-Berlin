@@ -6,11 +6,11 @@ on:
   pull_request:
     branches: [main, task/prof-selcan-ipek-ugay, pytest-workflow]
 
-# Security: Restrict workflow permissions to minimum required
+# Security: Restrict workflow permissions to minimum required.
 permissions:
   contents: read
-  checks: write # Required for publishing test results
-  pull-requests: write # Required for PR comments
+  checks: write # Required for publishing test results.
+  pull-requests: write # Required for PR comments.
 
 jobs:
   test:
