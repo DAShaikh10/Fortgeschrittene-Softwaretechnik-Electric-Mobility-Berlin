@@ -1,0 +1,3 @@
+"""
+Shared Application Tests Module.
+"""
