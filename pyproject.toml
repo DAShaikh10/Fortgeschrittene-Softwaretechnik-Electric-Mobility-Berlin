@@ -23,14 +23,15 @@ disable = [
     "R0903", # Too few public methods.
     "R0913", # Too many arguments.
     "R0917", # Too many positional arguments.
-    "W0718", # Cacthing too general exception Exception.
+    "W0406", # Module import itself (import-self).
     "W0603", # Using global statement.
+    "W0718", # Cacthing too general exception Exception.
 ]
 
 # Task runner config.
 [tool.taskipy.tasks]
 install = "pip install -r requirements.txt"
-lint = "pylint main.py config.py src/"
+lint = "pylint main.py config.py src/ tests/"
 clean = "python -c \"import shutil, pathlib; [shutil.rmtree(p) for p in pathlib.Path('.').rglob('__pycache__')]\""
 run = "streamlit run main.py"
 run-clean = "task clean && streamlit run main.py"

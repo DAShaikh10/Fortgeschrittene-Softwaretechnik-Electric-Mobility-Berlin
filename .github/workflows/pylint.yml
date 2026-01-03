@@ -37,4 +37,4 @@ jobs:
       - name: Analysing the code with pylint
         continue-on-error: true
         run: |
-          pylint main.py config.py src/ --disable=fixme
+          pylint main.py config.py src/ tests/ --disable=fixme
