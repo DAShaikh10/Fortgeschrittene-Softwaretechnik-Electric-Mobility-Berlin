@@ -7,3 +7,5 @@ streamlit_folium
 scipy
 pylint # Linter.
 taskify # Task Runner.
+pytest # Testing framework.
+pytest-cov # Code coverage for pytest.
