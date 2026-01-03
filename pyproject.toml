@@ -48,6 +48,9 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+filterwarnings = [
+    "ignore::UserWarning:geopandas.geoseries",
+]
 addopts = "-v --strict-markers"
 markers = [
     "unit: Unit tests",
