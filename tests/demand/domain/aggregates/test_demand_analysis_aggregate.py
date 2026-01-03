@@ -22,7 +22,6 @@ from src.demand.domain.events import (
     HighDemandAreaIdentifiedEvent,
 )
 from src.shared.domain.value_objects import PostalCode
-from src.shared.domain.exceptions import InvalidPostalCodeError
 
 
 # Test fixtures
@@ -85,9 +84,7 @@ class TestDemandAnalysisAggregateFactoryMethods:
 
     def test_create_returns_aggregate_with_calculated_priority(self, valid_postal_code):
         """Test create factory method calculates priority automatically."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=30000, station_count=5
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=30000, station_count=5)
 
         assert isinstance(aggregate, DemandAnalysisAggregate)
         assert aggregate.postal_code == valid_postal_code
@@ -98,45 +95,35 @@ class TestDemandAnalysisAggregateFactoryMethods:
 
     def test_create_calculates_high_priority_correctly(self, valid_postal_code):
         """Test that create calculates high priority for >5000 residents/station."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=30000, station_count=5
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=30000, station_count=5)
 
         assert aggregate.demand_priority.level == PriorityLevel.HIGH
         assert aggregate.demand_priority.residents_per_station == 6000.0
 
     def test_create_calculates_medium_priority_correctly(self, valid_postal_code):
         """Test that create calculates medium priority for 2000-5000 residents/station."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=15000, station_count=5
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=15000, station_count=5)
 
         assert aggregate.demand_priority.level == PriorityLevel.MEDIUM
         assert aggregate.demand_priority.residents_per_station == 3000.0
 
     def test_create_calculates_low_priority_correctly(self, valid_postal_code):
         """Test that create calculates low priority for <2000 residents/station."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=10000, station_count=10
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=10000, station_count=10)
 
         assert aggregate.demand_priority.level == PriorityLevel.LOW
         assert aggregate.demand_priority.residents_per_station == 1000.0
 
     def test_create_with_zero_stations_sets_high_priority(self, valid_postal_code):
         """Test that create with zero stations results in high priority."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=50000, station_count=0
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=50000, station_count=0)
 
         assert aggregate.demand_priority.level == PriorityLevel.HIGH
         assert aggregate.demand_priority.residents_per_station == 50000.0
 
     def test_create_from_existing_uses_provided_priority(self, valid_postal_code):
         """Test create_from_existing uses the provided priority without recalculation."""
-        existing_priority = DemandPriority(
-            level=PriorityLevel.MEDIUM, residents_per_station=3500.0
-        )
+        existing_priority = DemandPriority(level=PriorityLevel.MEDIUM, residents_per_station=3500.0)
 
         aggregate = DemandAnalysisAggregate.create_from_existing(
             postal_code=valid_postal_code,
@@ -170,16 +157,12 @@ class TestDemandAnalysisAggregateInvariantValidation:
     def test_create_raises_error_for_negative_population(self, valid_postal_code):
         """Test that negative population raises ValueError."""
         with pytest.raises(ValueError, match="Population cannot be negative"):
-            DemandAnalysisAggregate.create(
-                postal_code=valid_postal_code, population=-1000, station_count=5
-            )
+            DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=-1000, station_count=5)
 
     def test_create_raises_error_for_negative_station_count(self, valid_postal_code):
         """Test that negative station count raises ValueError."""
         with pytest.raises(ValueError, match="Station count cannot be negative"):
-            DemandAnalysisAggregate.create(
-                postal_code=valid_postal_code, population=20000, station_count=-5
-            )
+            DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=20000, station_count=-5)
 
     def test_create_raises_error_for_none_priority(self, valid_postal_code):
         """Test that None priority raises ValueError (requires factory method)."""
@@ -193,17 +176,13 @@ class TestDemandAnalysisAggregateInvariantValidation:
 
     def test_create_accepts_zero_population(self, valid_postal_code):
         """Test that zero population is valid."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=0, station_count=5
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=0, station_count=5)
 
         assert aggregate.population == 0
 
     def test_create_accepts_zero_stations(self, valid_postal_code):
         """Test that zero stations is valid."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=20000, station_count=0
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=20000, station_count=0)
 
         assert aggregate.station_count == 0
 
@@ -237,17 +216,13 @@ class TestDemandAnalysisAggregateQueries:
 
     def test_get_residents_per_station_with_zero_stations(self, valid_postal_code):
         """Test get_residents_per_station returns population when no stations."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=50000, station_count=0
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=50000, station_count=0)
 
         assert aggregate.get_residents_per_station() == 50000.0
 
     def test_get_residents_per_station_with_fractional_result(self, valid_postal_code):
         """Test get_residents_per_station handles fractional results."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=10000, station_count=3
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=10000, station_count=3)
 
         assert aggregate.get_residents_per_station() == pytest.approx(3333.33, rel=0.01)
 
@@ -259,9 +234,7 @@ class TestDemandAnalysisAggregateBusinessRules:
         """Test is_high_priority returns True for high priority areas."""
         assert high_priority_aggregate.is_high_priority() is True
 
-    def test_is_high_priority_returns_false_for_medium_priority(
-        self, medium_priority_aggregate
-    ):
+    def test_is_high_priority_returns_false_for_medium_priority(self, medium_priority_aggregate):
         """Test is_high_priority returns False for medium priority areas."""
         assert medium_priority_aggregate.is_high_priority() is False
 
@@ -279,48 +252,36 @@ class TestDemandAnalysisAggregateBusinessRules:
 
     def test_needs_infrastructure_expansion_at_boundary(self, valid_postal_code):
         """Test needs_infrastructure_expansion at 3000 threshold."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=15000, station_count=5
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=15000, station_count=5)
 
         # 3000 residents/station - exactly at boundary (not >3000)
         assert aggregate.needs_infrastructure_expansion() is False
 
     def test_get_coverage_assessment_returns_critical(self, valid_postal_code):
         """Test get_coverage_assessment returns CRITICAL for >10000 ratio."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=50000, station_count=4
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=50000, station_count=4)
 
         assert aggregate.get_coverage_assessment() == "CRITICAL"
 
     def test_get_coverage_assessment_returns_poor(self, valid_postal_code):
         """Test get_coverage_assessment returns POOR for 5000-10000 ratio."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=30000, station_count=5
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=30000, station_count=5)
 
         assert aggregate.get_coverage_assessment() == "POOR"
 
     def test_get_coverage_assessment_returns_adequate(self, valid_postal_code):
         """Test get_coverage_assessment returns ADEQUATE for 2000-5000 ratio."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=15000, station_count=5
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=15000, station_count=5)
 
         assert aggregate.get_coverage_assessment() == "ADEQUATE"
 
     def test_get_coverage_assessment_returns_good(self, valid_postal_code):
         """Test get_coverage_assessment returns GOOD for <2000 ratio."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=10000, station_count=10
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=10000, station_count=10)
 
         assert aggregate.get_coverage_assessment() == "GOOD"
 
-    def test_calculate_recommended_stations_with_default_target(
-        self, high_priority_aggregate
-    ):
+    def test_calculate_recommended_stations_with_default_target(self, high_priority_aggregate):
         """Test calculate_recommended_stations with default target ratio (2000)."""
         # 30000 / 2000 = 15 total needed, 5 existing = 10 additional
         additional = high_priority_aggregate.calculate_recommended_stations()
@@ -334,25 +295,19 @@ class TestDemandAnalysisAggregateBusinessRules:
 
         assert additional == 25
 
-    def test_calculate_recommended_stations_when_already_meeting_target(
-        self, low_priority_aggregate
-    ):
+    def test_calculate_recommended_stations_when_already_meeting_target(self, low_priority_aggregate):
         """Test calculate_recommended_stations returns 0 when target already met."""
         # 10000 / 2000 = 5 total needed, 10 existing = 0 additional (already exceeded)
         additional = low_priority_aggregate.calculate_recommended_stations(target_ratio=2000.0)
 
         assert additional == 0
 
-    def test_calculate_recommended_stations_raises_error_for_zero_target(
-        self, high_priority_aggregate
-    ):
+    def test_calculate_recommended_stations_raises_error_for_zero_target(self, high_priority_aggregate):
         """Test calculate_recommended_stations raises error for zero or negative target."""
         with pytest.raises(ValueError, match="Target ratio must be positive"):
             high_priority_aggregate.calculate_recommended_stations(target_ratio=0.0)
 
-    def test_calculate_recommended_stations_raises_error_for_negative_target(
-        self, high_priority_aggregate
-    ):
+    def test_calculate_recommended_stations_raises_error_for_negative_target(self, high_priority_aggregate):
         """Test calculate_recommended_stations raises error for negative target."""
         with pytest.raises(ValueError, match="Target ratio must be positive"):
             high_priority_aggregate.calculate_recommended_stations(target_ratio=-1000.0)
@@ -400,16 +355,12 @@ class TestDemandAnalysisAggregateCommands:
         # 30000 / 20 = 1500 residents/station -> LOW priority
         assert high_priority_aggregate.demand_priority.level == PriorityLevel.LOW
 
-    def test_update_station_count_raises_error_for_negative_value(
-        self, high_priority_aggregate
-    ):
+    def test_update_station_count_raises_error_for_negative_value(self, high_priority_aggregate):
         """Test update_station_count raises error for negative station count."""
         with pytest.raises(ValueError, match="Station count cannot be negative"):
             high_priority_aggregate.update_station_count(-3)
 
-    def test_calculate_demand_priority_recalculates_and_returns(
-        self, high_priority_aggregate
-    ):
+    def test_calculate_demand_priority_recalculates_and_returns(self, high_priority_aggregate):
         """Test calculate_demand_priority recalculates and returns priority."""
         priority = high_priority_aggregate.calculate_demand_priority()
 
@@ -433,9 +384,7 @@ class TestDemandAnalysisAggregateCommands:
 class TestDemandAnalysisAggregateEventHandling:
     """Test domain event handling."""
 
-    def test_calculate_demand_priority_emits_demand_calculated_event(
-        self, high_priority_aggregate
-    ):
+    def test_calculate_demand_priority_emits_demand_calculated_event(self, high_priority_aggregate):
         """Test that calculate_demand_priority emits DemandAnalysisCalculatedEvent."""
         high_priority_aggregate.calculate_demand_priority()
 
@@ -444,9 +393,7 @@ class TestDemandAnalysisAggregateEventHandling:
         # Should have at least the DemandAnalysisCalculatedEvent
         assert any(isinstance(e, DemandAnalysisCalculatedEvent) for e in events)
 
-    def test_calculate_demand_priority_emits_high_demand_event_for_high_priority(
-        self, high_priority_aggregate
-    ):
+    def test_calculate_demand_priority_emits_high_demand_event_for_high_priority(self, high_priority_aggregate):
         """Test that high priority areas emit HighDemandAreaIdentifiedEvent."""
         high_priority_aggregate.calculate_demand_priority()
 
@@ -456,9 +403,7 @@ class TestDemandAnalysisAggregateEventHandling:
         assert any(isinstance(e, DemandAnalysisCalculatedEvent) for e in events)
         assert any(isinstance(e, HighDemandAreaIdentifiedEvent) for e in events)
 
-    def test_calculate_demand_priority_no_high_demand_event_for_low_priority(
-        self, low_priority_aggregate
-    ):
+    def test_calculate_demand_priority_no_high_demand_event_for_low_priority(self, low_priority_aggregate):
         """Test that low priority areas don't emit HighDemandAreaIdentifiedEvent."""
         low_priority_aggregate.calculate_demand_priority()
 
@@ -470,16 +415,12 @@ class TestDemandAnalysisAggregateEventHandling:
 
     def test_demand_calculated_event_contains_correct_data(self, valid_postal_code):
         """Test that DemandAnalysisCalculatedEvent contains correct data."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=25000, station_count=4
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=25000, station_count=4)
 
         aggregate.calculate_demand_priority()
         events = aggregate.get_domain_events()
 
-        demand_event = next(
-            (e for e in events if isinstance(e, DemandAnalysisCalculatedEvent)), None
-        )
+        demand_event = next((e for e in events if isinstance(e, DemandAnalysisCalculatedEvent)), None)
 
         assert demand_event is not None
         assert demand_event.postal_code == valid_postal_code
@@ -492,9 +433,7 @@ class TestDemandAnalysisAggregateEventHandling:
         high_priority_aggregate.calculate_demand_priority()
 
         events = high_priority_aggregate.get_domain_events()
-        high_demand_event = next(
-            (e for e in events if isinstance(e, HighDemandAreaIdentifiedEvent)), None
-        )
+        high_demand_event = next((e for e in events if isinstance(e, HighDemandAreaIdentifiedEvent)), None)
 
         assert high_demand_event is not None
         assert high_demand_event.urgency_score > 0
@@ -570,36 +509,28 @@ class TestDemandAnalysisAggregateEdgeCases:
 
     def test_aggregate_with_very_large_population(self, valid_postal_code):
         """Test aggregate handles very large population."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=1000000, station_count=50
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=1000000, station_count=50)
 
         assert aggregate.population == 1000000
         assert aggregate.get_residents_per_station() == 20000.0
 
     def test_aggregate_with_very_large_station_count(self, valid_postal_code):
         """Test aggregate handles very large station count."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=50000, station_count=1000
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=50000, station_count=1000)
 
         assert aggregate.station_count == 1000
         assert aggregate.demand_priority.level == PriorityLevel.LOW
 
     def test_aggregate_with_equal_population_and_stations(self, valid_postal_code):
         """Test aggregate with 1:1 ratio."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=1000, station_count=1000
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=1000, station_count=1000)
 
         assert aggregate.get_residents_per_station() == 1.0
         assert aggregate.demand_priority.level == PriorityLevel.LOW
 
     def test_aggregate_priority_boundary_at_5000(self, valid_postal_code):
         """Test priority boundary at exactly 5000 residents/station."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=25000, station_count=5
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=25000, station_count=5)
 
         # Exactly 5000 - should still be MEDIUM (>5000 is HIGH)
         assert aggregate.get_residents_per_station() == 5000.0
@@ -607,9 +538,7 @@ class TestDemandAnalysisAggregateEdgeCases:
 
     def test_aggregate_priority_boundary_at_2000(self, valid_postal_code):
         """Test priority boundary at exactly 2000 residents/station."""
-        aggregate = DemandAnalysisAggregate.create(
-            postal_code=valid_postal_code, population=10000, station_count=5
-        )
+        aggregate = DemandAnalysisAggregate.create(postal_code=valid_postal_code, population=10000, station_count=5)
 
         # Exactly 2000 - should still be LOW (>2000 is MEDIUM)
         assert aggregate.get_residents_per_station() == 2000.0
@@ -620,9 +549,7 @@ class TestDemandAnalysisAggregateEdgeCases:
         postal_codes = ["10115", "12345", "13579", "14195"]
 
         for code in postal_codes:
-            aggregate = DemandAnalysisAggregate.create(
-                postal_code=PostalCode(code), population=20000, station_count=5
-            )
+            aggregate = DemandAnalysisAggregate.create(postal_code=PostalCode(code), population=20000, station_count=5)
             assert aggregate.postal_code.value == code
 
     def test_aggregate_state_consistency_after_multiple_updates(self, high_priority_aggregate):

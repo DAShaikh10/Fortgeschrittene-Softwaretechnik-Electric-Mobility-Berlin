@@ -92,9 +92,7 @@ def low_priority_aggregate():
 class TestDemandAnalysisServiceInitialization:
     """Test initialization of DemandAnalysisService."""
 
-    def test_service_initializes_with_repository_and_event_bus(
-        self, mock_repository, mock_event_bus
-    ):
+    def test_service_initializes_with_repository_and_event_bus(self, mock_repository, mock_event_bus):
         """Test that service initializes correctly with repository and event bus."""
         service = DemandAnalysisService(mock_repository, mock_event_bus)
 
@@ -113,9 +111,7 @@ class TestDemandAnalysisServiceInitialization:
 class TestAnalyzeDemandUseCase:
     """Test analyze_demand use case."""
 
-    def test_analyze_demand_creates_aggregate_with_correct_data(
-        self, demand_analysis_service, mock_repository, mock_event_bus
-    ):
+    def test_analyze_demand_creates_aggregate_with_correct_data(self, demand_analysis_service):
         """Test that analyze_demand creates aggregate with correct postal code, population, station count."""
         result = demand_analysis_service.analyze_demand("10115", 30000, 5)
 
@@ -124,9 +120,7 @@ class TestAnalyzeDemandUseCase:
         assert result.population == 30000
         assert result.station_count == 5
 
-    def test_analyze_demand_calculates_priority_automatically(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_analyze_demand_calculates_priority_automatically(self, demand_analysis_service):
         """Test that analyze_demand automatically calculates demand priority."""
         result = demand_analysis_service.analyze_demand("10115", 30000, 5)
 
@@ -134,9 +128,7 @@ class TestAnalyzeDemandUseCase:
         assert isinstance(result.demand_priority, DemandPriority)
         assert result.demand_priority.level == PriorityLevel.HIGH
 
-    def test_analyze_demand_saves_aggregate_to_repository(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_analyze_demand_saves_aggregate_to_repository(self, demand_analysis_service, mock_repository):
         """Test that analyze_demand saves aggregate to repository."""
         result = demand_analysis_service.analyze_demand("10115", 25000, 3)
 
@@ -144,18 +136,14 @@ class TestAnalyzeDemandUseCase:
         saved_aggregate = mock_repository.save.call_args[0][0]
         assert saved_aggregate.postal_code.value == "10115"
 
-    def test_analyze_demand_publishes_events(
-        self, demand_analysis_service, mock_repository, mock_event_bus
-    ):
+    def test_analyze_demand_publishes_events(self, demand_analysis_service, mock_repository, mock_event_bus):
         """Test that analyze_demand publishes domain events."""
         result = demand_analysis_service.analyze_demand("10115", 30000, 5)
 
         # Should publish events from the aggregate
         mock_event_bus.publish.assert_called()
 
-    def test_analyze_demand_raises_error_for_invalid_postal_code(
-        self, demand_analysis_service
-    ):
+    def test_analyze_demand_raises_error_for_invalid_postal_code(self, demand_analysis_service):
         """Test that analyze_demand raises error for invalid postal code."""
         with pytest.raises(InvalidPostalCodeError):
             demand_analysis_service.analyze_demand("99999", 10000, 5)
@@ -167,17 +155,13 @@ class TestAnalyzeDemandUseCase:
         assert result.station_count == 0
         assert result.demand_priority.level == PriorityLevel.HIGH
 
-    def test_analyze_demand_with_low_priority_area(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_analyze_demand_with_low_priority_area(self, demand_analysis_service, mock_repository):
         """Test analyzing demand for low priority area (adequate coverage)."""
         result = demand_analysis_service.analyze_demand("10115", 10000, 10)
 
         assert result.demand_priority.level == PriorityLevel.LOW
 
-    def test_analyze_demand_with_medium_priority_area(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_analyze_demand_with_medium_priority_area(self, demand_analysis_service, mock_repository):
         """Test analyzing demand for medium priority area."""
         result = demand_analysis_service.analyze_demand("10115", 15000, 5)
 
@@ -187,9 +171,7 @@ class TestAnalyzeDemandUseCase:
 class TestAnalyzeMultipleAreasUseCase:
     """Test analyze_multiple_areas use case."""
 
-    def test_analyze_multiple_areas_returns_list_of_aggregates(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_analyze_multiple_areas_returns_list_of_aggregates(self, demand_analysis_service, mock_repository):
         """Test that analyze_multiple_areas returns list of aggregates."""
         areas = [
             {"postal_code": "10115", "population": 30000, "station_count": 5},
@@ -202,9 +184,7 @@ class TestAnalyzeMultipleAreasUseCase:
         assert len(results) == 2
         assert all(isinstance(agg, DemandAnalysisAggregate) for agg in results)
 
-    def test_analyze_multiple_areas_processes_all_areas(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_analyze_multiple_areas_processes_all_areas(self, demand_analysis_service, mock_repository):
         """Test that all areas are processed and saved."""
         areas = [
             {"postal_code": "10115", "population": 25000, "station_count": 4},
@@ -217,9 +197,7 @@ class TestAnalyzeMultipleAreasUseCase:
         assert len(results) == 3
         assert mock_repository.save.call_count == 3
 
-    def test_analyze_multiple_areas_continues_on_error(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_analyze_multiple_areas_continues_on_error(self, demand_analysis_service, mock_repository):
         """Test that processing continues when one area has an error."""
         areas = [
             {"postal_code": "10115", "population": 25000, "station_count": 4},
@@ -241,9 +219,7 @@ class TestAnalyzeMultipleAreasUseCase:
 
         assert results == []
 
-    def test_analyze_multiple_areas_with_single_area(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_analyze_multiple_areas_with_single_area(self, demand_analysis_service):
         """Test analyzing single area in list."""
         areas = [{"postal_code": "10115", "population": 20000, "station_count": 5}]
 
@@ -271,19 +247,11 @@ class TestGetHighPriorityAreasUseCase:
         assert len(results) == 1
         assert results[0].is_high_priority()
 
-    def test_get_high_priority_areas_sorted_by_urgency(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_get_high_priority_areas_sorted_by_urgency(self, demand_analysis_service, mock_repository):
         """Test that high priority areas are sorted by urgency score (descending)."""
-        agg1 = DemandAnalysisAggregate.create(
-            PostalCode("10115"), population=60000, station_count=10
-        )
-        agg2 = DemandAnalysisAggregate.create(
-            PostalCode("12345"), population=100000, station_count=5
-        )
-        agg3 = DemandAnalysisAggregate.create(
-            PostalCode("13579"), population=30000, station_count=5
-        )
+        agg1 = DemandAnalysisAggregate.create(PostalCode("10115"), population=60000, station_count=10)
+        agg2 = DemandAnalysisAggregate.create(PostalCode("12345"), population=100000, station_count=5)
+        agg3 = DemandAnalysisAggregate.create(PostalCode("13579"), population=30000, station_count=5)
 
         mock_repository.find_all.return_value = [agg1, agg2, agg3]
 
@@ -303,9 +271,7 @@ class TestGetHighPriorityAreasUseCase:
 
         assert results == []
 
-    def test_get_high_priority_areas_calls_repository_find_all(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_get_high_priority_areas_calls_repository_find_all(self, demand_analysis_service, mock_repository):
         """Test that repository find_all is called."""
         mock_repository.find_all.return_value = []
 
@@ -328,9 +294,7 @@ class TestGetDemandAnalysisUseCase:
         assert result is high_priority_aggregate
         assert result.postal_code.value == "10115"
 
-    def test_get_demand_analysis_returns_none_when_not_found(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_get_demand_analysis_returns_none_when_not_found(self, demand_analysis_service, mock_repository):
         """Test that get_demand_analysis returns None when not found."""
         mock_repository.find_by_postal_code.return_value = None
 
@@ -338,9 +302,7 @@ class TestGetDemandAnalysisUseCase:
 
         assert result is None
 
-    def test_get_demand_analysis_calls_repository_with_postal_code(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_get_demand_analysis_calls_repository_with_postal_code(self, demand_analysis_service, mock_repository):
         """Test that repository is called with correct postal code."""
         mock_repository.find_by_postal_code.return_value = None
 
@@ -350,9 +312,7 @@ class TestGetDemandAnalysisUseCase:
         call_args = mock_repository.find_by_postal_code.call_args[0][0]
         assert call_args.value == "10115"
 
-    def test_get_demand_analysis_raises_error_for_invalid_postal_code(
-        self, demand_analysis_service
-    ):
+    def test_get_demand_analysis_raises_error_for_invalid_postal_code(self, demand_analysis_service):
         """Test that invalid postal code raises error."""
         with pytest.raises(InvalidPostalCodeError):
             demand_analysis_service.get_demand_analysis("99999")
@@ -367,9 +327,7 @@ class TestUpdateDemandAnalysisUseCase:
         """Test that update_demand_analysis updates population."""
         mock_repository.find_by_postal_code.return_value = high_priority_aggregate
 
-        result = demand_analysis_service.update_demand_analysis(
-            "10115", population=40000
-        )
+        result = demand_analysis_service.update_demand_analysis("10115", population=40000)
 
         assert result.population == 40000
 
@@ -379,9 +337,7 @@ class TestUpdateDemandAnalysisUseCase:
         """Test that update_demand_analysis updates station count."""
         mock_repository.find_by_postal_code.return_value = high_priority_aggregate
 
-        result = demand_analysis_service.update_demand_analysis(
-            "10115", station_count=10
-        )
+        result = demand_analysis_service.update_demand_analysis("10115", station_count=10)
 
         assert result.station_count == 10
 
@@ -391,9 +347,7 @@ class TestUpdateDemandAnalysisUseCase:
         """Test that both population and station count can be updated."""
         mock_repository.find_by_postal_code.return_value = high_priority_aggregate
 
-        result = demand_analysis_service.update_demand_analysis(
-            "10115", population=50000, station_count=15
-        )
+        result = demand_analysis_service.update_demand_analysis("10115", population=50000, station_count=15)
 
         assert result.population == 50000
         assert result.station_count == 15
@@ -419,9 +373,7 @@ class TestUpdateDemandAnalysisUseCase:
 
         mock_event_bus.publish.assert_called()
 
-    def test_update_demand_analysis_raises_error_when_not_found(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_update_demand_analysis_raises_error_when_not_found(self, demand_analysis_service, mock_repository):
         """Test that error is raised when analysis not found."""
         mock_repository.find_by_postal_code.return_value = None
 
@@ -461,13 +413,9 @@ class TestGetRecommendationsUseCase:
         assert "current_ratio" in result
         assert "coverage_assessment" in result
 
-    def test_get_recommendations_calculates_additional_stations_needed(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_get_recommendations_calculates_additional_stations_needed(self, demand_analysis_service, mock_repository):
         """Test that recommendations calculates correct number of additional stations."""
-        aggregate = DemandAnalysisAggregate.create(
-            PostalCode("10115"), population=20000, station_count=5
-        )
+        aggregate = DemandAnalysisAggregate.create(PostalCode("10115"), population=20000, station_count=5)
         mock_repository.find_by_postal_code.return_value = aggregate
 
         result = demand_analysis_service.get_recommendations("10115", target_ratio=2000.0)
@@ -476,13 +424,9 @@ class TestGetRecommendationsUseCase:
         assert result["recommended_additional_stations"] == 5
         assert result["recommended_total_stations"] == 10
 
-    def test_get_recommendations_with_custom_target_ratio(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_get_recommendations_with_custom_target_ratio(self, demand_analysis_service, mock_repository):
         """Test recommendations with custom target ratio."""
-        aggregate = DemandAnalysisAggregate.create(
-            PostalCode("10115"), population=30000, station_count=10
-        )
+        aggregate = DemandAnalysisAggregate.create(PostalCode("10115"), population=30000, station_count=10)
         mock_repository.find_by_postal_code.return_value = aggregate
 
         result = demand_analysis_service.get_recommendations("10115", target_ratio=1000.0)
@@ -491,13 +435,9 @@ class TestGetRecommendationsUseCase:
         assert result["recommended_additional_stations"] == 20
         assert result["target_ratio"] == 1000.0
 
-    def test_get_recommendations_when_already_meeting_target(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_get_recommendations_when_already_meeting_target(self, demand_analysis_service, mock_repository):
         """Test recommendations when area already meets target ratio."""
-        aggregate = DemandAnalysisAggregate.create(
-            PostalCode("10115"), population=10000, station_count=10
-        )
+        aggregate = DemandAnalysisAggregate.create(PostalCode("10115"), population=10000, station_count=10)
         mock_repository.find_by_postal_code.return_value = aggregate
 
         result = demand_analysis_service.get_recommendations("10115", target_ratio=2000.0)
@@ -527,9 +467,7 @@ class TestGetRecommendationsUseCase:
         assert "coverage_assessment" in result
         assert result["coverage_assessment"] in ["CRITICAL", "POOR", "ADEQUATE", "GOOD"]
 
-    def test_get_recommendations_raises_error_when_not_found(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_get_recommendations_raises_error_when_not_found(self, demand_analysis_service, mock_repository):
         """Test that error is raised when analysis not found."""
         mock_repository.find_by_postal_code.return_value = None
 
@@ -540,18 +478,14 @@ class TestGetRecommendationsUseCase:
 class TestEventPublishingIntegration:
     """Test event publishing integration."""
 
-    def test_analyze_demand_publishes_demand_calculated_event(
-        self, demand_analysis_service, mock_repository, mock_event_bus
-    ):
+    def test_analyze_demand_publishes_demand_calculated_event(self, demand_analysis_service, mock_event_bus):
         """Test that analyze_demand publishes DemandAnalysisCalculatedEvent."""
         demand_analysis_service.analyze_demand("10115", 30000, 5)
 
         # Event bus should be called to publish events
         assert mock_event_bus.publish.called
 
-    def test_analyze_demand_publishes_high_demand_event_for_high_priority(
-        self, demand_analysis_service, mock_repository, mock_event_bus
-    ):
+    def test_analyze_demand_publishes_high_demand_event_for_high_priority(self, demand_analysis_service, mock_event_bus):
         """Test that high demand event is published for high priority areas."""
         demand_analysis_service.analyze_demand("10115", 50000, 5)
 
@@ -572,16 +506,12 @@ class TestEventPublishingIntegration:
 class TestErrorHandling:
     """Test error handling scenarios."""
 
-    def test_analyze_demand_with_negative_population_raises_error(
-        self, demand_analysis_service
-    ):
+    def test_analyze_demand_with_negative_population_raises_error(self, demand_analysis_service):
         """Test that negative population raises error."""
         with pytest.raises(ValueError):
             demand_analysis_service.analyze_demand("10115", -1000, 5)
 
-    def test_analyze_demand_with_negative_station_count_raises_error(
-        self, demand_analysis_service
-    ):
+    def test_analyze_demand_with_negative_station_count_raises_error(self, demand_analysis_service):
         """Test that negative station count raises error."""
         with pytest.raises(ValueError):
             demand_analysis_service.analyze_demand("10115", 20000, -5)
@@ -591,9 +521,7 @@ class TestErrorHandling:
         with pytest.raises(InvalidPostalCodeError):
             demand_analysis_service.update_demand_analysis("99999", population=10000)
 
-    def test_get_recommendations_with_invalid_postal_code_raises_error(
-        self, demand_analysis_service
-    ):
+    def test_get_recommendations_with_invalid_postal_code_raises_error(self, demand_analysis_service):
         """Test that getting recommendations with invalid postal code raises error."""
         with pytest.raises(InvalidPostalCodeError):
             demand_analysis_service.get_recommendations("99999")
@@ -612,9 +540,7 @@ class TestServiceBehaviorConsistency:
         with pytest.raises(InvalidPostalCodeError):
             demand_analysis_service.get_demand_analysis("invalid")
 
-    def test_service_coordinates_with_repository_for_persistence(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_service_coordinates_with_repository_for_persistence(self, demand_analysis_service, mock_repository):
         """Test that service properly coordinates with repository for all persistence operations."""
         # Analyze creates and saves
         demand_analysis_service.analyze_demand("10115", 20000, 5)
@@ -625,9 +551,7 @@ class TestServiceBehaviorConsistency:
         demand_analysis_service.get_demand_analysis("10115")
         assert mock_repository.find_by_postal_code.called
 
-    def test_service_methods_return_appropriate_types(
-        self, demand_analysis_service, mock_repository
-    ):
+    def test_service_methods_return_appropriate_types(self, demand_analysis_service, mock_repository):
         """Test that service methods return expected types."""
         # analyze_demand returns aggregate
         result = demand_analysis_service.analyze_demand("10115", 20000, 5)

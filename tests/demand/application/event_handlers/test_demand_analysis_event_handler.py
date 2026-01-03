@@ -82,9 +82,7 @@ class TestDemandAnalysisEventHandlerBasicFunctionality:
     """Test basic event handler functionality."""
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_logs_high_priority_event_with_correct_format(
-        self, mock_logger, high_priority_event
-    ):
+    def test_handle_logs_high_priority_event_with_correct_format(self, mock_logger, high_priority_event):
         """Test that handle method logs high priority events with proper formatting."""
         DemandAnalysisEventHandler.handle(high_priority_event)
 
@@ -129,7 +127,7 @@ class TestDemandAnalysisEventHandlerBasicFunctionality:
         )
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_returns_none(self, mock_logger, high_priority_event):
+    def test_handle_returns_none(self, high_priority_event):
         """Test that handle method returns None."""
         result = DemandAnalysisEventHandler.handle(high_priority_event)
 
@@ -149,9 +147,7 @@ class TestDemandAnalysisEventHandlerWithVariousPostalCodes:
     """Test event handler with different postal codes."""
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_logs_event_with_different_postal_code_10xxx(
-        self, mock_logger, high_demand_priority
-    ):
+    def test_handle_logs_event_with_different_postal_code_10xxx(self, mock_logger, high_demand_priority):
         """Test logging with postal code starting with 10."""
         postal_code = PostalCode("10178")
         event = DemandAnalysisCalculatedEvent(
@@ -168,9 +164,7 @@ class TestDemandAnalysisEventHandlerWithVariousPostalCodes:
         assert args[1] == "10178"
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_logs_event_with_postal_code_12xxx(
-        self, mock_logger, medium_demand_priority
-    ):
+    def test_handle_logs_event_with_postal_code_12xxx(self, mock_logger, medium_demand_priority):
         """Test logging with postal code starting with 12."""
         postal_code = PostalCode("12345")
         event = DemandAnalysisCalculatedEvent(
@@ -187,9 +181,7 @@ class TestDemandAnalysisEventHandlerWithVariousPostalCodes:
         assert args[1] == "12345"
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_logs_event_with_postal_code_13xxx(
-        self, mock_logger, low_demand_priority
-    ):
+    def test_handle_logs_event_with_postal_code_13xxx(self, mock_logger, low_demand_priority):
         """Test logging with postal code starting with 13."""
         postal_code = PostalCode("13579")
         event = DemandAnalysisCalculatedEvent(
@@ -206,9 +198,7 @@ class TestDemandAnalysisEventHandlerWithVariousPostalCodes:
         assert args[1] == "13579"
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_logs_event_with_postal_code_14xxx(
-        self, mock_logger, high_demand_priority
-    ):
+    def test_handle_logs_event_with_postal_code_14xxx(self, mock_logger, high_demand_priority):
         """Test logging with postal code starting with 14."""
         postal_code = PostalCode("14195")
         event = DemandAnalysisCalculatedEvent(
@@ -229,13 +219,9 @@ class TestDemandAnalysisEventHandlerEdgeCases:
     """Test event handler with edge cases and boundary values."""
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_logs_event_with_zero_stations(
-        self, mock_logger, valid_postal_code
-    ):
+    def test_handle_logs_event_with_zero_stations(self, mock_logger, valid_postal_code):
         """Test logging when station count is zero (indicates infinite residents per station)."""
-        demand_priority = DemandPriority(
-            level=PriorityLevel.HIGH, residents_per_station=50000.0
-        )
+        demand_priority = DemandPriority(level=PriorityLevel.HIGH, residents_per_station=50000.0)
         event = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
             population=50000,
@@ -256,13 +242,9 @@ class TestDemandAnalysisEventHandlerEdgeCases:
         )
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_logs_event_with_single_station(
-        self, mock_logger, valid_postal_code
-    ):
+    def test_handle_logs_event_with_single_station(self, mock_logger, valid_postal_code):
         """Test logging when there is exactly one station."""
-        demand_priority = DemandPriority(
-            level=PriorityLevel.HIGH, residents_per_station=15000.0
-        )
+        demand_priority = DemandPriority(level=PriorityLevel.HIGH, residents_per_station=15000.0)
         event = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
             population=15000,
@@ -277,13 +259,9 @@ class TestDemandAnalysisEventHandlerEdgeCases:
         assert args[4] == 1  # station_count
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_logs_event_with_large_population(
-        self, mock_logger, valid_postal_code
-    ):
+    def test_handle_logs_event_with_large_population(self, mock_logger, valid_postal_code):
         """Test logging with very large population."""
-        demand_priority = DemandPriority(
-            level=PriorityLevel.HIGH, residents_per_station=100000.0
-        )
+        demand_priority = DemandPriority(level=PriorityLevel.HIGH, residents_per_station=100000.0)
         event = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
             population=1000000,
@@ -298,13 +276,9 @@ class TestDemandAnalysisEventHandlerEdgeCases:
         assert args[3] == 1000000  # population
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_logs_event_with_many_stations(
-        self, mock_logger, valid_postal_code
-    ):
+    def test_handle_logs_event_with_many_stations(self, mock_logger, valid_postal_code):
         """Test logging with large number of stations."""
-        demand_priority = DemandPriority(
-            level=PriorityLevel.LOW, residents_per_station=100.0
-        )
+        demand_priority = DemandPriority(level=PriorityLevel.LOW, residents_per_station=100.0)
         event = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
             population=5000,
@@ -319,13 +293,9 @@ class TestDemandAnalysisEventHandlerEdgeCases:
         assert args[4] == 50  # station_count
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_logs_event_with_fractional_residents_per_station(
-        self, mock_logger, valid_postal_code
-    ):
+    def test_handle_logs_event_with_fractional_residents_per_station(self, mock_logger, valid_postal_code):
         """Test that residents per station is logged with one decimal place."""
-        demand_priority = DemandPriority(
-            level=PriorityLevel.MEDIUM, residents_per_station=2345.6789
-        )
+        demand_priority = DemandPriority(level=PriorityLevel.MEDIUM, residents_per_station=2345.6789)
         event = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
             population=11728,
@@ -344,13 +314,9 @@ class TestDemandAnalysisEventHandlerEdgeCases:
         assert args[5] == 2345.6789
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_logs_event_with_exact_threshold_values(
-        self, mock_logger, valid_postal_code
-    ):
+    def test_handle_logs_event_with_exact_threshold_values(self, mock_logger, valid_postal_code):
         """Test logging with residents per station at exact priority threshold (5000)."""
-        demand_priority = DemandPriority(
-            level=PriorityLevel.HIGH, residents_per_station=5000.0
-        )
+        demand_priority = DemandPriority(level=PriorityLevel.HIGH, residents_per_station=5000.0)
         event = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
             population=25000,
@@ -369,9 +335,7 @@ class TestDemandAnalysisEventHandlerLoggerIntegration:
     """Test integration with the logging system."""
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_calls_logger_info_not_warning_or_error(
-        self, mock_logger, high_priority_event
-    ):
+    def test_handle_calls_logger_info_not_warning_or_error(self, mock_logger, high_priority_event):
         """Test that handler uses info level logging, not warning or error."""
         DemandAnalysisEventHandler.handle(high_priority_event)
 
@@ -389,9 +353,7 @@ class TestDemandAnalysisEventHandlerLoggerIntegration:
         assert format_string.startswith("[EVENT]")
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_multiple_events_logs_each_separately(
-        self, mock_logger, high_priority_event, low_priority_event
-    ):
+    def test_handle_multiple_events_logs_each_separately(self, mock_logger, high_priority_event, low_priority_event):
         """Test that multiple events are logged independently."""
         DemandAnalysisEventHandler.handle(high_priority_event)
         DemandAnalysisEventHandler.handle(low_priority_event)
@@ -399,13 +361,9 @@ class TestDemandAnalysisEventHandlerLoggerIntegration:
         assert mock_logger.info.call_count == 2
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_extracts_correct_attributes_from_event(
-        self, mock_logger, valid_postal_code
-    ):
+    def test_handle_extracts_correct_attributes_from_event(self, mock_logger, valid_postal_code):
         """Test that all event attributes are correctly extracted and logged."""
-        demand_priority = DemandPriority(
-            level=PriorityLevel.MEDIUM, residents_per_station=4321.0
-        )
+        demand_priority = DemandPriority(level=PriorityLevel.MEDIUM, residents_per_station=4321.0)
         event = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
             population=12963,
@@ -435,9 +393,7 @@ class TestDemandAnalysisEventHandlerStaticMethodBehavior:
         assert len(handler.__dict__) == 0
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_can_be_called_from_instance(
-        self, mock_logger, high_priority_event
-    ):
+    def test_handle_can_be_called_from_instance(self, mock_logger, high_priority_event):
         """Test that handle method can be called from an instance (though not typical)."""
         handler = DemandAnalysisEventHandler()
         handler.handle(high_priority_event)
@@ -456,9 +412,7 @@ class TestDemandAnalysisEventHandlerEventDataValidation:
     """Test event handler behavior with valid event data structures."""
 
     @patch("src.demand.application.event_handlers.DemandAnalysisEventHandler.logger")
-    def test_handle_accepts_frozen_dataclass_event(
-        self, mock_logger, high_priority_event
-    ):
+    def test_handle_accepts_frozen_dataclass_event(self, mock_logger, high_priority_event):
         """Test that handler accepts frozen dataclass events (immutable)."""
         # DemandAnalysisCalculatedEvent is a frozen dataclass
         DemandAnalysisEventHandler.handle(high_priority_event)
@@ -475,9 +429,7 @@ class TestDemandAnalysisEventHandlerEventDataValidation:
         ]
 
         for level, ratio in priority_levels:
-            demand_priority = DemandPriority(
-                level=level, residents_per_station=ratio
-            )
+            demand_priority = DemandPriority(level=level, residents_per_station=ratio)
             event = DemandAnalysisCalculatedEvent(
                 postal_code=valid_postal_code,
                 population=10000,
