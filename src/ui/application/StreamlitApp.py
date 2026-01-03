@@ -287,7 +287,6 @@ class StreamlitApp:
                         ).add_to(folium_map)
 
                         logger.info("✓ Postal code boundary with population data added to map successfully!")
-                        streamlit.success(f"✓ Postal Code {selected_postal_code}: Population {population:,}")
                     except Exception as boundary_error:
                         logger.error("Error rendering residents boundary: %s", boundary_error, exc_info=True)
                         streamlit.error(f"Error rendering postal code boundary: {boundary_error}")
@@ -299,8 +298,8 @@ class StreamlitApp:
                     )
                     streamlit.warning(f"No resident data available for postal code {selected_postal_code}")
             else:
-                # Show informational message for "All areas"
-                streamlit.info("Select a specific postal code to view population data on the map.")
+                # No message needed for "All areas" view.
+                pass
         except Exception as e:
             # Handle and display any errors gracefully in the UI
             logger.error("Error loading residents layer: %s", e, exc_info=True)
@@ -382,11 +381,6 @@ class StreamlitApp:
                             f"Category: {capacity_category}"
                         ),
                     ).add_to(folium_map)
-
-                    streamlit.success(
-                        f"✓ Postal Code {selected_postal_code}: {capacity_value:.0f} kW "
-                        f"({station_count} stations) - **{capacity_category}** capacity"
-                    )
                 else:
                     streamlit.warning(f"No capacity data available for postal code {selected_postal_code}")
             else:
@@ -425,9 +419,6 @@ class StreamlitApp:
                             areas_rendered += 1
                         except Exception as e:
                             logger.warning("Could not render postal code %s: %s", plz, e)
-
-                streamlit.success(f"✓ Rendered {areas_rendered} postal code areas with power capacity visualization")
-
         except Exception as e:
             logger.error("Error rendering power capacity layer: %s", e, exc_info=True)
             streamlit.error(f"Error rendering power capacity layer: {e}")
@@ -492,8 +483,6 @@ class StreamlitApp:
                             },
                             tooltip=f"Postal Code: {selected_postal_code}",
                         ).add_to(folium_map)
-                        logger.info("✓ Postal code boundary added to map successfully!")
-                        streamlit.success(f"✓ Postal code {selected_postal_code} boundary rendered")
                     except Exception as boundary_error:
                         logger.error("Error rendering boundary: %s", boundary_error, exc_info=True)
                         streamlit.error(f"Error rendering postal code boundary: {boundary_error}")
@@ -520,10 +509,6 @@ class StreamlitApp:
                         fillColor="green",
                         fillOpacity=0.8,
                     ).add_to(folium_map)
-                logger.info("✓ Added %d charging station markers to map", len(area.stations))
-            else:
-                # Prevent map clutter when viewing all areas
-                streamlit.info("Select a specific postal code to view charging stations on the map.")
         except Exception as e:
             # Handle and display any errors gracefully in the UI
             logger.error("Error loading charging stations: %s", e, exc_info=True)
