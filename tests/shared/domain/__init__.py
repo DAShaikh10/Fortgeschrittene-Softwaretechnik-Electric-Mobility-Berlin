@@ -1,0 +1,3 @@
+"""
+Shared Domain Tests Module.
+"""
