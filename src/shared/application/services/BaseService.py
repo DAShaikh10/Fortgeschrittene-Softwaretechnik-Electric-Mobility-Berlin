@@ -17,7 +17,17 @@ class BaseService:
         self._repository = repository
         self._event_bus = event_bus
 
-    def _publish_events(self, aggregate: BaseAggregate):
+    @property
+    def repository(self):
+        """Get the repository instance."""
+        return self._repository
+
+    @property
+    def event_bus(self) -> Optional[IDomainEventPublisher]:
+        """Get the event bus instance."""
+        return self._event_bus
+
+    def publish_events(self, aggregate: BaseAggregate):
         """
         Publish all domain events from the aggregate.
 

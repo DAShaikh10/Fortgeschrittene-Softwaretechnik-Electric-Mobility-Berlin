@@ -14,6 +14,9 @@ maintainers = [
 ]
 
 # PyLint config.
+[tool.pylint.master]
+init-hook = "import sys; sys.path.insert(0, '.')"
+
 [tool.pylint.format]
 max-line-length = 130
 
@@ -27,6 +30,16 @@ disable = [
     "W0603", # Using global statement.
     "W0718", # Cacthing too general exception Exception.
 ]
+
+[tool.pylint."messages control"]
+# Ignore duplicate code in test files - test setup patterns are often similar
+ignore-paths = ["tests/.*/.*_test\\.py$"]
+
+[tool.pylint.similarities]
+# Increase minimum lines for duplicate code detection
+min-similarity-lines = 10
+# Ignore test files for duplicate code checks
+ignore-imports = true
 
 # Task runner config.
 [tool.taskipy.tasks]

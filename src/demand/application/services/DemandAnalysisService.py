@@ -71,7 +71,7 @@ class DemandAnalysisService(BaseService):
 
         self._repository.save(aggregate)
 
-        self._publish_events(aggregate)
+        self.publish_events(aggregate)
 
         return aggregate
 
@@ -166,7 +166,7 @@ class DemandAnalysisService(BaseService):
         self._repository.save(aggregate)
 
         # Publish events
-        self._publish_events(aggregate)
+        self.publish_events(aggregate)
 
         return aggregate
 

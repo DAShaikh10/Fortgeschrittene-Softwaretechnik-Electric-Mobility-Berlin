@@ -50,7 +50,7 @@ class ChargingStationService(BaseService):
 
         aggregate.perform_search(search_parameters={"postal_code": postal_code.value})
 
-        self._publish_events(aggregate)
+        self.publish_events(aggregate)
 
         return aggregate
 

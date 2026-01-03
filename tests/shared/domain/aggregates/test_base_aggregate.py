@@ -1,7 +1,6 @@
 """
 Unit Tests for BaseAggregate.
 
-Tests follow TDD principles and aim for 100% code coverage.
 Test categories:
 - Initialization tests
 - Event addition tests
