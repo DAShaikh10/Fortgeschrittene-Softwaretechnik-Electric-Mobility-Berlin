@@ -19,8 +19,16 @@ URL: **[evision-berlin.streamlit.app](https://evision-berlin.streamlit.app/)**
 
 </div>
 
+<div align="center">
+
+![Pylint](https://github.com/DAShaikh10/Fortgeschrittene-Softwaretechnik-Electric-Mobility-Berlin/actions/workflows/pylint.yml/badge.svg)
+![Pytest](https://github.com/DAShaikh10/Fortgeschrittene-Softwaretechnik-Electric-Mobility-Berlin/actions/workflows/pytest.yml/badge.svg)
+![Coverage](https://github.com/DAShaikh10/Fortgeschrittene-Softwaretechnik-Electric-Mobility-Berlin/actions/workflows/coverage.yml/badge.svg)
+
+</div>
+
 **Course:** Advanced Software Engineering  
-**Professor:** Dr. Harald Stein
+**Professor:** Dr. Prof. Selcan Ipek Ugay
 
 ## Team Members
 
