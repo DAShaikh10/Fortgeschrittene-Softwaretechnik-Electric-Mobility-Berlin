@@ -45,12 +45,26 @@ jobs:
       # Security: Run coverage in isolated environment.
       - name: Run tests with coverage
         run: |
-          pytest tests/ -v --cov=src --cov-report=xml --cov-report=term-missing --cov-report=html
+          pytest tests/ -v --cov=src --cov-report=xml --cov-report=term-missing --cov-report=html --cov-report=term
         env:
           # Security: Prevent code from writing bytecode or accessing sensitive data.
           PYTHONDONTWRITEBYTECODE: 1
           PYTHONUTF8: 1
           PYTHONPATH: ${{ github.workspace }}
+
+      # Generate coverage summary for workflow.
+      - name: Generate Coverage Summary
+        if: always()
+        run: |
+          echo "## 📊 Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Coverage by Module" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          coverage report --format=markdown >> $GITHUB_STEP_SUMMARY || coverage report >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          COVERAGE=$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); print(f\"{float(root.attrib['line-rate']) * 100:.2f}\")")
+          echo "**Total Coverage: ${COVERAGE}%**" >> $GITHUB_STEP_SUMMARY
 
       # Security: Validate coverage meets minimum threshold.
       - name: Check coverage threshold
