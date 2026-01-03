@@ -2,8 +2,6 @@
 Demand Domain Aggregate - Demand Analysis Aggregate Module.
 """
 
-from dataclasses import dataclass
-
 from src.shared.domain.value_objects import PostalCode
 from src.shared.domain.aggregates import BaseAggregate
 from src.demand.domain.value_objects import DemandPriority, Population, StationCount
@@ -13,7 +11,6 @@ from src.demand.domain.events import (
 )
 
 
-@dataclass
 class DemandAnalysisAggregate(BaseAggregate):
     """
     Aggregate Root: Represents a demand analysis for a postal code area.
@@ -30,21 +27,54 @@ class DemandAnalysisAggregate(BaseAggregate):
     - Priority must be consistent with population/station data
     """
 
-    postal_code: PostalCode  # Identity
-    population: Population
-    station_count: StationCount
-    demand_priority: DemandPriority
-
-    def __post_init__(self):
+    def __init__(
+        self,
+        postal_code: PostalCode,
+        population: Population,
+        station_count: StationCount,
+        demand_priority: DemandPriority,
+    ):
         """
-        Initialize aggregate and enforce invariants.
+        Initialize the DemandAnalysisAggregate.
+
+        Args:
+            postal_code: Postal code identifying the area
+            population: Population value object
+            station_count: Station count value object
+            demand_priority: Demand priority value object
         """
         # Initialize base aggregate event handling.
         super().__init__()
 
+        # Set instance attributes
+        self._postal_code = postal_code
+        self._population = population
+        self._station_count = station_count
+        self._demand_priority = demand_priority
+
         # Validate invariants (value objects handle their own validation).
-        if self.demand_priority is None:
+        if self._demand_priority is None:
             raise ValueError("Demand priority must be provided (use factory methods)")
+
+    @property
+    def postal_code(self) -> PostalCode:
+        """Get the postal code."""
+        return self._postal_code
+
+    @property
+    def population(self) -> Population:
+        """Get the population."""
+        return self._population
+
+    @property
+    def station_count(self) -> StationCount:
+        """Get the station count."""
+        return self._station_count
+
+    @property
+    def demand_priority(self) -> DemandPriority:
+        """Get the demand priority."""
+        return self._demand_priority
 
     @staticmethod
     def create(postal_code: PostalCode, population: int, station_count: int) -> "DemandAnalysisAggregate":
@@ -115,14 +145,14 @@ class DemandAnalysisAggregate(BaseAggregate):
             DemandPriority: Calculated priority
         """
 
-        priority = DemandPriority.calculate_priority(self.population, self.station_count)
-        self.demand_priority = priority
+        priority = DemandPriority.calculate_priority(self._population, self._station_count)
+        self._demand_priority = priority
 
         # Emit domain event.
         event = DemandAnalysisCalculatedEvent(
-            postal_code=self.postal_code,
-            population=self.population.value,
-            station_count=self.station_count.value,
+            postal_code=self._postal_code,
+            population=self._population.value,
+            station_count=self._station_count.value,
             demand_priority=priority,
         )
         self._add_domain_event(event)
@@ -130,9 +160,9 @@ class DemandAnalysisAggregate(BaseAggregate):
         # Emit high demand event if priority is high.
         if priority.is_high_priority():
             high_demand_event = HighDemandAreaIdentifiedEvent(
-                postal_code=self.postal_code,
-                population=self.population.value,
-                station_count=self.station_count.value,
+                postal_code=self._postal_code,
+                population=self._population.value,
+                station_count=self._station_count.value,
                 urgency_score=priority.get_urgency_score(),
             )
             self._add_domain_event(high_demand_event)
@@ -146,7 +176,7 @@ class DemandAnalysisAggregate(BaseAggregate):
         Returns:
             PostalCode: Postal code value object.
         """
-        return self.postal_code
+        return self._postal_code
 
     def get_population(self) -> int:
         """
@@ -155,7 +185,7 @@ class DemandAnalysisAggregate(BaseAggregate):
         Returns:
             int: Population in this area.
         """
-        return self.population.value
+        return self._population.value
 
     def get_station_count(self) -> int:
         """
@@ -164,7 +194,7 @@ class DemandAnalysisAggregate(BaseAggregate):
         Returns:
             int: Station count in this area.
         """
-        return self.station_count.value
+        return self._station_count.value
 
     def get_demand_priority(self) -> DemandPriority:
         """
@@ -173,7 +203,7 @@ class DemandAnalysisAggregate(BaseAggregate):
         Returns:
             DemandPriority: Current demand priority.
         """
-        return self.demand_priority
+        return self._demand_priority
 
     def update_population(self, new_population: int):
         """
@@ -186,7 +216,7 @@ class DemandAnalysisAggregate(BaseAggregate):
             ValueError: If population is negative
         """
 
-        self.population = Population(new_population)
+        self._population = Population(new_population)
         self.calculate_demand_priority()
 
     def update_station_count(self, new_count: int):
@@ -200,7 +230,7 @@ class DemandAnalysisAggregate(BaseAggregate):
             ValueError: If station count is negative
         """
 
-        self.station_count = StationCount(new_count)
+        self._station_count = StationCount(new_count)
         self.calculate_demand_priority()
 
     def get_residents_per_station(self) -> float:
@@ -211,9 +241,9 @@ class DemandAnalysisAggregate(BaseAggregate):
             float: Residents per station (population if no stations)
         """
 
-        if self.station_count.is_zero():
-            return float(self.population.value)
-        return self.population.value / self.station_count.value
+        if self._station_count.is_zero():
+            return float(self._population.value)
+        return self._population.value / self._station_count.value
 
     def is_high_priority(self) -> bool:
         """
@@ -233,7 +263,7 @@ class DemandAnalysisAggregate(BaseAggregate):
             bool: True if expansion is needed
         """
 
-        return self.demand_priority.residents_per_station > 3000
+        return self._demand_priority.residents_per_station > 3000
 
     def get_coverage_assessment(self) -> str:
         """
@@ -267,8 +297,8 @@ class DemandAnalysisAggregate(BaseAggregate):
         if target_ratio <= 0:
             raise ValueError("Target ratio must be positive")
 
-        recommended_total = int(self.population.value / target_ratio)
-        additional_needed = max(0, recommended_total - self.station_count.value)
+        recommended_total = int(self._population.value / target_ratio)
+        additional_needed = max(0, recommended_total - self._station_count.value)
 
         return additional_needed
 
@@ -280,12 +310,12 @@ class DemandAnalysisAggregate(BaseAggregate):
             dict: Dictionary with aggregate data
         """
         return {
-            "postal_code": self.postal_code.value,
-            "population": self.population.value,
-            "station_count": self.station_count.value,
-            "demand_priority": self.demand_priority.level.value,
-            "residents_per_station": self.demand_priority.residents_per_station,
-            "urgency_score": self.demand_priority.get_urgency_score(),
+            "postal_code": self._postal_code.value,
+            "population": self._population.value,
+            "station_count": self._station_count.value,
+            "demand_priority": self._demand_priority.level.value,
+            "residents_per_station": self._demand_priority.residents_per_station,
+            "urgency_score": self._demand_priority.get_urgency_score(),
             "is_high_priority": self.is_high_priority(),
             "needs_expansion": self.needs_infrastructure_expansion(),
             "coverage_assessment": self.get_coverage_assessment(),
