@@ -780,8 +780,8 @@ class StreamlitApp:
                         tooltip_html = (
                             f"<b>Postal Code: {plz}</b><br>"
                             f"Priority: {priority}<br>"
-                            f"Population: {analysis.population:,}<br>"
-                            f"Stations: {analysis.station_count}<br>"
+                            f"Population: {analysis.population.value:,}<br>"
+                            f"Stations: {analysis.station_count.value}<br>"
                             f"Residents/Station: {residents_per_station:.0f}<br>"
                             f"Urgency Score: {urgency_score:.0f}/100"
                         )

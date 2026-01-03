@@ -1,0 +1,3 @@
+"""
+Demand Domain Aggregates Tests.
+"""

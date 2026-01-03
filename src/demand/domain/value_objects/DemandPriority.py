@@ -3,8 +3,12 @@ Demand Domain Value Object - DemandPriority
 """
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from src.demand.application.enums import PriorityLevel
+
+if TYPE_CHECKING:
+    from src.demand.domain.value_objects import Population, StationCount
 
 
 @dataclass(frozen=True)
@@ -36,7 +40,7 @@ class DemandPriority:
             raise ValueError("Residents per station cannot be negative")
 
     @staticmethod
-    def calculate_priority(population: int, station_count: int) -> "DemandPriority":
+    def calculate_priority(population: "Population", station_count: "StationCount") -> "DemandPriority":
         """
         Calculate demand priority based on population and station count ratio.
 
@@ -50,25 +54,29 @@ class DemandPriority:
             - LOW: < 2000 residents per station (adequate coverage)
 
         Args:
-            population (int): Total population in the area.
-            station_count (int): Number of existing charging stations.
+            population (Population): Total population in the area (value object)
+            station_count (StationCount): Number of existing charging stations (value object)
 
         Returns:
             DemandPriority: Calculated priority value object with level and ratio.
 
         Example:
-            >>> priority = DemandPriority.calculate_priority(15000, 3)
+            >>> priority = DemandPriority.calculate_priority(Population(15000), StationCount(3))
             >>> priority.level  # HIGH
             >>> priority.residents_per_station  # 5000.0
         """
+        # Extract integer values from value objects
+        pop_value = population.value
+        station_value = station_count.value
+
         # Handle edge case: no existing stations means highest priority
-        if station_count == 0:
+        if station_value == 0:
             return DemandPriority(
-                level=PriorityLevel.HIGH, residents_per_station=float(population)
+                level=PriorityLevel.HIGH, residents_per_station=float(pop_value)
             )
 
         # Calculate the ratio of residents to available charging stations
-        residents_per_station = population / station_count
+        residents_per_station = pop_value / station_value
 
         # Apply business rules to determine priority level
         if residents_per_station > 5000:

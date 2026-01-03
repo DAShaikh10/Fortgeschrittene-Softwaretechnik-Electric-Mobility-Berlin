@@ -2,18 +2,15 @@
 Demand Domain Aggregate - Demand Analysis Aggregate Module.
 """
 
-from dataclasses import dataclass
-
 from src.shared.domain.value_objects import PostalCode
 from src.shared.domain.aggregates import BaseAggregate
-from src.demand.domain.value_objects import DemandPriority
+from src.demand.domain.value_objects import DemandPriority, Population, StationCount
 from src.demand.domain.events import (
     DemandAnalysisCalculatedEvent,
     HighDemandAreaIdentifiedEvent,
 )
 
 
-@dataclass
 class DemandAnalysisAggregate(BaseAggregate):
     """
     Aggregate Root: Represents a demand analysis for a postal code area.
@@ -26,31 +23,58 @@ class DemandAnalysisAggregate(BaseAggregate):
 
     Business Invariants:
     - Postal code must be valid
-    - Population and station count must be non-negative
+    - Population and station count must be non-negative (enforced by value objects)
     - Priority must be consistent with population/station data
     """
 
-    postal_code: PostalCode  # Identity
-    population: int
-    station_count: int
-    demand_priority: DemandPriority
-
-    def __post_init__(self):
+    def __init__(
+        self,
+        postal_code: PostalCode,
+        population: Population,
+        station_count: StationCount,
+        demand_priority: DemandPriority,
+    ):
         """
-        Initialize aggregate and enforce invariants.
+        Initialize the DemandAnalysisAggregate.
+
+        Args:
+            postal_code: Postal code identifying the area
+            population: Population value object
+            station_count: Station count value object
+            demand_priority: Demand priority value object
         """
         # Initialize base aggregate event handling.
         super().__init__()
 
-        # Validate invariants.
-        if self.population < 0:
-            raise ValueError(f"Population cannot be negative, got: {self.population}")
+        # Set instance attributes
+        self._postal_code = postal_code
+        self._population = population
+        self._station_count = station_count
+        self._demand_priority = demand_priority
 
-        if self.station_count < 0:
-            raise ValueError(f"Station count cannot be negative, got: {self.station_count}")
-
-        if self.demand_priority is None:
+        # Validate invariants (value objects handle their own validation).
+        if self._demand_priority is None:
             raise ValueError("Demand priority must be provided (use factory methods)")
+
+    @property
+    def postal_code(self) -> PostalCode:
+        """Get the postal code."""
+        return self._postal_code
+
+    @property
+    def population(self) -> Population:
+        """Get the population."""
+        return self._population
+
+    @property
+    def station_count(self) -> StationCount:
+        """Get the station count."""
+        return self._station_count
+
+    @property
+    def demand_priority(self) -> DemandPriority:
+        """Get the demand priority."""
+        return self._demand_priority
 
     @staticmethod
     def create(postal_code: PostalCode, population: int, station_count: int) -> "DemandAnalysisAggregate":
@@ -59,8 +83,8 @@ class DemandAnalysisAggregate(BaseAggregate):
 
         Args:
             postal_code: PostalCode value object for the area
-            population: Population count in the area
-            station_count: Number of charging stations in the area
+            population: Population count in the area (will be wrapped in Population value object)
+            station_count: Number of charging stations (will be wrapped in StationCount value object)
 
         Returns:
             DemandAnalysisAggregate: Newly created aggregate with calculated priority
@@ -69,14 +93,18 @@ class DemandAnalysisAggregate(BaseAggregate):
             ValueError: If population or station_count is negative
             InvalidPostalCodeError: If postal code is invalid
         """
+        # Create value objects (validation happens here)
+        pop_vo = Population(population)
+        station_vo = StationCount(station_count)
+
         # Calculate priority before construction.
-        priority = DemandPriority.calculate_priority(population, station_count)
+        priority = DemandPriority.calculate_priority(pop_vo, station_vo)
 
         # Create aggregate with all required data.
         return DemandAnalysisAggregate(
             postal_code=postal_code,
-            population=population,
-            station_count=station_count,
+            population=pop_vo,
+            station_count=station_vo,
             demand_priority=priority,
         )
 
@@ -92,8 +120,8 @@ class DemandAnalysisAggregate(BaseAggregate):
 
         Args:
             postal_code: PostalCode value object for the area
-            population: Population count in the area
-            station_count: Number of charging stations in the area
+            population: Population count (will be wrapped in Population value object)
+            station_count: Station count (will be wrapped in StationCount value object)
             existing_priority: Previously calculated DemandPriority
 
         Returns:
@@ -104,8 +132,8 @@ class DemandAnalysisAggregate(BaseAggregate):
         """
         return DemandAnalysisAggregate(
             postal_code=postal_code,
-            population=population,
-            station_count=station_count,
+            population=Population(population),
+            station_count=StationCount(station_count),
             demand_priority=existing_priority,
         )
 
@@ -117,14 +145,14 @@ class DemandAnalysisAggregate(BaseAggregate):
             DemandPriority: Calculated priority
         """
 
-        priority = DemandPriority.calculate_priority(self.population, self.station_count)
-        self.demand_priority = priority
+        priority = DemandPriority.calculate_priority(self._population, self._station_count)
+        self._demand_priority = priority
 
         # Emit domain event.
         event = DemandAnalysisCalculatedEvent(
-            postal_code=self.postal_code,
-            population=self.population,
-            station_count=self.station_count,
+            postal_code=self._postal_code,
+            population=self._population.value,
+            station_count=self._station_count.value,
             demand_priority=priority,
         )
         self._add_domain_event(event)
@@ -132,9 +160,9 @@ class DemandAnalysisAggregate(BaseAggregate):
         # Emit high demand event if priority is high.
         if priority.is_high_priority():
             high_demand_event = HighDemandAreaIdentifiedEvent(
-                postal_code=self.postal_code,
-                population=self.population,
-                station_count=self.station_count,
+                postal_code=self._postal_code,
+                population=self._population.value,
+                station_count=self._station_count.value,
                 urgency_score=priority.get_urgency_score(),
             )
             self._add_domain_event(high_demand_event)
@@ -148,7 +176,7 @@ class DemandAnalysisAggregate(BaseAggregate):
         Returns:
             PostalCode: Postal code value object.
         """
-        return self.postal_code
+        return self._postal_code
 
     def get_population(self) -> int:
         """
@@ -157,7 +185,7 @@ class DemandAnalysisAggregate(BaseAggregate):
         Returns:
             int: Population in this area.
         """
-        return self.population
+        return self._population.value
 
     def get_station_count(self) -> int:
         """
@@ -166,7 +194,7 @@ class DemandAnalysisAggregate(BaseAggregate):
         Returns:
             int: Station count in this area.
         """
-        return self.station_count
+        return self._station_count.value
 
     def get_demand_priority(self) -> DemandPriority:
         """
@@ -175,7 +203,7 @@ class DemandAnalysisAggregate(BaseAggregate):
         Returns:
             DemandPriority: Current demand priority.
         """
-        return self.demand_priority
+        return self._demand_priority
 
     def update_population(self, new_population: int):
         """
@@ -188,10 +216,7 @@ class DemandAnalysisAggregate(BaseAggregate):
             ValueError: If population is negative
         """
 
-        if new_population < 0:
-            raise ValueError("Population cannot be negative")
-
-        self.population = new_population
+        self._population = Population(new_population)
         self.calculate_demand_priority()
 
     def update_station_count(self, new_count: int):
@@ -205,10 +230,7 @@ class DemandAnalysisAggregate(BaseAggregate):
             ValueError: If station count is negative
         """
 
-        if new_count < 0:
-            raise ValueError("Station count cannot be negative")
-
-        self.station_count = new_count
+        self._station_count = StationCount(new_count)
         self.calculate_demand_priority()
 
     def get_residents_per_station(self) -> float:
@@ -219,9 +241,9 @@ class DemandAnalysisAggregate(BaseAggregate):
             float: Residents per station (population if no stations)
         """
 
-        if self.station_count == 0:
-            return float(self.population)
-        return self.population / self.station_count
+        if self._station_count.is_zero():
+            return float(self._population.value)
+        return self._population.value / self._station_count.value
 
     def is_high_priority(self) -> bool:
         """
@@ -241,7 +263,7 @@ class DemandAnalysisAggregate(BaseAggregate):
             bool: True if expansion is needed
         """
 
-        return self.demand_priority.residents_per_station > 3000
+        return self._demand_priority.residents_per_station > 3000
 
     def get_coverage_assessment(self) -> str:
         """
@@ -275,8 +297,8 @@ class DemandAnalysisAggregate(BaseAggregate):
         if target_ratio <= 0:
             raise ValueError("Target ratio must be positive")
 
-        recommended_total = int(self.population / target_ratio)
-        additional_needed = max(0, recommended_total - self.station_count)
+        recommended_total = int(self._population.value / target_ratio)
+        additional_needed = max(0, recommended_total - self._station_count.value)
 
         return additional_needed
 
@@ -288,12 +310,12 @@ class DemandAnalysisAggregate(BaseAggregate):
             dict: Dictionary with aggregate data
         """
         return {
-            "postal_code": self.postal_code.value,
-            "population": self.population,
-            "station_count": self.station_count,
-            "demand_priority": self.demand_priority.level.value,
-            "residents_per_station": self.demand_priority.residents_per_station,
-            "urgency_score": self.demand_priority.get_urgency_score(),
+            "postal_code": self._postal_code.value,
+            "population": self._population.value,
+            "station_count": self._station_count.value,
+            "demand_priority": self._demand_priority.level.value,
+            "residents_per_station": self._demand_priority.residents_per_station,
+            "urgency_score": self._demand_priority.get_urgency_score(),
             "is_high_priority": self.is_high_priority(),
             "needs_expansion": self.needs_infrastructure_expansion(),
             "coverage_assessment": self.get_coverage_assessment(),

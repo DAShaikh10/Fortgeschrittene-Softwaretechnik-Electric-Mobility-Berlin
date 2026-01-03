@@ -12,7 +12,7 @@ Test categories:
 import pytest
 
 from src.demand.application.enums import PriorityLevel
-from src.demand.domain.value_objects import DemandPriority
+from src.demand.domain.value_objects import DemandPriority, Population, StationCount
 
 
 class TestDemandPriorityValidation:
@@ -47,77 +47,77 @@ class TestDemandPriorityCalculation:
 
     def test_high_priority_calculation_above_threshold(self):
         """Test HIGH priority when residents/station > 5000."""
-        priority = DemandPriority.calculate_priority(population=15000, station_count=2)
+        priority = DemandPriority.calculate_priority(population=Population(15000), station_count=StationCount(2))
 
         assert priority.level == PriorityLevel.HIGH
         assert priority.residents_per_station == 7500.0
 
     def test_high_priority_at_exact_boundary(self):
         """Test HIGH priority at exactly 5001 residents/station."""
-        priority = DemandPriority.calculate_priority(population=5001, station_count=1)
+        priority = DemandPriority.calculate_priority(population=Population(5001), station_count=StationCount(1))
 
         assert priority.level == PriorityLevel.HIGH
         assert priority.residents_per_station == 5001.0
 
     def test_medium_priority_calculation_in_range(self):
         """Test MEDIUM priority when 2000 < residents/station <= 5000."""
-        priority = DemandPriority.calculate_priority(population=10000, station_count=3)
+        priority = DemandPriority.calculate_priority(population=Population(10000), station_count=StationCount(3))
 
         assert priority.level == PriorityLevel.MEDIUM
         assert priority.residents_per_station == pytest.approx(3333.33, rel=0.01)
 
     def test_medium_priority_at_upper_boundary(self):
         """Test MEDIUM priority at exactly 5000 residents/station."""
-        priority = DemandPriority.calculate_priority(population=5000, station_count=1)
+        priority = DemandPriority.calculate_priority(population=Population(5000), station_count=StationCount(1))
 
         assert priority.level == PriorityLevel.MEDIUM
         assert priority.residents_per_station == 5000.0
 
     def test_medium_priority_at_lower_boundary(self):
         """Test MEDIUM priority at exactly 2001 residents/station."""
-        priority = DemandPriority.calculate_priority(population=2001, station_count=1)
+        priority = DemandPriority.calculate_priority(population=Population(2001), station_count=StationCount(1))
 
         assert priority.level == PriorityLevel.MEDIUM
         assert priority.residents_per_station == 2001.0
 
     def test_low_priority_calculation_below_threshold(self):
         """Test LOW priority when residents/station <= 2000."""
-        priority = DemandPriority.calculate_priority(population=4000, station_count=3)
+        priority = DemandPriority.calculate_priority(population=Population(4000), station_count=StationCount(3))
 
         assert priority.level == PriorityLevel.LOW
         assert priority.residents_per_station == pytest.approx(1333.33, rel=0.01)
 
     def test_low_priority_at_exact_boundary(self):
         """Test LOW priority at exactly 2000 residents/station."""
-        priority = DemandPriority.calculate_priority(population=2000, station_count=1)
+        priority = DemandPriority.calculate_priority(population=Population(2000), station_count=StationCount(1))
 
         assert priority.level == PriorityLevel.LOW
         assert priority.residents_per_station == 2000.0
 
     def test_zero_stations_returns_high_priority(self):
         """Test that zero stations always returns HIGH priority with population as ratio."""
-        priority = DemandPriority.calculate_priority(population=10000, station_count=0)
+        priority = DemandPriority.calculate_priority(population=Population(10000), station_count=StationCount(0))
 
         assert priority.level == PriorityLevel.HIGH
         assert priority.residents_per_station == 10000.0
 
     def test_zero_population_zero_stations(self):
         """Test edge case: zero population and zero stations."""
-        priority = DemandPriority.calculate_priority(population=0, station_count=0)
+        priority = DemandPriority.calculate_priority(population=Population(0), station_count=StationCount(0))
 
         assert priority.level == PriorityLevel.HIGH
         assert priority.residents_per_station == 0.0
 
     def test_zero_population_with_stations(self):
         """Test edge case: zero population with existing stations."""
-        priority = DemandPriority.calculate_priority(population=0, station_count=5)
+        priority = DemandPriority.calculate_priority(population=Population(0), station_count=StationCount(5))
 
         assert priority.level == PriorityLevel.LOW
         assert priority.residents_per_station == 0.0
 
     def test_large_population_calculation(self):
         """Test with large population numbers."""
-        priority = DemandPriority.calculate_priority(population=1000000, station_count=50)
+        priority = DemandPriority.calculate_priority(population=Population(1000000), station_count=StationCount(50))
 
         assert priority.level == PriorityLevel.HIGH
         assert priority.residents_per_station == 20000.0
@@ -243,7 +243,7 @@ class TestDemandPriorityIntegration:
     def test_full_workflow_high_priority_area(self):
         """Test complete workflow for a high priority area."""
         # Calculate priority for area with shortage
-        priority = DemandPriority.calculate_priority(population=25000, station_count=3)
+        priority = DemandPriority.calculate_priority(population=Population(25000), station_count=StationCount(3))
 
         # Verify classification
         assert priority.level == PriorityLevel.HIGH
@@ -260,7 +260,7 @@ class TestDemandPriorityIntegration:
     def test_full_workflow_medium_priority_area(self):
         """Test complete workflow for a medium priority area."""
         # Calculate priority for area with moderate coverage
-        priority = DemandPriority.calculate_priority(population=12000, station_count=4)
+        priority = DemandPriority.calculate_priority(population=Population(12000), station_count=StationCount(4))
 
         # Verify classification
         assert priority.level == PriorityLevel.MEDIUM
@@ -277,7 +277,7 @@ class TestDemandPriorityIntegration:
     def test_full_workflow_low_priority_area(self):
         """Test complete workflow for a low priority area."""
         # Calculate priority for area with good coverage
-        priority = DemandPriority.calculate_priority(population=5000, station_count=5)
+        priority = DemandPriority.calculate_priority(population=Population(5000), station_count=StationCount(5))
 
         # Verify classification
         assert priority.level == PriorityLevel.LOW
