@@ -1,9 +1,17 @@
-import pytest
+"""
+Shared Infrastructure CSVPopulationRepository Tests.
+"""
+
+# pylint: disable=redefined-outer-name
+
 from unittest.mock import patch, MagicMock
+
+import pytest
 import pandas as pd
 
 from src.shared.infrastructure.repositories.CSVPopulationRepository import CSVPopulationRepository
 from src.shared.domain.value_objects.PostalCode import PostalCode
+
 
 @pytest.fixture
 def population_data_setup():
@@ -16,10 +24,11 @@ def population_data_setup():
         "einwohner": [500, 300, 15000, 100],
         "lat": ["52,5323", "52,5323", "52,0000", "0,0"],
         "lon": ["13,3846", "13,3846", "13,0000", "0,0"],
-        "other_col": ["ignore", "ignore", "ignore", "ignore"]
+        "other_col": ["ignore", "ignore", "ignore", "ignore"],
     }
     file_path = "dummy_population.csv"
     return raw_data, file_path
+
 
 @patch("pandas.read_csv")
 def test_initialization_and_transform(mock_read_csv, population_data_setup):
@@ -36,15 +45,16 @@ def test_initialization_and_transform(mock_read_csv, population_data_setup):
     # pylint: disable=protected-access
     # Check if 'plz' is string
     assert repo._df["plz"].dtype == "object"
-    
+
     # Check if coordinates replaced ',' with '.'
     assert repo._df.iloc[0]["lat"] == "52.5323"
     assert repo._df.iloc[0]["lon"] == "13.3846"
-    
+
     # Verify read_csv parameters
     mock_read_csv.assert_called_once()
     _, kwargs = mock_read_csv.call_args
     assert kwargs.get("sep") == ","
+
 
 @patch("src.shared.infrastructure.repositories.CSVPopulationRepository.PostalCode")
 @patch("pandas.read_csv")
@@ -68,13 +78,14 @@ def test_get_all_postal_codes_success(mock_read_csv, mock_postal_code_cls, popul
     # (10115 appears twice, but unique() filters it)
     assert len(result) == 3
     assert all(res == mock_instance for res in result)
-    
+
     # Verify PostalCode was instantiated with the string values
     assert mock_postal_code_cls.call_count == 3
     # Check that it was called with '10115' at least once
     call_args_list = [args[0][0] for args in mock_postal_code_cls.call_args_list]
     assert "10115" in call_args_list
     assert "10247" in call_args_list
+
 
 @patch("src.shared.infrastructure.repositories.CSVPopulationRepository.PostalCode")
 @patch("pandas.read_csv")
@@ -101,6 +112,7 @@ def test_get_all_postal_codes_skip_invalid(mock_read_csv, mock_postal_code_cls, 
     # Should contain 10115 and 10247, but skip 99999
     assert len(result) == 2
 
+
 @patch("pandas.read_csv")
 def test_get_residents_count_found(mock_read_csv, population_data_setup):
     """
@@ -121,6 +133,7 @@ def test_get_residents_count_found(mock_read_csv, population_data_setup):
     assert count == 800
     assert isinstance(count, int)
 
+
 @patch("pandas.read_csv")
 def test_get_residents_count_not_found(mock_read_csv, population_data_setup):
     """
@@ -133,7 +146,7 @@ def test_get_residents_count_not_found(mock_read_csv, population_data_setup):
     repo = CSVPopulationRepository(file_path)
 
     mock_postal = MagicMock(spec=PostalCode)
-    mock_postal.value = "00000" # Not in dataset
+    mock_postal.value = "00000"  # Not in dataset
 
     count = repo.get_residents_count(mock_postal)
     assert count == 0

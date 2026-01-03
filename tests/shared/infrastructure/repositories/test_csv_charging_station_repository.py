@@ -102,4 +102,4 @@ def test_find_stations_by_postal_code_not_found(mock_read_csv, repo_setup):
 
     stations = repo.find_stations_by_postal_code(mock_postal)
 
-    assert stations == []
+    assert not stations
