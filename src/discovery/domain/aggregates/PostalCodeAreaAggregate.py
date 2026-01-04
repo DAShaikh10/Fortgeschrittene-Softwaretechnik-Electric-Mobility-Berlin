@@ -3,7 +3,6 @@ Discovery Domain Aggregate - Postal Code Area Aggregate Module.
 """
 
 from typing import List
-from dataclasses import dataclass, field
 
 from src.shared.domain.entities import ChargingStation
 from src.shared.domain.aggregates import BaseAggregate
@@ -12,7 +11,6 @@ from src.shared.domain.enums import CoverageLevel
 from src.shared.domain.events import StationSearchPerformedEvent
 
 
-@dataclass
 class PostalCodeAreaAggregate(BaseAggregate):
     """
     Aggregate Root: Represents a postal code area with its charging infrastructure.
@@ -29,14 +27,33 @@ class PostalCodeAreaAggregate(BaseAggregate):
     - Station list must be non-null
     """
 
-    postal_code: PostalCode  # Identity
-    stations: List[ChargingStation] = field(default_factory=list)
+    def __init__(self, postal_code: PostalCode, stations: List[ChargingStation] = None):
+        """
+        Initialize the PostalCodeAreaAggregate.
 
-    def __post_init__(self):
+        Args:
+            postal_code: Postal code identifying the area
+            stations: List of ChargingStation entities (defaults to empty list)
+
+        Note:
+            Use factory methods (create, create_with_stations) instead of direct instantiation.
         """
-        Initialize base aggregate event handling.
-        """
+        # Initialize base aggregate event handling.
         super().__init__()
+
+        # Set private instance attributes
+        self._postal_code = postal_code
+        self._stations = stations.copy() if stations is not None else []
+
+        # Validate all stations are ChargingStation entities
+        for station in self._stations:
+            if not isinstance(station, ChargingStation):
+                raise ValueError("All items must be ChargingStation entities")
+
+    @property
+    def postal_code(self) -> PostalCode:
+        """Get the postal code (read-only property)."""
+        return self._postal_code
 
     @staticmethod
     def create(postal_code: PostalCode) -> "PostalCodeAreaAggregate":
@@ -66,11 +83,6 @@ class PostalCodeAreaAggregate(BaseAggregate):
         Raises:
             ValueError: If any item in stations is not a ChargingStation.
         """
-        # Validate all stations.
-        for station in stations:
-            if not isinstance(station, ChargingStation):
-                raise ValueError("All items must be ChargingStation entities")
-
         return PostalCodeAreaAggregate(postal_code=postal_code, stations=stations.copy())
 
     def get_postal_code(self) -> PostalCode:
@@ -80,7 +92,7 @@ class PostalCodeAreaAggregate(BaseAggregate):
         Returns:
             PostalCode: Postal code value object.
         """
-        return self.postal_code
+        return self._postal_code
 
     def get_stations(self) -> List[ChargingStation]:
         """
@@ -89,7 +101,7 @@ class PostalCodeAreaAggregate(BaseAggregate):
         Returns:
             List[ChargingStation]: Copy of stations list to protect encapsulation.
         """
-        return self.stations.copy()
+        return self._stations.copy()
 
     def add_station(self, station: ChargingStation):
         """
@@ -105,7 +117,7 @@ class PostalCodeAreaAggregate(BaseAggregate):
         if not isinstance(station, ChargingStation):
             raise ValueError("Must be a ChargingStation entity")
 
-        self.stations.append(station)
+        self._stations.append(station)
 
     def get_station_count(self) -> int:
         """
@@ -114,7 +126,7 @@ class PostalCodeAreaAggregate(BaseAggregate):
         Returns:
             int: Number of stations in this postal code area.
         """
-        return len(self.stations)
+        return len(self._stations)
 
     def get_fast_charger_count(self) -> int:
         """
@@ -123,7 +135,7 @@ class PostalCodeAreaAggregate(BaseAggregate):
         Returns:
             int: Number of fast charging stations in this area.
         """
-        return sum(1 for station in self.stations if station.is_fast_charger())
+        return sum(1 for station in self._stations if station.is_fast_charger())
 
     def get_total_capacity_kw(self) -> float:
         """
@@ -132,7 +144,7 @@ class PostalCodeAreaAggregate(BaseAggregate):
         Returns:
             float: Sum of power capacity in kilowatts.
         """
-        return sum(station.power_capacity.kilowatts for station in self.stations)
+        return sum(station.power_capacity.kilowatts for station in self._stations)
 
     def get_average_power_kw(self) -> float:
         """
@@ -141,9 +153,9 @@ class PostalCodeAreaAggregate(BaseAggregate):
         Returns:
             float: Average power in kW, or 0.0 if no stations.
         """
-        if not self.stations:
+        if not self._stations:
             return 0.0
-        return self.get_total_capacity_kw() / len(self.stations)
+        return self.get_total_capacity_kw() / len(self._stations)
 
     def has_fast_charging(self) -> bool:
         """
@@ -204,7 +216,7 @@ class PostalCodeAreaAggregate(BaseAggregate):
             dict: Dictionary mapping ChargingSpeed categories to lists of stations.
         """
         categories = {}
-        for station in self.stations:
+        for station in self._stations:
             category = station.get_charging_category()
             if category not in categories:
                 categories[category] = []
@@ -223,7 +235,7 @@ class PostalCodeAreaAggregate(BaseAggregate):
 
         # Emit domain event using consistent method.
         event = StationSearchPerformedEvent(
-            postal_code=self.postal_code,
+            postal_code=self._postal_code,
             stations_found=self.get_station_count(),
             search_parameters=search_parameters,
         )

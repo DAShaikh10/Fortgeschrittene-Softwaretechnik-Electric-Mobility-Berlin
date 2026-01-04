@@ -31,9 +31,9 @@ class TestPostalCodeAreaAggregateFactoryMethods:
         aggregate = PostalCodeAreaAggregate.create(postal_code)
 
         assert isinstance(aggregate, PostalCodeAreaAggregate)
-        assert aggregate.postal_code == postal_code
+        assert aggregate.get_postal_code() == postal_code
         assert aggregate.get_station_count() == 0
-        assert aggregate.stations == []
+        assert aggregate.get_stations() == []
 
     def test_create_with_stations_returns_aggregate_with_stations(self, valid_postal_code, mock_charging_station):
         """Test create_with_stations factory method."""
@@ -41,7 +41,7 @@ class TestPostalCodeAreaAggregateFactoryMethods:
 
         aggregate = PostalCodeAreaAggregate.create_with_stations(valid_postal_code, stations)
 
-        assert aggregate.postal_code == valid_postal_code
+        assert aggregate.get_postal_code() == valid_postal_code
         assert aggregate.get_station_count() == 2
 
     def test_create_with_stations_validates_station_types(self, valid_postal_code):
@@ -212,7 +212,7 @@ class TestPostalCodeAreaAggregateCommands:
         aggregate.add_station(mock_charging_station)
 
         assert aggregate.get_station_count() == 1
-        assert mock_charging_station in aggregate.stations
+        assert mock_charging_station in aggregate.get_stations()
 
     def test_add_station_validates_type(self, valid_postal_code):
         """Test add_station raises ValueError for non-ChargingStation objects."""

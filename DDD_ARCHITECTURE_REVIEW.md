@@ -288,7 +288,7 @@ def get_power_capacity_by_postal_code(...) -> pd.DataFrame:  # ❌ Infrastructur
 
 ## 🟠 SEVERE VIOLATIONS (Major Architectural Flaws)
 
-### ⚠️ VIOLATION #7: DATACLASS AGGREGATES BREAK ENCAPSULATION
+### ~~⚠️ VIOLATION #7: DATACLASS AGGREGATES BREAK ENCAPSULATION~~
 
 **Severity: SEVERE** 🟠
 
