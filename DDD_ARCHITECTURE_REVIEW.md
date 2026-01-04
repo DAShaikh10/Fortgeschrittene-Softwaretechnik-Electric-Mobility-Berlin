@@ -198,7 +198,7 @@ results = [r.to_dict() for r in results]  # ❌ UI directly calling aggregate me
 
 ---
 
-### ❌ VIOLATION #5: SERVICES RETURN AGGREGATES TO PRESENTATION LAYER
+### ~~❌ VIOLATION #5: SERVICES RETURN AGGREGATES TO PRESENTATION LAYER~~
 
 **Severity: CRITICAL** 🔴
 
