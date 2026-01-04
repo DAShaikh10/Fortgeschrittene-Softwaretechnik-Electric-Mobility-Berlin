@@ -74,4 +74,3 @@ class TestServiceIntegration:
 
         assert is_high is True
         assert category == "MEDIUM"
-        
