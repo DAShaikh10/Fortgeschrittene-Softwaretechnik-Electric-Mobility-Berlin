@@ -33,27 +33,29 @@ class PostalCodeAreaAggregate(BaseAggregate):
 
         Args:
             postal_code: Postal code identifying the area
-            stations: List of ChargingStation entities (defaults to empty list)
-
-        Note:
-            Use factory methods (create, create_with_stations) instead of direct instantiation.
+            stations: List of charging stations (defaults to empty list)
         """
         # Initialize base aggregate event handling.
         super().__init__()
 
-        # Set private instance attributes
+        # Set instance attributes
         self._postal_code = postal_code
-        self._stations = stations.copy() if stations is not None else []
+        self._stations = stations if stations is not None else []
 
-        # Validate all stations are ChargingStation entities
+        # Validate invariants
         for station in self._stations:
             if not isinstance(station, ChargingStation):
                 raise ValueError("All items must be ChargingStation entities")
 
     @property
     def postal_code(self) -> PostalCode:
-        """Get the postal code (read-only property)."""
+        """Get the postal code."""
         return self._postal_code
+
+    @property
+    def stations(self) -> List[ChargingStation]:
+        """Get a copy of the stations list to protect encapsulation."""
+        return self._stations.copy()
 
     @staticmethod
     def create(postal_code: PostalCode) -> "PostalCodeAreaAggregate":

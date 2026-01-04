@@ -199,4 +199,3 @@ class DemandCalculationService:
             clusters[priority_level].append(postal_code)
 
         return clusters
-

@@ -243,4 +243,3 @@ class TestRegionalDemandAnalysis:
         assert result["low_priority_count"] == 1
         assert result["average_residents_per_station"] == 3000.0
         assert result["critical_areas"] == ["10115"]
-
