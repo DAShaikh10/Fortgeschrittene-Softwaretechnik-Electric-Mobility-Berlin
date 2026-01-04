@@ -14,9 +14,9 @@ Test categories:
 
 import pytest
 
+from src.demand.domain.enums import PriorityLevel
 from src.demand.domain.aggregates import DemandAnalysisAggregate
 from src.demand.domain.value_objects import DemandPriority, Population, StationCount
-from src.demand.application.enums import PriorityLevel
 from src.demand.domain.events import (
     DemandAnalysisCalculatedEvent,
     HighDemandAreaIdentifiedEvent,

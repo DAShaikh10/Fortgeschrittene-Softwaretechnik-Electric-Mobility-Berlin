@@ -12,15 +12,16 @@ Test categories:
 - Type validation tests
 - Edge cases and boundary values
 """
+
 # pylint: disable=redefined-outer-name
 
 import pytest
 
+from src.shared.domain.value_objects import PostalCode
+from src.demand.domain.enums import PriorityLevel
 from src.demand.domain.aggregates import DemandAnalysisAggregate
 from src.demand.domain.value_objects import DemandPriority, Population, StationCount
-from src.demand.application.enums import PriorityLevel
 from src.demand.infrastructure.repositories import InMemoryDemandAnalysisRepository
-from src.shared.domain.value_objects import PostalCode
 
 
 @pytest.fixture

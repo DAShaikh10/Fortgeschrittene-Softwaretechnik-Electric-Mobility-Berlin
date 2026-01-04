@@ -1,4 +1,7 @@
-"""Tests for Demand Analysis Calculated Event."""
+"""
+Demand Domain Demand Analysis Calculated Events Tests.
+"""
+
 # pylint: disable=redefined-outer-name
 
 from dataclasses import FrozenInstanceError
@@ -6,10 +9,10 @@ from datetime import datetime
 
 import pytest
 
+from src.shared.domain.value_objects import PostalCode
+from src.demand.domain.enums import PriorityLevel
 from src.demand.domain.events import DemandAnalysisCalculatedEvent
 from src.demand.domain.value_objects import DemandPriority
-from src.demand.application.enums import PriorityLevel
-from src.shared.domain.value_objects import PostalCode
 
 
 @pytest.fixture
@@ -38,9 +41,7 @@ def demand_calculated_event(valid_postal_code, valid_demand_priority):
 class TestDemandAnalysisCalculatedEventInitialization:
     """Test event initialization."""
 
-    def test_event_initialization_with_valid_data(
-        self, valid_postal_code, valid_demand_priority
-    ):
+    def test_event_initialization_with_valid_data(self, valid_postal_code, valid_demand_priority):
         """Test creating event with valid data."""
         event = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
@@ -54,9 +55,7 @@ class TestDemandAnalysisCalculatedEventInitialization:
         assert event.station_count == 5
         assert event.demand_priority == valid_demand_priority
 
-    def test_event_initialization_with_zero_population(
-        self, valid_postal_code, valid_demand_priority
-    ):
+    def test_event_initialization_with_zero_population(self, valid_postal_code, valid_demand_priority):
         """Test event with zero population."""
         event = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
@@ -67,9 +66,7 @@ class TestDemandAnalysisCalculatedEventInitialization:
 
         assert event.population == 0
 
-    def test_event_initialization_with_zero_stations(
-        self, valid_postal_code, valid_demand_priority
-    ):
+    def test_event_initialization_with_zero_stations(self, valid_postal_code, valid_demand_priority):
         """Test event with zero stations."""
         event = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
@@ -80,9 +77,7 @@ class TestDemandAnalysisCalculatedEventInitialization:
 
         assert event.station_count == 0
 
-    def test_event_initialization_with_large_numbers(
-        self, valid_postal_code, valid_demand_priority
-    ):
+    def test_event_initialization_with_large_numbers(self, valid_postal_code, valid_demand_priority):
         """Test event with large population and station counts."""
         event = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
@@ -115,9 +110,7 @@ class TestDemandAnalysisCalculatedEventImmutability:
 
     def test_cannot_modify_demand_priority(self, demand_calculated_event):
         """Test that demand priority cannot be modified."""
-        new_priority = DemandPriority(
-            level=PriorityLevel.LOW, residents_per_station=1000.0
-        )
+        new_priority = DemandPriority(level=PriorityLevel.LOW, residents_per_station=1000.0)
         with pytest.raises(FrozenInstanceError):
             demand_calculated_event.demand_priority = new_priority
 
@@ -132,13 +125,9 @@ class TestDemandAnalysisCalculatedEventType:
 
     def test_event_type_name_matches_class(self, demand_calculated_event):
         """Test that event type name matches class name."""
-        assert "DemandAnalysisCalculatedEvent" in str(
-            demand_calculated_event.event_type
-        )
+        assert "DemandAnalysisCalculatedEvent" in str(demand_calculated_event.event_type)
 
-    def test_multiple_events_have_same_type(
-        self, valid_postal_code, valid_demand_priority
-    ):
+    def test_multiple_events_have_same_type(self, valid_postal_code, valid_demand_priority):
         """Test that multiple events have the same class type."""
         event1 = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
@@ -176,9 +165,7 @@ class TestDemandAnalysisCalculatedEventData:
         """Test that timestamp is a datetime object."""
         assert isinstance(demand_calculated_event.occurred_at, datetime)
 
-    def test_event_data_preservation(
-        self, valid_postal_code, valid_demand_priority
-    ):
+    def test_event_data_preservation(self, valid_postal_code, valid_demand_priority):
         """Test that event data is preserved correctly."""
         population = 25000
         station_count = 3
@@ -197,9 +184,7 @@ class TestDemandAnalysisCalculatedEventData:
 class TestDemandAnalysisCalculatedEventEquality:
     """Test event equality and comparison."""
 
-    def test_two_events_with_same_data_are_equal(
-        self, valid_postal_code, valid_demand_priority
-    ):
+    def test_two_events_with_same_data_are_equal(self, valid_postal_code, valid_demand_priority):
         """Test that events with same data are equal."""
         event1 = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
@@ -218,9 +203,7 @@ class TestDemandAnalysisCalculatedEventEquality:
         assert event1.population == event2.population
         assert event1.station_count == event2.station_count
 
-    def test_events_with_different_population_are_not_equal(
-        self, valid_postal_code, valid_demand_priority
-    ):
+    def test_events_with_different_population_are_not_equal(self, valid_postal_code, valid_demand_priority):
         """Test that events with different population are not equal."""
         event1 = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
@@ -256,9 +239,7 @@ class TestDemandAnalysisCalculatedEventPriorities:
 
     def test_event_with_medium_priority(self, valid_postal_code):
         """Test event with medium priority."""
-        priority = DemandPriority(
-            level=PriorityLevel.MEDIUM, residents_per_station=3000.0
-        )
+        priority = DemandPriority(level=PriorityLevel.MEDIUM, residents_per_station=3000.0)
         event = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
             population=15000,
@@ -302,9 +283,7 @@ class TestDemandAnalysisCalculatedEventIntegration:
 
     def test_event_workflow_high_priority_area(self, valid_postal_code):
         """Test event creation for high priority area."""
-        priority = DemandPriority(
-            level=PriorityLevel.HIGH, residents_per_station=7500.0
-        )
+        priority = DemandPriority(level=PriorityLevel.HIGH, residents_per_station=7500.0)
         event = DemandAnalysisCalculatedEvent(
             postal_code=valid_postal_code,
             population=30000,

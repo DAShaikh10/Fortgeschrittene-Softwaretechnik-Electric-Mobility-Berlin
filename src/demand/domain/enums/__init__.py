@@ -1,5 +1,5 @@
 """
-Demand Application Enums Module.
+Demand Domain Enums Module.
 """
 
 from .PriorityLevel import *

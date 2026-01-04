@@ -19,15 +19,15 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from src.shared.domain.events import IDomainEventPublisher
+from src.shared.domain.exceptions import InvalidPostalCodeError
+from src.shared.application.services import BaseService
+from src.shared.domain.value_objects import PostalCode
 from src.demand.application.services import DemandAnalysisService
 from src.demand.domain.aggregates import DemandAnalysisAggregate
 from src.demand.domain.value_objects import DemandPriority
-from src.demand.application.enums import PriorityLevel
-from src.shared.domain.value_objects import PostalCode
-from src.shared.domain.events import IDomainEventPublisher
-from src.shared.domain.exceptions import InvalidPostalCodeError
+from src.demand.domain.enums import PriorityLevel
 from src.demand.infrastructure.repositories import DemandAnalysisRepository
-from src.shared.application.services import BaseService
 
 
 # Test fixtures
