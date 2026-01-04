@@ -19,7 +19,7 @@ from src.shared.domain.value_objects import PostalCode
 from src.shared.application.services import BaseService, ChargingStationService
 from src.shared.domain.events import IDomainEventPublisher, StationSearchPerformedEvent
 from src.shared.infrastructure.repositories import ChargingStationRepository
-from src.discovery.domain.aggregates import PostalCodeAreaAggregate
+from src.discovery.application.dtos import PostalCodeAreaDTO
 
 
 # Test fixtures
@@ -120,9 +120,9 @@ class TestSearchByPostalCode:
 
         result = charging_station_service.search_by_postal_code(valid_postal_code)
 
-        assert isinstance(result, PostalCodeAreaAggregate)
-        assert result.postal_code == valid_postal_code
-        assert result.get_station_count() == 3
+        assert isinstance(result, PostalCodeAreaDTO)
+        assert result.postal_code == valid_postal_code.value
+        assert result.station_count == 3
 
     def test_search_calls_repository_with_correct_postal_code(
         self, charging_station_service, valid_postal_code, mock_repository
@@ -142,9 +142,9 @@ class TestSearchByPostalCode:
 
         result = charging_station_service.search_by_postal_code(valid_postal_code)
 
-        assert isinstance(result, PostalCodeAreaAggregate)
-        assert result.get_station_count() == 0
-        assert result.postal_code == valid_postal_code
+        assert isinstance(result, PostalCodeAreaDTO)
+        assert result.station_count == 0
+        assert result.postal_code == valid_postal_code.value
 
     def test_search_adds_all_stations_to_aggregate(
         self, charging_station_service, valid_postal_code, mock_station_list, mock_repository
@@ -154,7 +154,7 @@ class TestSearchByPostalCode:
 
         result = charging_station_service.search_by_postal_code(valid_postal_code)
 
-        assert result.get_station_count() == len(mock_station_list)
+        assert result.station_count == len(mock_station_list)
 
     def test_search_triggers_search_performed_event(self, charging_station_service, valid_postal_code, mock_repository):
         """Test that search triggers perform_search on aggregate."""
@@ -162,8 +162,8 @@ class TestSearchByPostalCode:
 
         result = charging_station_service.search_by_postal_code(valid_postal_code)
 
-        # Aggregate should have domain event
-        assert result.has_domain_events() is False  # Events cleared after publishing
+        # DTO doesn't have domain events
+        assert isinstance(result, PostalCodeAreaDTO)
 
     def test_search_publishes_events_to_event_bus(
         self, charging_station_service, valid_postal_code, mock_repository, mock_event_bus
@@ -184,9 +184,8 @@ class TestSearchByPostalCode:
 
         result = charging_station_service.search_by_postal_code(valid_postal_code)
 
-        # Events should be cleared after publishing
-        assert result.has_domain_events() is False
-        assert result.get_event_count() == 0
+        # DTO doesn't have domain events
+        assert isinstance(result, PostalCodeAreaDTO)
 
 
 class TestFindStationsByPostalCode:
@@ -244,8 +243,8 @@ class TestFindStationsByPostalCode:
 
         result = charging_station_service.find_stations_by_postal_code(valid_postal_code)
 
-        # Result should be plain list, not aggregate
-        assert not isinstance(result, PostalCodeAreaAggregate)
+        # Result should be plain list, not DTO
+        assert not isinstance(result, PostalCodeAreaDTO)
         assert isinstance(result, list)
 
 
@@ -264,15 +263,12 @@ class TestChargingStationServiceIntegration:
         # Verify repository was called
         mock_repository.find_stations_by_postal_code.assert_called_once_with(valid_postal_code)
 
-        # Verify aggregate was created with stations
-        assert result.get_station_count() == 3
-        assert result.postal_code == valid_postal_code
+        # Verify DTO was created with stations
+        assert result.station_count == 3
+        assert result.postal_code == valid_postal_code.value
 
         # Verify events were published
         assert mock_event_bus.publish.call_count == 1
-
-        # Verify events were cleared
-        assert result.has_domain_events() is False
 
     def test_find_workflow_returns_raw_stations(
         self, mock_repository, mock_event_bus, valid_postal_code, mock_station_list
@@ -331,8 +327,8 @@ class TestChargingStationServiceIntegration:
 
         result = charging_station_service.search_by_postal_code(valid_postal_code)
 
-        assert result.get_station_count() == 1
-        assert result.has_fast_charging() is True
+        assert result.station_count == 1
+        assert result.has_fast_charging is True
 
     def test_event_contains_correct_search_parameters(
         self, charging_station_service, valid_postal_code, mock_repository, mock_event_bus
@@ -343,5 +339,5 @@ class TestChargingStationServiceIntegration:
         charging_station_service.search_by_postal_code(valid_postal_code)
 
         published_event = mock_event_bus.publish.call_args[0][0]
-        assert published_event.postal_code == valid_postal_code
+        assert published_event.postal_code.value == valid_postal_code.value
         assert published_event.stations_found == 0
