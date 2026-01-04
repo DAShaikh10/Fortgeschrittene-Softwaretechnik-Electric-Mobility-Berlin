@@ -102,3 +102,37 @@ def test_find_stations_by_postal_code_not_found(mock_read_csv, repo_setup):
     stations = repo.find_stations_by_postal_code(mock_postal)
 
     assert not stations
+
+
+@patch("pandas.read_csv")
+def test_get_dataframe_columns(mock_read_csv, repo_setup):
+    """
+    Test public inspection method get_dataframe_columns.
+    """
+    raw_data, file_path = repo_setup
+    mock_df = pd.DataFrame(raw_data)
+    mock_read_csv.return_value = mock_df
+
+    repo = CSVChargingStationRepository(file_path)
+
+    columns = repo.get_dataframe_columns()
+
+    assert isinstance(columns, list)
+    assert "PLZ" in columns
+    assert "KW" in columns
+
+
+@patch("pandas.read_csv")
+def test_get_dataframe_value(mock_read_csv, repo_setup):
+    """
+    Test public inspection method get_dataframe_value.
+    """
+    raw_data, file_path = repo_setup
+    mock_df = pd.DataFrame(raw_data)
+    mock_read_csv.return_value = mock_df
+
+    repo = CSVChargingStationRepository(file_path)
+
+    value = repo.get_dataframe_value(0, "PLZ")
+
+    assert value == "10115"

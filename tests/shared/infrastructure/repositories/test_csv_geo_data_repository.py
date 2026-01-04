@@ -177,3 +177,73 @@ def test_coerce_boundary_wraps_geodataframe():
     assert isinstance(result, GeopandasBoundary)
     assert not result.is_empty()
     assert hasattr(result, "geometry")
+
+
+@patch("pandas.read_csv")
+def test_get_all_postal_codes_exception_handling(mock_read_csv, repo_setup):
+    """
+    Test that get_all_postal_codes handles exceptions during conversion gracefully.
+    """
+    _, file_path = repo_setup
+    # Create a DataFrame where astype(int) will fail
+    bad_data = {"PLZ": ["invalid", "data"]}
+    mock_df = pd.DataFrame(bad_data)
+    mock_read_csv.return_value = mock_df
+
+    with patch.object(CSVGeoDataRepository, "_transform"):
+        repo = CSVGeoDataRepository(file_path)
+        # This should catch the exception and return []
+        plz_list = repo.get_all_postal_codes()
+
+    assert plz_list == []
+
+
+@patch("pandas.read_csv")
+def test_get_dataframe_columns(mock_read_csv, repo_setup):
+    """
+    Test public inspection method get_dataframe_columns.
+    """
+    raw_data, file_path = repo_setup
+    mock_df = pd.DataFrame(raw_data)
+    mock_read_csv.return_value = mock_df
+
+    repo = CSVGeoDataRepository(file_path)
+
+    columns = repo.get_dataframe_columns()
+
+    assert isinstance(columns, list)
+    assert "PLZ" in columns
+    assert "geometry" in columns
+
+
+@patch("pandas.read_csv")
+def test_get_dataframe_column_dtype(mock_read_csv, repo_setup):
+    """
+    Test public inspection method get_dataframe_column_dtype.
+    """
+    raw_data, file_path = repo_setup
+    mock_df = pd.DataFrame(raw_data)
+    mock_read_csv.return_value = mock_df
+
+    repo = CSVGeoDataRepository(file_path)
+
+    dtype = repo.get_dataframe_column_dtype("PLZ")
+
+    assert isinstance(dtype, str)
+    assert "object" in dtype  # PLZ is converted to string type
+
+
+@patch("pandas.read_csv")
+def test_get_dataframe_value(mock_read_csv, repo_setup):
+    """
+    Test public inspection method get_dataframe_value.
+    """
+    raw_data, file_path = repo_setup
+    mock_df = pd.DataFrame(raw_data)
+    mock_read_csv.return_value = mock_df
+
+    repo = CSVGeoDataRepository(file_path)
+
+    value = repo.get_dataframe_value(0, "PLZ")
+
+    assert value == "10115"

@@ -143,3 +143,36 @@ def test_get_residents_count_not_found(mock_read_csv, population_data_setup):
 
     count = repo.get_residents_count(mock_postal)
     assert count == 0
+
+
+@patch("pandas.read_csv")
+def test_get_dataframe_column_dtype(mock_read_csv, population_data_setup):
+    """
+    Test public inspection method get_dataframe_column_dtype.
+    """
+    raw_data, file_path = population_data_setup
+    mock_df = pd.DataFrame(raw_data)
+    mock_read_csv.return_value = mock_df
+
+    repo = CSVPopulationRepository(file_path)
+
+    dtype = repo.get_dataframe_column_dtype("plz")
+
+    assert isinstance(dtype, str)
+    assert "object" in dtype  # plz is converted to string type
+
+
+@patch("pandas.read_csv")
+def test_get_dataframe_value(mock_read_csv, population_data_setup):
+    """
+    Test public inspection method get_dataframe_value.
+    """
+    raw_data, file_path = population_data_setup
+    mock_df = pd.DataFrame(raw_data)
+    mock_read_csv.return_value = mock_df
+
+    repo = CSVPopulationRepository(file_path)
+
+    value = repo.get_dataframe_value(0, "plz")
+
+    assert value == "10115"
