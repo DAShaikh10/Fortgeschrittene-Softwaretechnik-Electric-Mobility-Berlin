@@ -254,7 +254,7 @@ def analyze_demand(...) -> DemandAnalysisDTO:  # ✓ Returns DTO
 
 ---
 
-### ❌ VIOLATION #6: PANDAS DATAFRAME IN APPLICATION LAYER
+### ~~❌ VIOLATION #6: PANDAS DATAFRAME IN APPLICATION LAYER~~
 
 **Severity: CRITICAL** 🔴
 

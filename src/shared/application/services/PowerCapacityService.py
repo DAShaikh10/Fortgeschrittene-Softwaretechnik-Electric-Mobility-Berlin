@@ -3,8 +3,8 @@ Shared Application Service for Power Capacity Analysis.
 """
 
 from typing import Dict, List, Tuple
-import pandas as pd
 
+from src.shared.application.dtos import PowerCapacityDTO
 from src.shared.domain.value_objects import PostalCode
 from src.shared.infrastructure.repositories import ChargingStationRepository
 
@@ -23,7 +23,7 @@ class PowerCapacityService:
         """
         self._repository = charging_station_repository
 
-    def get_power_capacity_by_postal_code(self, postal_codes: List[PostalCode]) -> pd.DataFrame:
+    def get_power_capacity_by_postal_code(self, postal_codes: List[PostalCode]) -> List[PowerCapacityDTO]:
         """
         Calculate total power capacity (in kW) for each postal code.
 
@@ -31,7 +31,7 @@ class PowerCapacityService:
             postal_codes: List of postal codes to analyze.
 
         Returns:
-            DataFrame with columns: postal_code, total_capacity_kw, station_count
+            List of PowerCapacityDTO objects with postal_code, total_capacity_kw, and station_count.
         """
         capacity_data = []
 
@@ -41,50 +41,65 @@ class PowerCapacityService:
             if stations:
                 total_capacity = sum(station.power_capacity.kilowatts for station in stations)
                 capacity_data.append(
-                    {
-                        "postal_code": postal_code.value,
-                        "total_capacity_kw": total_capacity,
-                        "station_count": len(stations),
-                    }
+                    PowerCapacityDTO(
+                        postal_code=postal_code.value,
+                        total_capacity_kw=total_capacity,
+                        station_count=len(stations),
+                    )
                 )
             else:
-                capacity_data.append({"postal_code": postal_code.value, "total_capacity_kw": 0.0, "station_count": 0})
+                capacity_data.append(
+                    PowerCapacityDTO(
+                        postal_code=postal_code.value,
+                        total_capacity_kw=0.0,
+                        station_count=0,
+                    )
+                )
 
-        return pd.DataFrame(capacity_data)
+        return capacity_data
 
     def classify_capacity_ranges(
-        self, capacity_df: pd.DataFrame
-    ) -> Tuple[Dict[str, Tuple[float, float]], pd.DataFrame]:
+        self, capacity_dtos: List[PowerCapacityDTO]
+    ) -> Tuple[Dict[str, Tuple[float, float]], List[PowerCapacityDTO]]:
         """
         Classify postal codes into Low, Medium, and High capacity ranges using quantiles.
 
         Args:
-            capacity_df: DataFrame with postal code capacity data.
+            capacity_dtos: List of PowerCapacityDTO objects with postal code capacity data.
 
         Returns:
-            Tuple of (range_definitions, capacity_df_with_category)
+            Tuple of (range_definitions, capacity_dtos_with_category)
             - range_definitions: Dict mapping category to (min, max) capacity
-            - capacity_df_with_category: Original DataFrame with added 'capacity_category' column
+            - capacity_dtos_with_category: List of PowerCapacityDTO with capacity_category set
         """
-        if capacity_df.empty or capacity_df["total_capacity_kw"].max() == 0:
-            return {"Low": (0, 0), "Medium": (0, 0), "High": (0, 0)}, capacity_df
+        if not capacity_dtos:
+            return {"Low": (0, 0), "Medium": (0, 0), "High": (0, 0)}, capacity_dtos
+
+        # Get all capacities and find max
+        capacities = [dto.total_capacity_kw for dto in capacity_dtos]
+        max_capacity = max(capacities) if capacities else 0.0
+
+        if max_capacity == 0:
+            return {"Low": (0, 0), "Medium": (0, 0), "High": (0, 0)}, capacity_dtos
 
         # Filter out zero capacity areas for classification
-        non_zero_capacity = capacity_df[capacity_df["total_capacity_kw"] > 0]["total_capacity_kw"]
+        non_zero_capacities = [cap for cap in capacities if cap > 0]
 
-        if len(non_zero_capacity) == 0:
-            return {"Low": (0, 0), "Medium": (0, 0), "High": (0, 0)}, capacity_df
+        if len(non_zero_capacities) == 0:
+            return {"Low": (0, 0), "Medium": (0, 0), "High": (0, 0)}, capacity_dtos
 
         # Calculate quantiles (33rd and 66th percentiles)
-        q33 = non_zero_capacity.quantile(0.33)
-        q66 = non_zero_capacity.quantile(0.66)
-        max_capacity = capacity_df["total_capacity_kw"].max()
+        sorted_capacities = sorted(non_zero_capacities)
+        q33_index = int(len(sorted_capacities) * 0.33)
+        q66_index = int(len(sorted_capacities) * 0.66)
+        q33 = sorted_capacities[q33_index] if q33_index < len(sorted_capacities) else sorted_capacities[-1]
+        q66 = sorted_capacities[q66_index] if q66_index < len(sorted_capacities) else sorted_capacities[-1]
 
         # Define ranges
         range_definitions = {"Low": (0, q33), "Medium": (q33, q66), "High": (q66, max_capacity)}
 
-        # Classify each postal code
-        def classify_capacity(capacity):
+        # Classify each postal code and create new DTOs with category
+        def classify_capacity(capacity: float) -> str:
             if capacity == 0:
                 return "None"
             if capacity <= q33:
@@ -93,10 +108,17 @@ class PowerCapacityService:
                 return "Medium"
             return "High"
 
-        capacity_df = capacity_df.copy()
-        capacity_df["capacity_category"] = capacity_df["total_capacity_kw"].apply(classify_capacity)
+        capacity_dtos_with_category = [
+            PowerCapacityDTO(
+                postal_code=dto.postal_code,
+                total_capacity_kw=dto.total_capacity_kw,
+                station_count=dto.station_count,
+                capacity_category=classify_capacity(dto.total_capacity_kw),
+            )
+            for dto in capacity_dtos
+        ]
 
-        return range_definitions, capacity_df
+        return range_definitions, capacity_dtos_with_category
 
     def get_color_for_capacity(self, capacity: float, max_capacity: float) -> str:
         """
@@ -126,18 +148,18 @@ class PowerCapacityService:
 
         return f"#{r:02x}{g:02x}{b:02x}"
 
-    def filter_by_capacity_category(self, capacity_df: pd.DataFrame, category: str) -> pd.DataFrame:
+    def filter_by_capacity_category(self, capacity_dtos: List[PowerCapacityDTO], category: str) -> List[PowerCapacityDTO]:
         """
         Filter postal codes by capacity category.
 
         Args:
-            capacity_df: DataFrame with capacity data and 'capacity_category' column.
+            capacity_dtos: List of PowerCapacityDTO objects with capacity_category set.
             category: Category to filter by ('Low', 'Medium', 'High', 'All').
 
         Returns:
-            Filtered DataFrame.
+            Filtered list of PowerCapacityDTO objects.
         """
         if category == "All":
-            return capacity_df
+            return capacity_dtos
 
-        return capacity_df[capacity_df["capacity_category"] == category]
+        return [dto for dto in capacity_dtos if dto.capacity_category == category]

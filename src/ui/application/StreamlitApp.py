@@ -403,20 +403,20 @@ class StreamlitApp:
             postal_codes = self.postal_code_residents_service.get_all_postal_codes(sort=True)
 
             # Calculate power capacity for all postal codes
-            capacity_df = self.power_capacity_service.get_power_capacity_by_postal_code(postal_codes)
+            capacity_dtos = self.power_capacity_service.get_power_capacity_by_postal_code(postal_codes)
 
             # Classify capacity ranges
-            range_definitions, capacity_df = self.power_capacity_service.classify_capacity_ranges(capacity_df)
+            range_definitions, capacity_dtos = self.power_capacity_service.classify_capacity_ranges(capacity_dtos)
 
             # Apply capacity filter
             if capacity_filter != "All":
-                capacity_df = self.power_capacity_service.filter_by_capacity_category(capacity_df, capacity_filter)
+                capacity_dtos = self.power_capacity_service.filter_by_capacity_category(capacity_dtos, capacity_filter)
 
-            if capacity_df.empty:
+            if not capacity_dtos:
                 streamlit.warning(f"No postal codes found in the '{capacity_filter}' capacity range.")
                 return
 
-            max_capacity = capacity_df["total_capacity_kw"].max()
+            max_capacity = max(dto.total_capacity_kw for dto in capacity_dtos) if capacity_dtos else 0.0
 
             # Display capacity range information
             if selected_postal_code in ("All areas", ""):
@@ -434,12 +434,13 @@ class StreamlitApp:
                 plz_geometry = self.geolocation_service.get_geolocation_data_for_postal_code(postal_code_obj)
 
                 # Get capacity data for this postal code
-                plz_capacity = capacity_df[capacity_df["postal_code"] == selected_postal_code]
+                plz_capacity_list = [dto for dto in capacity_dtos if dto.postal_code == selected_postal_code]
 
-                if plz_geometry is not None and plz_geometry.boundary is not None and not plz_capacity.empty:
-                    capacity_value = plz_capacity.iloc[0]["total_capacity_kw"]
-                    station_count = plz_capacity.iloc[0]["station_count"]
-                    capacity_category = plz_capacity.iloc[0]["capacity_category"]
+                if plz_geometry is not None and plz_geometry.boundary is not None and plz_capacity_list:
+                    plz_capacity = plz_capacity_list[0]
+                    capacity_value = plz_capacity.total_capacity_kw
+                    station_count = plz_capacity.station_count
+                    capacity_category = plz_capacity.capacity_category
 
                     color = self.power_capacity_service.get_color_for_capacity(capacity_value, max_capacity)
 
@@ -457,7 +458,7 @@ class StreamlitApp:
                             f"Postal Code: {selected_postal_code}<br>"
                             f"Total Capacity: {capacity_value:.0f} kW<br>"
                             f"Stations: {station_count}<br>"
-                            f"Category: {capacity_category}"
+                            f"Category: {capacity_category or 'N/A'}"
                         ),
                     ).add_to(folium_map)
                 else:
@@ -465,11 +466,11 @@ class StreamlitApp:
             else:
                 # Render all postal code areas
                 areas_rendered = 0
-                for _, row in capacity_df.iterrows():
-                    plz = row["postal_code"]
-                    capacity = row["total_capacity_kw"]
-                    station_count = row["station_count"]
-                    category = row["capacity_category"]
+                for dto in capacity_dtos:
+                    plz = dto.postal_code
+                    capacity = dto.total_capacity_kw
+                    station_count = dto.station_count
+                    category = dto.capacity_category
 
                     postal_code_obj = PostalCode(plz)
                     plz_geometry = self.geolocation_service.get_geolocation_data_for_postal_code(postal_code_obj)
@@ -492,7 +493,7 @@ class StreamlitApp:
                                     f"Postal Code: {plz}<br>"
                                     f"Total Capacity: {capacity:.0f} kW<br>"
                                     f"Stations: {station_count}<br>"
-                                    f"Category: {category}"
+                                    f"Category: {category or 'N/A'}"
                                 ),
                             ).add_to(folium_map)
                             areas_rendered += 1
