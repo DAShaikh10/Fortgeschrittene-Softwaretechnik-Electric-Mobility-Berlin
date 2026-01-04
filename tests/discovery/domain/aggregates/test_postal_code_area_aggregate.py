@@ -372,13 +372,27 @@ class TestPostalCodeAreaAggregateBusinessRules:
 class TestPostalCodeAreaAggregateDataConversion:
     """Test data conversion methods."""
 
+    @staticmethod
+    def to_dict_helper(aggregate: PostalCodeAreaAggregate) -> dict:
+        """Map aggregate to dict via public queries (no domain internals exposure)."""
+        return {
+            "postal_code": aggregate.get_postal_code().value,
+            "station_count": aggregate.get_station_count(),
+            "fast_charger_count": aggregate.get_fast_charger_count(),
+            "total_capacity_kw": aggregate.get_total_capacity_kw(),
+            "average_power_kw": aggregate.get_average_power_kw(),
+            "has_fast_charging": aggregate.has_fast_charging(),
+            "is_well_equipped": aggregate.is_well_equipped(),
+            "coverage_level": aggregate.get_coverage_level().value,
+        }
+
     def test_to_dict_returns_correct_structure(self, valid_postal_code, mock_charging_station, mock_slow_station):
         """Test to_dict returns dictionary with all business metrics."""
         aggregate = PostalCodeAreaAggregate.create(valid_postal_code)
         aggregate.add_station(mock_charging_station)
         aggregate.add_station(mock_slow_station)
 
-        result = aggregate.to_dict()
+        result = self.to_dict_helper(aggregate)
 
         assert result["postal_code"] == "10115"
         assert result["station_count"] == 2
@@ -393,7 +407,7 @@ class TestPostalCodeAreaAggregateDataConversion:
         """Test to_dict works correctly for empty aggregate."""
         aggregate = PostalCodeAreaAggregate.create(valid_postal_code)
 
-        result = aggregate.to_dict()
+        result = self.to_dict_helper(aggregate)
 
         assert result["postal_code"] == "10115"
         assert result["station_count"] == 0
@@ -491,7 +505,7 @@ class TestPostalCodeAreaAggregateIntegration:
         assert aggregate.has_domain_events() is True
 
         # Verify data conversion
-        data = aggregate.to_dict()
+        data = TestPostalCodeAreaAggregateDataConversion.to_dict_helper(aggregate)
         assert data["postal_code"] == "10115"
         assert data["station_count"] == 3
 

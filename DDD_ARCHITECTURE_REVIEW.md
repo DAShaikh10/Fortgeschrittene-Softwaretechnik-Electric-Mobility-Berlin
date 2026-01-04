@@ -148,7 +148,7 @@ station.is_fast_charger = Mock(return_value=True)  # Mock hides the missing meth
 
 ---
 
-### ❌ VIOLATION #4: AGGREGATES EXPOSE INTERNALS VIA `to_dict()`
+### ~~❌ VIOLATION #4: AGGREGATES EXPOSE INTERNALS VIA `to_dict()`~~
 
 **Severity: CRITICAL** 🔴
 

@@ -211,24 +211,6 @@ class PostalCodeAreaAggregate(BaseAggregate):
             categories[category].append(station)
         return categories
 
-    def to_dict(self) -> dict:
-        """
-        Convert aggregate to dictionary representation for presentation layer.
-
-        Returns:
-            dict: Dictionary with aggregate data and business metrics.
-        """
-        return {
-            "postal_code": self.postal_code.value,
-            "station_count": self.get_station_count(),
-            "fast_charger_count": self.get_fast_charger_count(),
-            "total_capacity_kw": self.get_total_capacity_kw(),
-            "average_power_kw": self.get_average_power_kw(),
-            "has_fast_charging": self.has_fast_charging(),
-            "is_well_equipped": self.is_well_equipped(),
-            "coverage_level": self.get_coverage_level().value,
-        }
-
     def perform_search(self, search_parameters: dict = None):
         """
         Business operation: Perform a search and emit domain event.

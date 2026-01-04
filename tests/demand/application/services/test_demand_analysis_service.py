@@ -24,8 +24,8 @@ from src.shared.domain.exceptions import InvalidPostalCodeError
 from src.shared.application.services import BaseService
 from src.shared.domain.value_objects import PostalCode
 from src.demand.application.services import DemandAnalysisService
+from src.demand.application.dto import DemandAnalysisDTO
 from src.demand.domain.aggregates import DemandAnalysisAggregate
-from src.demand.domain.value_objects import DemandPriority
 from src.demand.domain.enums import PriorityLevel
 from src.demand.infrastructure.repositories import DemandAnalysisRepository
 
@@ -111,22 +111,21 @@ class TestDemandAnalysisServiceInitialization:
 class TestAnalyzeDemandUseCase:
     """Test analyze_demand use case."""
 
-    def test_analyze_demand_creates_aggregate_with_correct_data(self, demand_analysis_service):
-        """Test that analyze_demand creates aggregate with correct postal code, population, station count."""
+    def test_analyze_demand_creates_dto_with_correct_data(self, demand_analysis_service):
+        """Test that analyze_demand returns DTO with correct postal code, population, station count."""
         result = demand_analysis_service.analyze_demand("10115", 30000, 5)
 
-        assert isinstance(result, DemandAnalysisAggregate)
-        assert result.postal_code.value == "10115"
-        assert result.get_population() == 30000
-        assert result.get_station_count() == 5
+        assert isinstance(result, DemandAnalysisDTO)
+        assert result.postal_code == "10115"
+        assert result.population == 30000
+        assert result.station_count == 5
 
     def test_analyze_demand_calculates_priority_automatically(self, demand_analysis_service):
         """Test that analyze_demand automatically calculates demand priority."""
         result = demand_analysis_service.analyze_demand("10115", 30000, 5)
 
-        assert result.demand_priority is not None
-        assert isinstance(result.demand_priority, DemandPriority)
-        assert result.demand_priority.level == PriorityLevel.HIGH
+        assert result.demand_priority == PriorityLevel.HIGH.value
+        assert result.urgency_score > 0
 
     def test_analyze_demand_saves_aggregate_to_repository(self, demand_analysis_service, mock_repository):
         """Test that analyze_demand saves aggregate to repository."""
@@ -152,27 +151,27 @@ class TestAnalyzeDemandUseCase:
         """Test analyzing demand with zero stations (critical shortage)."""
         result = demand_analysis_service.analyze_demand("10115", 50000, 0)
 
-        assert result.get_station_count() == 0
-        assert result.demand_priority.level == PriorityLevel.HIGH
+        assert result.station_count == 0
+        assert result.demand_priority == PriorityLevel.HIGH.value
 
     def test_analyze_demand_with_low_priority_area(self, demand_analysis_service):
         """Test analyzing demand for low priority area (adequate coverage)."""
         result = demand_analysis_service.analyze_demand("10115", 10000, 10)
 
-        assert result.demand_priority.level == PriorityLevel.LOW
+        assert result.demand_priority == PriorityLevel.LOW.value
 
     def test_analyze_demand_with_medium_priority_area(self, demand_analysis_service):
         """Test analyzing demand for medium priority area."""
         result = demand_analysis_service.analyze_demand("10115", 15000, 5)
 
-        assert result.demand_priority.level == PriorityLevel.MEDIUM
+        assert result.demand_priority == PriorityLevel.MEDIUM.value
 
 
 class TestAnalyzeMultipleAreasUseCase:
     """Test analyze_multiple_areas use case."""
 
-    def test_analyze_multiple_areas_returns_list_of_aggregates(self, demand_analysis_service):
-        """Test that analyze_multiple_areas returns list of aggregates."""
+    def test_analyze_multiple_areas_returns_list_of_dtos(self, demand_analysis_service):
+        """Test that analyze_multiple_areas returns list of DTOs."""
         areas = [
             {"postal_code": "10115", "population": 30000, "station_count": 5},
             {"postal_code": "12345", "population": 15000, "station_count": 8},
@@ -182,7 +181,7 @@ class TestAnalyzeMultipleAreasUseCase:
 
         assert isinstance(results, list)
         assert len(results) == 2
-        assert all(isinstance(agg, DemandAnalysisAggregate) for agg in results)
+        assert all(isinstance(result, DemandAnalysisDTO) for result in results)
 
     def test_analyze_multiple_areas_processes_all_areas(self, demand_analysis_service, mock_repository):
         """Test that all areas are processed and saved."""
@@ -226,7 +225,7 @@ class TestAnalyzeMultipleAreasUseCase:
         results = demand_analysis_service.analyze_multiple_areas(areas)
 
         assert len(results) == 1
-        assert results[0].postal_code.value == "10115"
+        assert results[0].postal_code == "10115"
 
 
 class TestGetHighPriorityAreasUseCase:
@@ -245,7 +244,7 @@ class TestGetHighPriorityAreasUseCase:
         results = demand_analysis_service.get_high_priority_areas()
 
         assert len(results) == 1
-        assert results[0].is_high_priority()
+        assert results[0].is_high_priority
 
     def test_get_high_priority_areas_sorted_by_urgency(self, demand_analysis_service, mock_repository):
         """Test that high priority areas are sorted by urgency score (descending)."""
@@ -258,7 +257,7 @@ class TestGetHighPriorityAreasUseCase:
         results = demand_analysis_service.get_high_priority_areas()
 
         # Should be sorted by urgency score descending
-        urgency_scores = [agg.demand_priority.get_urgency_score() for agg in results]
+        urgency_scores = [dto.urgency_score for dto in results]
         assert urgency_scores == sorted(urgency_scores, reverse=True)
 
     def test_get_high_priority_areas_returns_empty_list_when_none_high(
@@ -283,16 +282,16 @@ class TestGetHighPriorityAreasUseCase:
 class TestGetDemandAnalysisUseCase:
     """Test get_demand_analysis use case."""
 
-    def test_get_demand_analysis_returns_aggregate_when_found(
+    def test_get_demand_analysis_returns_dto_when_found(
         self, demand_analysis_service, mock_repository, high_priority_aggregate
     ):
-        """Test that get_demand_analysis returns aggregate when found."""
+        """Test that get_demand_analysis returns DTO when found."""
         mock_repository.find_by_postal_code.return_value = high_priority_aggregate
 
         result = demand_analysis_service.get_demand_analysis("10115")
 
-        assert result is high_priority_aggregate
-        assert result.postal_code.value == "10115"
+        assert isinstance(result, DemandAnalysisDTO)
+        assert result.postal_code == "10115"
 
     def test_get_demand_analysis_returns_none_when_not_found(self, demand_analysis_service, mock_repository):
         """Test that get_demand_analysis returns None when not found."""
@@ -329,7 +328,7 @@ class TestUpdateDemandAnalysisUseCase:
 
         result = demand_analysis_service.update_demand_analysis("10115", population=40000)
 
-        assert result.get_population() == 40000
+        assert result.population == 40000
 
     def test_update_demand_analysis_updates_station_count(
         self, demand_analysis_service, mock_repository, high_priority_aggregate
@@ -339,7 +338,7 @@ class TestUpdateDemandAnalysisUseCase:
 
         result = demand_analysis_service.update_demand_analysis("10115", station_count=10)
 
-        assert result.get_station_count() == 10
+        assert result.station_count == 10
 
     def test_update_demand_analysis_updates_both_fields(
         self, demand_analysis_service, mock_repository, high_priority_aggregate
@@ -349,8 +348,8 @@ class TestUpdateDemandAnalysisUseCase:
 
         result = demand_analysis_service.update_demand_analysis("10115", population=50000, station_count=15)
 
-        assert result.get_population() == 50000
-        assert result.get_station_count() == 15
+        assert result.population == 50000
+        assert result.station_count == 15
 
     def test_update_demand_analysis_saves_to_repository(
         self, demand_analysis_service, mock_repository, high_priority_aggregate
@@ -389,8 +388,8 @@ class TestUpdateDemandAnalysisUseCase:
         result = demand_analysis_service.update_demand_analysis("10115")
 
         # Should return the same aggregate without changes
-        assert result.population == high_priority_aggregate.population
-        assert result.station_count == high_priority_aggregate.station_count
+        assert result.population == high_priority_aggregate.population.value
+        assert result.station_count == high_priority_aggregate.station_count.value
 
 
 class TestGetRecommendationsUseCase:
@@ -555,15 +554,16 @@ class TestServiceBehaviorConsistency:
 
     def test_service_methods_return_appropriate_types(self, demand_analysis_service, mock_repository):
         """Test that service methods return expected types."""
-        # analyze_demand returns aggregate
+        # analyze_demand returns DTO
         result = demand_analysis_service.analyze_demand("10115", 20000, 5)
-        assert isinstance(result, DemandAnalysisAggregate)
+        assert isinstance(result, DemandAnalysisDTO)
 
         # analyze_multiple_areas returns list
         results = demand_analysis_service.analyze_multiple_areas([])
         assert isinstance(results, list)
 
         # get_recommendations returns dict
-        mock_repository.find_by_postal_code.return_value = result
+        aggregate = DemandAnalysisAggregate.create(PostalCode("10115"), population=20000, station_count=5)
+        mock_repository.find_by_postal_code.return_value = aggregate
         recommendations = demand_analysis_service.get_recommendations("10115")
         assert isinstance(recommendations, dict)

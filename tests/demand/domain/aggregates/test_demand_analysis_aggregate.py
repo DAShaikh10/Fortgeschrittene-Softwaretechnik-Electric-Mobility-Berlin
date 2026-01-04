@@ -23,6 +23,7 @@ from src.demand.domain.events import (
     HighDemandAreaIdentifiedEvent,
 )
 from src.shared.domain.value_objects import PostalCode
+from src.demand.application.dto import DemandAnalysisDTO
 
 
 # Test fixtures
@@ -460,9 +461,14 @@ class TestDemandAnalysisAggregateEventHandling:
 class TestDemandAnalysisAggregateDataConversion:
     """Test data conversion methods."""
 
+    @staticmethod
+    def _to_dict(aggregate: DemandAnalysisAggregate) -> dict:
+        """Convert aggregate to DTO dict without exposing domain internals."""
+        return DemandAnalysisDTO.from_aggregate(aggregate).to_dict()
+
     def test_to_dict_returns_correct_structure(self, high_priority_aggregate):
         """Test to_dict returns dictionary with all business metrics."""
-        result = high_priority_aggregate.to_dict()
+        result = self._to_dict(high_priority_aggregate)
 
         assert isinstance(result, dict)
         assert "postal_code" in result
@@ -477,7 +483,7 @@ class TestDemandAnalysisAggregateDataConversion:
 
     def test_to_dict_contains_correct_values(self, high_priority_aggregate):
         """Test that to_dict contains correct values."""
-        result = high_priority_aggregate.to_dict()
+        result = self._to_dict(high_priority_aggregate)
 
         assert result["postal_code"] == "10115"
         assert result["population"] == 30000
@@ -490,7 +496,7 @@ class TestDemandAnalysisAggregateDataConversion:
 
     def test_to_dict_handles_low_priority_area(self, low_priority_aggregate):
         """Test to_dict works correctly for low priority area."""
-        result = low_priority_aggregate.to_dict()
+        result = self._to_dict(low_priority_aggregate)
 
         assert result["demand_priority"] == "Low"
         assert result["is_high_priority"] is False
@@ -499,7 +505,7 @@ class TestDemandAnalysisAggregateDataConversion:
 
     def test_to_dict_urgency_score_is_float(self, high_priority_aggregate):
         """Test that urgency_score in to_dict is a float."""
-        result = high_priority_aggregate.to_dict()
+        result = self._to_dict(high_priority_aggregate)
 
         assert isinstance(result["urgency_score"], float)
         assert result["urgency_score"] > 0

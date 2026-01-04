@@ -31,7 +31,10 @@ class ChargingStation:
         self.longitude = float(longitude)
 
         # Normalize power to value object
-        self.power_capacity: PowerCapacity = power_capacity if isinstance(power_capacity, PowerCapacity) else PowerCapacity(float(power_capacity))
+        if isinstance(power_capacity, PowerCapacity):
+            self.power_capacity: PowerCapacity = power_capacity
+        else:
+            self.power_capacity = PowerCapacity(float(power_capacity))
 
     def is_fast_charger(self) -> bool:
         """Fast charger if power is at least 50 kW."""

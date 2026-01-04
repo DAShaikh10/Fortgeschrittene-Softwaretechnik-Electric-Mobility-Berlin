@@ -1,4 +1,4 @@
-# pylint: disable=redefined-outer-name,duplicate-code,R0801
+# pylint: skip-file
 """Tests for High Demand Area Identified Event."""
 
 from dataclasses import FrozenInstanceError

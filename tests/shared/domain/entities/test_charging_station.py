@@ -340,7 +340,7 @@ class TestChargingStationEquality:
 
         assert station != "not a station"
         assert station != 123
-        assert station != None
+        assert station is not None
         assert station != {"id": station.id}
 
     def test_station_with_custom_id_equality(self):

@@ -300,24 +300,4 @@ class DemandAnalysisAggregate(BaseAggregate):
 
         recommended_total = int(self._population.value / target_ratio)
         additional_needed = max(0, recommended_total - self._station_count.value)
-
         return additional_needed
-
-    def to_dict(self) -> dict:
-        """
-        Convert aggregate to dictionary representation for presentation layer.
-
-        Returns:
-            dict: Dictionary with aggregate data
-        """
-        return {
-            "postal_code": self._postal_code.value,
-            "population": self._population.value,
-            "station_count": self._station_count.value,
-            "demand_priority": self._demand_priority.level.value,
-            "residents_per_station": self._demand_priority.residents_per_station,
-            "urgency_score": self._demand_priority.get_urgency_score(),
-            "is_high_priority": self.is_high_priority(),
-            "needs_expansion": self.needs_infrastructure_expansion(),
-            "coverage_assessment": self.get_coverage_assessment().value,
-        }

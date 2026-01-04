@@ -749,13 +749,8 @@ class StreamlitApp:
             # Render each postal code area with color-coded priority
             for analysis in results:
                 try:
-                    # Extract postal code value (analysis.postal_code is a PostalCode object)
-                    plz = (
-                        analysis.postal_code.value
-                        if hasattr(analysis.postal_code, "value")
-                        else str(analysis.postal_code)
-                    )
-                    priority = analysis.demand_priority.level.value
+                    plz = analysis.postal_code
+                    priority = analysis.demand_priority
                     postal_code_obj = PostalCode(plz)
 
                     # Get geometry for the postal code
@@ -773,15 +768,15 @@ class StreamlitApp:
                         boundary_geojson = json.loads(plz_geometry.boundary.to_json())
 
                         # Get urgency score from demand priority
-                        urgency_score = analysis.demand_priority.get_urgency_score()
-                        residents_per_station = analysis.demand_priority.residents_per_station
+                        urgency_score = analysis.urgency_score
+                        residents_per_station = analysis.residents_per_station
 
                         # Create tooltip with demand analysis info
                         tooltip_html = (
                             f"<b>Postal Code: {plz}</b><br>"
                             f"Priority: {priority}<br>"
-                            f"Population: {analysis.population.value:,}<br>"
-                            f"Stations: {analysis.station_count.value}<br>"
+                            f"Population: {analysis.population:,}<br>"
+                            f"Stations: {analysis.station_count}<br>"
                             f"Residents/Station: {residents_per_station:.0f}<br>"
                             f"Urgency Score: {urgency_score:.0f}/100"
                         )
@@ -881,7 +876,7 @@ class StreamlitApp:
         if areas_data:
             results = self.demand_analysis_service.analyze_multiple_areas(areas_data)
 
-            # Convert aggregates to dicts for DataFrame
+            # Convert DTOs to dicts for DataFrame
             results = [r.to_dict() for r in results]
 
             # If specific postal code selected, show detailed analysis
@@ -892,7 +887,7 @@ class StreamlitApp:
                 analysis = self.demand_analysis_service.get_demand_analysis(selected_postal_code)
 
                 if analysis:
-                    # Convert aggregate to dict for UI
+                    # Convert DTO to dict for UI
                     analysis = analysis.to_dict()
 
                     # Display metrics in columns
@@ -963,7 +958,7 @@ class StreamlitApp:
             # Get high priority areas
             high_priority_areas = self.demand_analysis_service.get_high_priority_areas()
 
-            # Convert aggregates to dicts for DataFrame
+            # Convert DTOs to dicts for DataFrame
             high_priority_areas = [area.to_dict() for area in high_priority_areas]
 
             if high_priority_areas:

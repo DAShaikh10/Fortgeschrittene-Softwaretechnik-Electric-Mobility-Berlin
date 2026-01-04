@@ -2,7 +2,7 @@
 Demand Application Service for Demand Analysis.
 """
 
-from typing import List, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from src.shared.infrastructure.logging_config import get_logger
 
@@ -11,6 +11,7 @@ from src.shared.domain.value_objects import PostalCode
 from src.shared.application.services import BaseService
 from src.demand.domain.aggregates import DemandAnalysisAggregate
 from src.demand.infrastructure.repositories import DemandAnalysisRepository
+from src.demand.application.dto import DemandAnalysisDTO
 
 logger = get_logger(__name__)
 
@@ -39,7 +40,7 @@ class DemandAnalysisService(BaseService):
     ):
         super().__init__(repository, event_bus)
 
-    def analyze_demand(self, postal_code: str, population: int, station_count: int) -> DemandAnalysisAggregate:
+    def analyze_demand(self, postal_code: str, population: int, station_count: int) -> DemandAnalysisDTO:
         """
         Use case: Analyze demand for a specific postal code area.
 
@@ -49,7 +50,7 @@ class DemandAnalysisService(BaseService):
             station_count: Number of charging stations
 
         Returns:
-            DemandAnalysisAggregate: Aggregate with demand analysis results
+            DemandAnalysisDTO: DTO with demand analysis results
 
         Raises:
             InvalidPostalCodeError: If postal code is invalid
@@ -73,9 +74,9 @@ class DemandAnalysisService(BaseService):
 
         self.publish_events(aggregate)
 
-        return aggregate
+        return self._to_dto(aggregate)
 
-    def analyze_multiple_areas(self, areas: List[Dict[str, any]]) -> List[DemandAnalysisAggregate]:
+    def analyze_multiple_areas(self, areas: List[Dict[str, Any]]) -> List[DemandAnalysisDTO]:
         """
         Use case: Analyze demand for multiple postal code areas.
 
@@ -83,7 +84,7 @@ class DemandAnalysisService(BaseService):
             areas: List of dicts with 'postal_code', 'population', 'station_count'
 
         Returns:
-            List[DemandAnalysisAggregate]: Analysis results for all areas
+            List[DemandAnalysisDTO]: Analysis results for all areas
         """
 
         results = []
@@ -102,12 +103,12 @@ class DemandAnalysisService(BaseService):
 
         return results
 
-    def get_high_priority_areas(self) -> List[DemandAnalysisAggregate]:
+    def get_high_priority_areas(self) -> List[DemandAnalysisDTO]:
         """
         Use case: Get all high-priority areas requiring attention.
 
         Returns:
-            List[DemandAnalysisAggregate]: High-priority areas sorted by urgency
+            List[DemandAnalysisDTO]: High-priority areas sorted by urgency
         """
 
         all_analyses = self._repository.find_all()
@@ -116,9 +117,9 @@ class DemandAnalysisService(BaseService):
         # Sort by urgency score (descending)
         high_priority.sort(key=lambda x: x.demand_priority.get_urgency_score(), reverse=True)
 
-        return high_priority
+        return [self._to_dto(agg) for agg in high_priority]
 
-    def get_demand_analysis(self, postal_code: str) -> Optional[DemandAnalysisAggregate]:
+    def get_demand_analysis(self, postal_code: str) -> Optional[DemandAnalysisDTO]:
         """
         Use case: Retrieve demand analysis for a specific postal code.
 
@@ -126,15 +127,20 @@ class DemandAnalysisService(BaseService):
             postal_code: Postal code to retrieve
 
         Returns:
-            Optional[DemandAnalysisAggregate]: Analysis aggregate or None if not found
+            Optional[DemandAnalysisDTO]: Analysis DTO or None if not found
         """
 
         postal_code_vo = PostalCode(postal_code)
-        return self._repository.find_by_postal_code(postal_code_vo)
+        aggregate = self._repository.find_by_postal_code(postal_code_vo)
+
+        if aggregate is None:
+            return None
+
+        return self._to_dto(aggregate)
 
     def update_demand_analysis(
         self, postal_code: str, population: int = None, station_count: int = None
-    ) -> DemandAnalysisAggregate:
+    ) -> DemandAnalysisDTO:
         """
         Use case: Update existing demand analysis with new data.
 
@@ -144,7 +150,7 @@ class DemandAnalysisService(BaseService):
             station_count: New station count (optional)
 
         Returns:
-            DemandAnalysisAggregate: Updated analysis aggregate
+            DemandAnalysisDTO: Updated analysis DTO
 
         Raises:
             ValueError: If analysis not found or invalid parameters
@@ -168,7 +174,11 @@ class DemandAnalysisService(BaseService):
         # Publish events
         self.publish_events(aggregate)
 
-        return aggregate
+        return self._to_dto(aggregate)
+
+    def _to_dto(self, aggregate: DemandAnalysisAggregate) -> DemandAnalysisDTO:
+        """Map a domain aggregate to an application DTO."""
+        return DemandAnalysisDTO.from_aggregate(aggregate)
 
     def get_recommendations(self, postal_code: str, target_ratio: float = 2000.0) -> Dict:
         """
