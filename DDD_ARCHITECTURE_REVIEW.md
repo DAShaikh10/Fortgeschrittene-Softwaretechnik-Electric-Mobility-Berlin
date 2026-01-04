@@ -329,7 +329,7 @@ class DemandAnalysisAggregate(BaseAggregate):
 
 ---
 
-### ⚠️ VIOLATION #8: APPLICATION LOGIC IN SERVICE CLASS
+### ~~⚠️ VIOLATION #8: APPLICATION LOGIC IN SERVICE CLASS~~
 
 **Severity: SEVERE** 🟠
 
@@ -371,7 +371,7 @@ def get_capacity_analysis(...):
 
 ---
 
-### ⚠️ VIOLATION #9: MISSING DOMAIN SERVICES
+### ~~⚠️ VIOLATION #9: MISSING DOMAIN SERVICES~~
 
 **Severity: SEVERE** 🟠
 
