@@ -64,4 +64,3 @@ class PopulationAnalysisService:
             float: Residents per station ratio (population if no stations).
         """
         return population / max(station_count, 1)
-    
