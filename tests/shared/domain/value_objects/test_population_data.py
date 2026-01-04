@@ -6,12 +6,9 @@ Test categories:
 - Immutability tests
 - Equality tests
 """
-# pylint: disable=redefined-outer-name
-
 import pytest
 from src.shared.domain.value_objects import PopulationData, PostalCode
 
-# Test fixtures
 @pytest.fixture
 def valid_postal_code():
     return PostalCode("10115")
