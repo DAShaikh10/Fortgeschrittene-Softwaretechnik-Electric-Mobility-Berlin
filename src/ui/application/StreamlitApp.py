@@ -571,11 +571,11 @@ class StreamlitApp:
 
                 # Retrieve stations for the selected postal code area
                 logger.info("Fetching charging stations for %s...", selected_postal_code)
-                area = self.charging_station_service.search_by_postal_code(postal_code_obj)
-                logger.info("Found %d charging stations", len(area.stations))
+                stations = self.charging_station_service.find_stations_by_postal_code(postal_code_obj)
+                logger.info("Found %d charging stations", len(stations))
 
                 # Create interactive map marker for each charging station
-                for station in area.stations:
+                for station in stations:
                     folium.CircleMarker(
                         location=[station.latitude, station.longitude],
                         radius=6,
