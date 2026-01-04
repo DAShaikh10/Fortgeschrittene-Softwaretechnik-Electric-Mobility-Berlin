@@ -28,7 +28,7 @@ disable = [
     "R0917", # Too many positional arguments.
     "W0406", # Module import itself (import-self).
     "W0603", # Using global statement.
-    "W0718", # Cacthing too general exception Exception.
+    "W0718", # Catching too general exception Exception.
 ]
 
 [tool.pylint."messages control"]
