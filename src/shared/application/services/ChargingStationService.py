@@ -8,6 +8,7 @@ from src.shared.domain.events import IDomainEventPublisher
 from src.shared.domain.entities import ChargingStation
 from src.shared.domain.value_objects import PostalCode
 from src.shared.infrastructure.repositories import ChargingStationRepository
+from src.discovery.application.dtos import PostalCodeAreaDTO
 from src.discovery.domain.aggregates import PostalCodeAreaAggregate
 
 from .BaseService import BaseService
@@ -28,18 +29,18 @@ class ChargingStationService(BaseService):
 
         super().__init__(repository, event_bus)
 
-    def search_by_postal_code(self, postal_code: PostalCode) -> PostalCodeAreaAggregate:
+    def search_by_postal_code(self, postal_code: PostalCode) -> PostalCodeAreaDTO:
         """
         Search for charging stations by postal code.
 
         This is the main use case for station discovery.
-        Returns a `PostalCodeAreaAggregate` with all stations and business logic.
+        Returns a DTO with all station data and business metrics.
 
         Args:
             postal_code (PostalCode): Postal code to search for.
 
         Returns:
-            PostalCodeAreaAggregate: Aggregate containing stations and coverage information.
+            PostalCodeAreaDTO: DTO containing stations and coverage information.
         """
 
         aggregate = PostalCodeAreaAggregate(postal_code=postal_code)
@@ -52,7 +53,7 @@ class ChargingStationService(BaseService):
 
         self.publish_events(aggregate)
 
-        return aggregate
+        return PostalCodeAreaDTO.from_aggregate(aggregate)
 
     def find_stations_by_postal_code(self, postal_code: PostalCode) -> List[ChargingStation]:
         """
