@@ -1,5 +1,5 @@
 """Tests for In-Memory Event Bus."""
-# pylint: disable=redefined-outer-name,missing-class-docstring,protected-access
+# pylint: disable=redefined-outer-name
 
 from unittest.mock import MagicMock, patch
 
@@ -9,10 +9,10 @@ from src.shared.domain.events.DomainEvent import DomainEvent
 
 # Renamed to 'SampleEvent' so pytest doesn't try to collect it as a test class
 class SampleEvent(DomainEvent):
-    pass
+    """A sample event for testing."""
 
 class AnotherSampleEvent(DomainEvent):
-    pass
+    """Another sample event for testing."""
 
 @pytest.fixture
 def event_bus():
@@ -25,8 +25,11 @@ def test_initialization(event_bus):
     """
     Test that the event bus initializes with an empty subscriber list.
     """
-    assert isinstance(event_bus._subscribers, dict)
-    assert len(event_bus._subscribers) == 0
+    # Test behavior instead of internal state
+    # An empty event bus should handle publishes without errors
+    assert isinstance(event_bus, InMemoryEventBus)
+    # Publishing to empty bus should not raise errors
+    event_bus.publish(SampleEvent())  # Should complete without errors
 
 def test_subscribe_and_publish(event_bus):
     """
@@ -132,9 +135,8 @@ def test_prevent_duplicate_subscription(event_bus):
     event_bus.subscribe(SampleEvent, handler)
     event_bus.subscribe(SampleEvent, handler) # Duplicate subscription
 
-    # Check internal state
-    assert len(event_bus._subscribers[SampleEvent]) == 1
-
+    # Test behavior instead of internal state
+    # If duplicate prevention works, handler should only be called once
     event = SampleEvent()
     event_bus.publish(event)
 

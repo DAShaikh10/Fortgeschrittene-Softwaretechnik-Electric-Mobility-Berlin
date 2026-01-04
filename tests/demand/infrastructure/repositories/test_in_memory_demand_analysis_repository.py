@@ -82,8 +82,9 @@ class TestInMemoryDemandAnalysisRepositoryInitialization:
     def test_repository_storage_is_dict(self, repository):
         """Test that internal storage is a dictionary."""
         assert hasattr(repository, "_storage")
-        # pylint: disable=protected-access
-        assert isinstance(repository._storage, dict)
+        # Test through public interface - empty repository should return empty results
+        assert isinstance(repository, InMemoryDemandAnalysisRepository)
+        assert repository.find_all() == []
 
 
 class TestSaveOperation:

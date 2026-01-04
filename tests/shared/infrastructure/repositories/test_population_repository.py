@@ -7,7 +7,7 @@ Test categories:
 - Concrete implementation tests
 """
 
-# pylint: disable=redefined-outer-name,protected-access,abstract-class-instantiated,no-member
+# pylint: disable=redefined-outer-name,abstract-class-instantiated,no-member
 
 import inspect
 from typing import List
@@ -37,13 +37,7 @@ class ConcretePopulationRepository(PopulationRepository):
 @pytest.fixture
 def postal_code_list():
     """Create a list of postal codes for testing."""
-    return [
-        PostalCode("10115"),
-        PostalCode("10117"),
-        PostalCode("10119"),
-        PostalCode("10178"),
-        PostalCode("10179")
-    ]
+    return [PostalCode("10115"), PostalCode("10117"), PostalCode("10119"), PostalCode("10178"), PostalCode("10179")]
 
 
 @pytest.fixture
@@ -73,9 +67,9 @@ class TestPopulationRepositoryAbstractBaseClass:
     def test_has_abstract_method_get_all_postal_codes(self):
         """Test that PopulationRepository has abstract method get_all_postal_codes."""
         # Check that get_all_postal_codes is abstract
-        assert hasattr(PopulationRepository, 'get_all_postal_codes')
+        assert hasattr(PopulationRepository, "get_all_postal_codes")
         # Check if it's an abstract method
-        assert hasattr(PopulationRepository.get_all_postal_codes, '__isabstractmethod__')
+        assert hasattr(PopulationRepository.get_all_postal_codes, "__isabstractmethod__")
         assert PopulationRepository.get_all_postal_codes.__isabstractmethod__ is True
 
 
@@ -87,11 +81,11 @@ class TestPopulationRepositoryConcreteImplementation:
         repo = ConcretePopulationRepository(postal_code_list)
 
         assert isinstance(repo, PopulationRepository)
-        assert repo._postal_codes == postal_code_list
+        result = repo.get_all_postal_codes()
+        assert len(result) == len(postal_code_list)
+        assert all(pc in postal_code_list for pc in result)
 
-    def test_concrete_implementation_implements_get_all_postal_codes(
-        self, postal_code_list
-    ):
+    def test_concrete_implementation_implements_get_all_postal_codes(self, postal_code_list):
         """Test that concrete implementation implements get_all_postal_codes."""
         repo = ConcretePopulationRepository(postal_code_list)
 
@@ -101,9 +95,7 @@ class TestPopulationRepositoryConcreteImplementation:
         assert len(result) == len(postal_code_list)
         assert all(isinstance(plz, PostalCode) for plz in result)
 
-    def test_get_all_postal_codes_returns_list_of_postal_codes(
-        self, postal_code_list
-    ):
+    def test_get_all_postal_codes_returns_list_of_postal_codes(self, postal_code_list):
         """Test that get_all_postal_codes returns list of PostalCode objects."""
         repo = ConcretePopulationRepository(postal_code_list)
 
@@ -114,9 +106,7 @@ class TestPopulationRepositoryConcreteImplementation:
         assert all(isinstance(plz, PostalCode) for plz in result)
         assert result == postal_code_list
 
-    def test_get_all_postal_codes_returns_empty_list_when_no_data(
-        self, empty_postal_code_list
-    ):
+    def test_get_all_postal_codes_returns_empty_list_when_no_data(self, empty_postal_code_list):
         """Test that get_all_postal_codes returns empty list when no data."""
         repo = ConcretePopulationRepository(empty_postal_code_list)
 
@@ -125,9 +115,7 @@ class TestPopulationRepositoryConcreteImplementation:
         assert isinstance(result, list)
         assert len(result) == 0
 
-    def test_get_all_postal_codes_returns_copy_not_reference(
-        self, postal_code_list
-    ):
+    def test_get_all_postal_codes_returns_copy_not_reference(self, postal_code_list):
         """Test that get_all_postal_codes returns a copy, not a reference."""
         repo = ConcretePopulationRepository(postal_code_list)
 
@@ -138,9 +126,7 @@ class TestPopulationRepositoryConcreteImplementation:
         assert result1 == result2
         assert result1 is not result2
 
-    def test_get_all_postal_codes_handles_single_postal_code(
-        self, single_postal_code
-    ):
+    def test_get_all_postal_codes_handles_single_postal_code(self, single_postal_code):
         """Test that get_all_postal_codes handles single postal code."""
         repo = ConcretePopulationRepository([single_postal_code])
 
@@ -156,7 +142,7 @@ class TestPopulationRepositoryConcreteImplementation:
             PostalCode("10115"),
             PostalCode("10119"),
             PostalCode("10117"),
-            PostalCode("10178")
+            PostalCode("10178"),
         ]
         repo = ConcretePopulationRepository(postal_codes)
 
@@ -173,7 +159,7 @@ class TestPopulationRepositoryInterface:
 
     def test_interface_defines_get_all_postal_codes(self):
         """Test that the interface defines get_all_postal_codes method."""
-        assert hasattr(PopulationRepository, 'get_all_postal_codes')
+        assert hasattr(PopulationRepository, "get_all_postal_codes")
         assert callable(PopulationRepository.get_all_postal_codes)
 
     def test_get_all_postal_codes_signature(self):
@@ -182,7 +168,7 @@ class TestPopulationRepositoryInterface:
 
         # Should have only self as parameter
         assert len(sig.parameters) == 1
-        assert 'self' in sig.parameters
+        assert "self" in sig.parameters
 
         # Return type annotation should be List[PostalCode]
         return_annotation = sig.return_annotation
@@ -190,6 +176,7 @@ class TestPopulationRepositoryInterface:
 
     def test_concrete_implementation_must_implement_get_all_postal_codes(self):
         """Test that concrete implementations must implement get_all_postal_codes."""
+
         # Create an incomplete implementation
         class IncompleteRepository(PopulationRepository):
             """Deliberately incomplete implementation for abstract enforcement test."""
@@ -198,9 +185,7 @@ class TestPopulationRepositoryInterface:
         with pytest.raises(TypeError):
             IncompleteRepository()
 
-    def test_concrete_implementation_can_be_used_polymorphically(
-        self, postal_code_list
-    ):
+    def test_concrete_implementation_can_be_used_polymorphically(self, postal_code_list):
         """Test that concrete implementations can be used polymorphically."""
         repo = ConcretePopulationRepository(postal_code_list)
 
@@ -235,11 +220,7 @@ class TestPopulationRepositoryIntegration:
 
     def test_repository_handles_duplicate_postal_codes(self):
         """Test that repository can handle duplicate postal codes if needed."""
-        postal_codes = [
-            PostalCode("10115"),
-            PostalCode("10115"),  # Duplicate
-            PostalCode("10117")
-        ]
+        postal_codes = [PostalCode("10115"), PostalCode("10115"), PostalCode("10117")]  # Duplicate
         repo = ConcretePopulationRepository(postal_codes)
 
         result = repo.get_all_postal_codes()
@@ -265,7 +246,7 @@ class TestPopulationRepositoryIntegration:
         assert isinstance(repo, PopulationRepository)
 
         # Verify it implements the required method
-        assert hasattr(repo, 'get_all_postal_codes')
+        assert hasattr(repo, "get_all_postal_codes")
         assert callable(repo.get_all_postal_codes)
 
         # Verify the method returns the correct type
@@ -363,11 +344,11 @@ class TestPostalCodeBoundedContextRules:
     def test_invalid_postal_code_wrong_length(self):
         """Test that postal codes with wrong length are rejected."""
         invalid_codes = [
-            "1011",   # 4 digits (too short)
+            "1011",  # 4 digits (too short)
             "10115",  # 5 digits (valid, but test other lengths)
-            "101155", # 6 digits (too long)
-            "10",     # 2 digits (too short)
-            "1011555", # 7 digits (too long)
+            "101155",  # 6 digits (too long)
+            "10",  # 2 digits (too short)
+            "1011555",  # 7 digits (too long)
         ]
 
         for code in invalid_codes:
@@ -470,9 +451,9 @@ class TestPostalCodeBoundedContextRules:
 
         # Invalid lengths
         invalid_lengths = {
-            "1011": "exactly 5 digits",    # 4 digits
+            "1011": "exactly 5 digits",  # 4 digits
             "101155": "exactly 5 digits",  # 6 digits
-            "10": "exactly 5 digits",     # 2 digits
+            "10": "exactly 5 digits",  # 2 digits
         }
 
         for code, expected_error in invalid_lengths.items():

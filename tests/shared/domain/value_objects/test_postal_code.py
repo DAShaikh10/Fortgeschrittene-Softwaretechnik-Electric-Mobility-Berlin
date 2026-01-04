@@ -8,6 +8,7 @@ Test categories:
 - Immutability tests
 - Edge cases and boundary values
 """
+
 # pylint: disable=redefined-outer-name  # pytest fixtures redefine names
 
 import pytest
@@ -112,34 +113,22 @@ class TestPostalCodeBerlinSpecificRules:
 
     def test_postal_code_starting_with_11_raises_error(self):
         """Test that postal code starting with 11 raises error."""
-        with pytest.raises(
-            InvalidPostalCodeError,
-            match="Berlin postal code must start with 10, 12, 13, or 14"
-        ):
+        with pytest.raises(InvalidPostalCodeError, match="Berlin postal code must start with 10, 12, 13, or 14"):
             PostalCode("11000")
 
     def test_postal_code_starting_with_15_raises_error(self):
         """Test that postal code starting with 15 raises error."""
-        with pytest.raises(
-            InvalidPostalCodeError,
-            match="Berlin postal code must start with 10, 12, 13, or 14"
-        ):
+        with pytest.raises(InvalidPostalCodeError, match="Berlin postal code must start with 10, 12, 13, or 14"):
             PostalCode("15000")
 
     def test_postal_code_starting_with_20_raises_error(self):
         """Test that postal code starting with 20 raises error."""
-        with pytest.raises(
-            InvalidPostalCodeError,
-            match="Berlin postal code must start with 10, 12, 13, or 14"
-        ):
+        with pytest.raises(InvalidPostalCodeError, match="Berlin postal code must start with 10, 12, 13, or 14"):
             PostalCode("20000")
 
     def test_postal_code_starting_with_00_raises_error(self):
         """Test that postal code starting with 00 raises error."""
-        with pytest.raises(
-            InvalidPostalCodeError,
-            match="Berlin postal code must start with 10, 12, 13, or 14"
-        ):
+        with pytest.raises(InvalidPostalCodeError, match="Berlin postal code must start with 10, 12, 13, or 14"):
             PostalCode("00000")
 
     def test_postal_code_at_lower_boundary_10001(self):
@@ -156,26 +145,17 @@ class TestPostalCodeBerlinSpecificRules:
 
     def test_postal_code_below_lower_boundary_10000_raises_error(self):
         """Test that 10000 (at boundary) raises error."""
-        with pytest.raises(
-            InvalidPostalCodeError,
-            match="Berlin postal code must start with 10, 12, 13, or 14"
-        ):
+        with pytest.raises(InvalidPostalCodeError, match="Berlin postal code must start with 10, 12, 13, or 14"):
             PostalCode("10000")
 
     def test_postal_code_above_upper_boundary_14200_raises_error(self):
         """Test that 14200 (at boundary) raises error."""
-        with pytest.raises(
-            InvalidPostalCodeError,
-            match="Berlin postal code must start with 10, 12, 13, or 14"
-        ):
+        with pytest.raises(InvalidPostalCodeError, match="Berlin postal code must start with 10, 12, 13, or 14"):
             PostalCode("14200")
 
     def test_postal_code_14999_raises_error(self):
         """Test that 14999 raises error (above valid range)."""
-        with pytest.raises(
-            InvalidPostalCodeError,
-            match="Berlin postal code must start with 10, 12, 13, or 14"
-        ):
+        with pytest.raises(InvalidPostalCodeError, match="Berlin postal code must start with 10, 12, 13, or 14"):
             PostalCode("14999")
 
 
@@ -184,11 +164,7 @@ class TestPostalCodeGetValues:
 
     def test_get_values_with_multiple_postal_codes(self):
         """Test get_values returns list of string values."""
-        postal_codes = [
-            PostalCode("10115"),
-            PostalCode("12045"),
-            PostalCode("13353")
-        ]
+        postal_codes = [PostalCode("10115"), PostalCode("12045"), PostalCode("13353")]
 
         values = PostalCode.get_values(postal_codes)
 
@@ -212,12 +188,7 @@ class TestPostalCodeGetValues:
 
     def test_get_values_preserves_order(self):
         """Test that get_values preserves the order of postal codes."""
-        postal_codes = [
-            PostalCode("14199"),
-            PostalCode("10115"),
-            PostalCode("13353"),
-            PostalCode("12045")
-        ]
+        postal_codes = [PostalCode("14199"), PostalCode("10115"), PostalCode("13353"), PostalCode("12045")]
 
         values = PostalCode.get_values(postal_codes)
 
@@ -225,11 +196,7 @@ class TestPostalCodeGetValues:
 
     def test_get_values_with_duplicate_postal_codes(self):
         """Test get_values with duplicate postal codes."""
-        postal_codes = [
-            PostalCode("10115"),
-            PostalCode("10115"),
-            PostalCode("12045")
-        ]
+        postal_codes = [PostalCode("10115"), PostalCode("10115"), PostalCode("12045")]
 
         values = PostalCode.get_values(postal_codes)
 
@@ -335,16 +302,21 @@ class TestPostalCodeEdgeCases:
             postal_code = PostalCode(code)
             assert postal_code.value == code
 
-    def test_is_berlin_postal_code_method_boundaries(self):
-        """Test _is_berlin_postal_code boundary conditions."""
-        # Valid: 10001 to 14199
-        # pylint: disable=protected-access
-        assert PostalCode._is_berlin_postal_code("10001") is True
-        assert PostalCode._is_berlin_postal_code("14199") is True
+    def test_postal_code_boundary_conditions(self):
+        """Test PostalCode validation at boundaries through public interface."""
+        # Valid: 10001 to 14199 - should create successfully
+        postal_code_1 = PostalCode("10001")
+        assert postal_code_1.value == "10001"
 
-        # Invalid: at boundaries
-        assert PostalCode._is_berlin_postal_code("10000") is False
-        assert PostalCode._is_berlin_postal_code("14200") is False
+        postal_code_2 = PostalCode("14199")
+        assert postal_code_2.value == "14199"
+
+        # Invalid: at boundaries - should raise exceptions
+        with pytest.raises(InvalidPostalCodeError):
+            PostalCode("10000")
+
+        with pytest.raises(InvalidPostalCodeError):
+            PostalCode("14200")
 
 
 class TestPostalCodeIntegration:
@@ -368,12 +340,7 @@ class TestPostalCodeIntegration:
 
     def test_multiple_postal_codes_in_collection(self):
         """Test creating and using multiple postal codes."""
-        postal_codes = [
-            PostalCode("10115"),
-            PostalCode("12045"),
-            PostalCode("13353"),
-            PostalCode("14199")
-        ]
+        postal_codes = [PostalCode("10115"), PostalCode("12045"), PostalCode("13353"), PostalCode("14199")]
 
         assert len(postal_codes) == 4
         assert all(isinstance(pc, PostalCode) for pc in postal_codes)
@@ -384,11 +351,7 @@ class TestPostalCodeIntegration:
 
     def test_postal_codes_in_dictionary(self):
         """Test storing postal codes in dictionary."""
-        postal_dict = {
-            "area1": PostalCode("10115"),
-            "area2": PostalCode("12045"),
-            "area3": PostalCode("13353")
-        }
+        postal_dict = {"area1": PostalCode("10115"), "area2": PostalCode("12045"), "area3": PostalCode("13353")}
 
         assert len(postal_dict) == 3
         assert postal_dict["area1"].value == "10115"
@@ -396,11 +359,7 @@ class TestPostalCodeIntegration:
 
     def test_postal_code_in_set(self):
         """Test using postal codes in a set."""
-        postal_set = {
-            PostalCode("10115"),
-            PostalCode("12045"),
-            PostalCode("10115")  # Duplicate
-        }
+        postal_set = {PostalCode("10115"), PostalCode("12045"), PostalCode("10115")}  # Duplicate
 
         # Set should contain only 2 unique postal codes
         assert len(postal_set) == 2
@@ -426,7 +385,7 @@ class TestPostalCodeIntegration:
             PostalCode("13001"),
             PostalCode("13999"),
             PostalCode("14001"),
-            PostalCode("14199")
+            PostalCode("14199"),
         ]
 
         values = PostalCode.get_values(postal_codes)

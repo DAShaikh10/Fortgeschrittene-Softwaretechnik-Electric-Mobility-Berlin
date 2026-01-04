@@ -94,6 +94,22 @@ class CSVGeoDataRepository(GeoDataRepository, CSVRepository):
             )
             raise
 
+    def coerce_boundary(self, raw_boundary) -> GeopandasBoundary:
+        """Public method to coerce boundary for testing purposes."""
+        return self._coerce_boundary(raw_boundary)
+
+    def get_dataframe_columns(self) -> list:
+        """Public method to inspect DataFrame columns for testing."""
+        return list(self._df.columns)
+
+    def get_dataframe_column_dtype(self, column: str) -> str:
+        """Public method to inspect DataFrame column data type for testing."""
+        return str(self._df[column].dtype)
+
+    def get_dataframe_value(self, row: int, column: str):
+        """Public method to inspect DataFrame values for testing."""
+        return self._df.iloc[row][column]
+
     def get_all_postal_codes(self) -> list[int]:
         """
         Retrieve all unique postal codes available in the dataset.

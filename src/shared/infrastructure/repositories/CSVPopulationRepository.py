@@ -72,3 +72,11 @@ class CSVPopulationRepository(PopulationRepository, CSVRepository):
         residents_count = df_filtered["einwohner"].sum()
 
         return int(residents_count)
+
+    def get_dataframe_column_dtype(self, column: str) -> str:
+        """Public method to inspect DataFrame column data type for testing."""
+        return str(self._df[column].dtype)
+
+    def get_dataframe_value(self, row: int, column: str):
+        """Public method to inspect DataFrame values for testing."""
+        return self._df.iloc[row][column]

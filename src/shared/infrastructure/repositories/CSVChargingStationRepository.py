@@ -79,3 +79,11 @@ class CSVChargingStationRepository(ChargingStationRepository, CSVRepository):
             stations.append(station)
 
         return stations
+
+    def get_dataframe_columns(self) -> list:
+        """Public method to inspect DataFrame columns for testing."""
+        return list(self._df.columns)
+
+    def get_dataframe_value(self, row: int, column: str):
+        """Public method to inspect DataFrame values for testing."""
+        return self._df.iloc[row][column]

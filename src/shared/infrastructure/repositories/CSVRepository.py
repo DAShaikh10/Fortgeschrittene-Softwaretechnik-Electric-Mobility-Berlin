@@ -32,3 +32,16 @@ class CSVRepository(ABC):
         """
 
         return pd.read_csv(self._file_path, sep=sep, **kwargs)
+
+    def load_csv(self, sep: str, **kwargs) -> pd.DataFrame:
+        """
+        Public method to load CSV file for testing and inspection purposes.
+
+        Args:
+            sep (str): The separator used in the CSV file.
+            **kwargs: Additional keyword arguments passed to `pandas.read_csv`
+
+        Returns:
+            pd.DataFrame: The contents of the CSV file.
+        """
+        return self._load_csv(sep=sep, **kwargs)

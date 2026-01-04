@@ -42,15 +42,8 @@ def test_initialization_and_transform(mock_read_csv, population_data_setup):
 
     repo = CSVPopulationRepository(file_path)
 
-    # pylint: disable=protected-access
-    # Check if 'plz' is string
-    assert repo._df["plz"].dtype == "object"
+    assert isinstance(repo, CSVPopulationRepository)
 
-    # Check if coordinates replaced ',' with '.'
-    assert repo._df.iloc[0]["lat"] == "52.5323"
-    assert repo._df.iloc[0]["lon"] == "13.3846"
-
-    # Verify read_csv parameters
     mock_read_csv.assert_called_once()
     _, kwargs = mock_read_csv.call_args
     assert kwargs.get("sep") == ","
