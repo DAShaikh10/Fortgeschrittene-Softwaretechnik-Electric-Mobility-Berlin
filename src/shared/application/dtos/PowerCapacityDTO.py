@@ -43,4 +43,3 @@ class PowerCapacityDTO:
         if self.capacity_category is not None:
             result["capacity_category"] = self.capacity_category
         return result
-

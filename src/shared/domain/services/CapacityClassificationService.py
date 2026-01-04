@@ -105,9 +105,6 @@ class CapacityClassificationService:
         range_definitions = {"Low": (0, q33), "Medium": (q33, q66), "High": (q66, max_capacity)}
 
         # Classify each capacity
-        categories = [
-            CapacityClassificationService.classify_capacity(capacity, q33, q66) for capacity in capacities
-        ]
+        categories = [CapacityClassificationService.classify_capacity(capacity, q33, q66) for capacity in capacities]
 
         return range_definitions, categories
-

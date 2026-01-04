@@ -153,7 +153,7 @@ class TestClassifyCapacities:
 
         range_definitions, _ = CapacityClassificationService.classify_capacities(capacities)
 
-        for category, (min_val, max_val) in range_definitions.items():
+        for _, (min_val, max_val) in range_definitions.items():
             assert isinstance(min_val, (int, float))
             assert isinstance(max_val, (int, float))
             assert min_val <= max_val
@@ -165,4 +165,3 @@ class TestClassifyCapacities:
         _, categories = CapacityClassificationService.classify_capacities(capacities)
 
         assert len(categories) == len(capacities)
-
