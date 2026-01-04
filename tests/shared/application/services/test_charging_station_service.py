@@ -70,17 +70,23 @@ def mock_charging_station():
 def mock_station_list():
     """Create a list of mock charging stations."""
     station1 = Mock(spec=ChargingStation)
-    station1.power_capacity = Mock(kilowatts=50.0)
+    power_capacity_1 = Mock()
+    power_capacity_1.kilowatts = 50.0
+    station1.power_capacity = power_capacity_1
     station1.is_fast_charger = Mock(return_value=True)
     station1.get_charging_category = Mock(return_value="FAST")
 
     station2 = Mock(spec=ChargingStation)
-    station2.power_capacity = Mock(kilowatts=22.0)
+    power_capacity_2 = Mock()
+    power_capacity_2.kilowatts = 22.0
+    station2.power_capacity = power_capacity_2
     station2.is_fast_charger = Mock(return_value=False)
     station2.get_charging_category = Mock(return_value="NORMAL")
 
     station3 = Mock(spec=ChargingStation)
-    station3.power_capacity = Mock(kilowatts=150.0)
+    power_capacity_3 = Mock()
+    power_capacity_3.kilowatts = 150.0
+    station3.power_capacity = power_capacity_3
     station3.is_fast_charger = Mock(return_value=True)
     station3.get_charging_category = Mock(return_value="ULTRA")
 

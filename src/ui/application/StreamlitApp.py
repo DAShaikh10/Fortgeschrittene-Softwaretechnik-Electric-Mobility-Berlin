@@ -579,7 +579,7 @@ class StreamlitApp:
                     folium.CircleMarker(
                         location=[station.latitude, station.longitude],
                         radius=6,
-                        popup=f"PLZ: {station.postal_code.value}<br>Power: {station.power_kw} kW",
+                        popup=f"PLZ: {station.postal_code.value}<br>Power: {station.power_capacity.kilowatts} kW",
                         color="darkgreen",
                         fill=True,
                         fillColor="green",

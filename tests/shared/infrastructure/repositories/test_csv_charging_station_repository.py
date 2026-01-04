@@ -82,7 +82,7 @@ def test_find_stations_by_postal_code_found(mock_read_csv, repo_setup):
     # Note: The order depends on DataFrame order, which is preserved here
     assert stations[0].latitude == 52.5323
     assert stations[0].longitude == 13.3846
-    assert stations[0].power_kw == 22.0
+    assert stations[0].power_capacity.kilowatts == 22.0
     assert stations[0].postal_code == mock_postal
 
 

@@ -35,7 +35,6 @@ def mock_charging_station():
     station.postal_code = "10115"
     station.latitude = 52.5200
     station.longitude = 13.4050
-    station.power_kw = 50.0
 
     # Mock power_capacity object
     power_capacity_mock = Mock()
@@ -52,7 +51,6 @@ def mock_slow_station():
     """Create a mock slow charging station (<50kW)."""
     station = Mock(spec=ChargingStation)
     station.postal_code = "10115"
-    station.power_kw = 22.0
 
     power_capacity_mock = Mock()
     power_capacity_mock.kilowatts = 22.0
@@ -162,11 +160,19 @@ class TestPostalCodeAreaAggregateQueries:
         aggregate = PostalCodeAreaAggregate.create(valid_postal_code)
 
         station1 = Mock(spec=ChargingStation)
-        station1.power_capacity = Mock(kilowatts=50.0)
+        power_capacity_1 = Mock()
+        power_capacity_1.kilowatts = 50.0
+        station1.power_capacity = power_capacity_1
+
         station2 = Mock(spec=ChargingStation)
-        station2.power_capacity = Mock(kilowatts=22.0)
+        power_capacity_2 = Mock()
+        power_capacity_2.kilowatts = 22.0
+        station2.power_capacity = power_capacity_2
+
         station3 = Mock(spec=ChargingStation)
-        station3.power_capacity = Mock(kilowatts=11.0)
+        power_capacity_3 = Mock()
+        power_capacity_3.kilowatts = 11.0
+        station3.power_capacity = power_capacity_3
 
         aggregate.add_station(station1)
         aggregate.add_station(station2)
@@ -185,11 +191,19 @@ class TestPostalCodeAreaAggregateQueries:
         aggregate = PostalCodeAreaAggregate.create(valid_postal_code)
 
         station1 = Mock(spec=ChargingStation)
-        station1.power_capacity = Mock(kilowatts=60.0)
+        power_capacity_1 = Mock()
+        power_capacity_1.kilowatts = 60.0
+        station1.power_capacity = power_capacity_1
+
         station2 = Mock(spec=ChargingStation)
-        station2.power_capacity = Mock(kilowatts=40.0)
+        power_capacity_2 = Mock()
+        power_capacity_2.kilowatts = 40.0
+        station2.power_capacity = power_capacity_2
+
         station3 = Mock(spec=ChargingStation)
-        station3.power_capacity = Mock(kilowatts=50.0)
+        power_capacity_3 = Mock()
+        power_capacity_3.kilowatts = 50.0
+        station3.power_capacity = power_capacity_3
 
         aggregate.add_station(station1)
         aggregate.add_station(station2)
@@ -436,17 +450,23 @@ class TestPostalCodeAreaAggregateIntegration:
 
         # Add various stations
         fast1 = Mock(spec=ChargingStation)
-        fast1.power_capacity = Mock(kilowatts=50.0)
+        power_capacity_fast1 = Mock()
+        power_capacity_fast1.kilowatts = 50.0
+        fast1.power_capacity = power_capacity_fast1
         fast1.is_fast_charger = Mock(return_value=True)
         fast1.get_charging_category = Mock(return_value="FAST")
 
         fast2 = Mock(spec=ChargingStation)
-        fast2.power_capacity = Mock(kilowatts=150.0)
+        power_capacity_fast2 = Mock()
+        power_capacity_fast2.kilowatts = 150.0
+        fast2.power_capacity = power_capacity_fast2
         fast2.is_fast_charger = Mock(return_value=True)
         fast2.get_charging_category = Mock(return_value="ULTRA")
 
         normal = Mock(spec=ChargingStation)
-        normal.power_capacity = Mock(kilowatts=22.0)
+        power_capacity_normal = Mock()
+        power_capacity_normal.kilowatts = 22.0
+        normal.power_capacity = power_capacity_normal
         normal.is_fast_charger = Mock(return_value=False)
         normal.get_charging_category = Mock(return_value="NORMAL")
 
@@ -480,7 +500,9 @@ class TestPostalCodeAreaAggregateIntegration:
         aggregate = PostalCodeAreaAggregate.create(valid_postal_code)
 
         slow = Mock(spec=ChargingStation)
-        slow.power_capacity = Mock(kilowatts=11.0)
+        power_capacity_slow = Mock()
+        power_capacity_slow.kilowatts = 11.0
+        slow.power_capacity = power_capacity_slow
         slow.is_fast_charger = Mock(return_value=False)
 
         for _ in range(5):
