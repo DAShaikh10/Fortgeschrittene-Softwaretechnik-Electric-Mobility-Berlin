@@ -35,16 +35,20 @@ ABOUT_SECTION = """
         - Business logic encapsulated in aggregates and value objects
         - Domain events for loose coupling between contexts
         - Invariant enforcement through value object validation
+        - **Named Constants**: Business thresholds in dedicated constant classes (no magic numbers)
+        - **Type-Safe Enums**: ChargingCategory, PopulationDensityCategory, CapacityCategory
 
     - **Application Layer**:
         - Service orchestration of domain operations
         - Use case implementations (search stations, analyze demand, get recommendations)
         - Cross-aggregate coordination through domain events
+        - Data Transfer Objects (DTOs) for presentation layer isolation
 
     - **Infrastructure Layer**:
         - CSV-based repository implementations
         - Centralized logging configuration with structured logging
         - GeoDataFrame processing for geographic boundaries
+        - Event bus for domain event publishing
 
     - **UI Layer**:
         - Streamlit-based presentation with responsive design
@@ -61,6 +65,8 @@ ABOUT_SECTION = """
     - **Priority Analysis**: Automated demand priority calculation (High/Medium/Low)
     - **Recommendations Engine**: Infrastructure expansion suggestions based on target ratios
     - **Centralized Logging**: Structured logging throughout all layers for observability
+    - **Type Safety**: Enums replace magic strings for better IDE support and refactoring safety
+    - **Maintainable Constants**: Business rules defined in named constants, not hardcoded values
 
     #### 📊 Data Sources
 
@@ -75,10 +81,11 @@ ABOUT_SECTION = """
     - **Repository Pattern**: Abstract data access with CSV implementations
     - **Service Layer**: Stateless orchestration of domain operations
     - **Domain Events**: Publisher-subscriber pattern for cross-context communication
-
+    - **Constants Module**: Centralized business thresholds (InfrastructureThresholds, PowerThresholds, etc.)
+    - **Enum Types**: Type-safe categorization for charging speeds, population density, and capacity levels
     ---
 
-    **Version**: 2.0 (TDD Enhanced DDD Architecture)  
+    **Version**: 2.0 (TDD Enhanced DDD)  
     **Framework**: Streamlit + DDD + TDD + Event-Driven Architecture  
     **Course**: Advanced Software Engineering  
     **Authors**:
