@@ -5,7 +5,7 @@ Shared Infratructure - CSV Charging Station Repository Implementation
 from typing import List
 
 from src.shared.domain.entities import ChargingStation
-from src.shared.domain.value_objects import PostalCode
+from src.shared.domain.value_objects import PostalCode, PowerCapacity
 
 from .CSVRepository import CSVRepository
 from .ChargingStationRepository import ChargingStationRepository
@@ -74,7 +74,7 @@ class CSVChargingStationRepository(ChargingStationRepository, CSVRepository):
                 postal_code=postal_code,
                 latitude=float(row["Breitengrad"]),
                 longitude=float(row["Längengrad"]),
-                power_kw=float(row["KW"]),
+                power_kw=PowerCapacity(float(row["KW"])),
             )
             stations.append(station)
 

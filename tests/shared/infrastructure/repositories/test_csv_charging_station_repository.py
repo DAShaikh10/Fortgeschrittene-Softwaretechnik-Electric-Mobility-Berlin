@@ -1,6 +1,6 @@
 """Tests for CSV Charging Station Repository."""
 
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name,protected-access
 
 from unittest.mock import patch, MagicMock
 

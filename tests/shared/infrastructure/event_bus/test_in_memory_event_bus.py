@@ -1,5 +1,5 @@
 """Tests for In-Memory Event Bus."""
-# pylint: disable=redefined-outer-name,missing-class-docstring
+# pylint: disable=redefined-outer-name,missing-class-docstring,protected-access
 
 from unittest.mock import MagicMock, patch
 

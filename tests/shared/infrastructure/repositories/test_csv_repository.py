@@ -8,9 +8,10 @@ Test categories:
 - Additional kwargs handling tests
 """
 
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name,protected-access
 
-from unittest.mock import patch, MagicMock
+from abc import ABC
+from unittest.mock import patch
 
 import pytest
 import pandas as pd
@@ -21,10 +22,6 @@ from src.shared.infrastructure.repositories.CSVRepository import CSVRepository
 # Create a concrete implementation for testing
 class ConcreteCSVRepository(CSVRepository):
     """Concrete implementation of CSVRepository for testing purposes."""
-
-    def __init__(self, file_path: str):
-        """Initialize the concrete repository."""
-        super().__init__(file_path)
 
 
 # Test fixtures
@@ -70,8 +67,6 @@ class TestCSVRepositoryInitialization:
 
     def test_is_abstract_base_class(self):
         """Test that CSVRepository is an abstract base class."""
-        from abc import ABC
-
         assert issubclass(CSVRepository, ABC)
 
     def test_can_instantiate_directly(self, sample_dataframe):
@@ -81,7 +76,7 @@ class TestCSVRepositoryInitialization:
         with patch('pandas.read_csv') as mock_read_csv:
             mock_read_csv.return_value = sample_dataframe
             repo = CSVRepository("test.csv")
-            
+
             # pylint: disable=protected-access
             assert repo._file_path == "test.csv"
             result = repo._load_csv(sep=',')
@@ -319,9 +314,9 @@ class TestCSVRepositoryIntegration:
         repo = ConcreteCSVRepository(sample_file_path)
 
         # Load with different separators
-        result1 = repo._load_csv(sep=',')
-        result2 = repo._load_csv(sep=';')
-        result3 = repo._load_csv(sep='\t')
+        _result1 = repo._load_csv(sep=',')
+        _result2 = repo._load_csv(sep=';')
+        _result3 = repo._load_csv(sep='\t')
 
         assert mock_read_csv.call_count == 3
         # Verify each call used the correct separator

@@ -7,10 +7,11 @@ Test categories:
 - Concrete implementation tests
 """
 
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name,protected-access,abstract-class-instantiated,no-member
 
+import inspect
 from typing import List
-from unittest.mock import MagicMock
+from abc import ABC
 
 import pytest
 
@@ -62,8 +63,6 @@ class TestPopulationRepositoryAbstractBaseClass:
 
     def test_is_abstract_base_class(self):
         """Test that PopulationRepository is an abstract base class."""
-        from abc import ABC
-
         assert issubclass(PopulationRepository, ABC)
 
     def test_cannot_instantiate_abstract_class_directly(self):
@@ -73,8 +72,6 @@ class TestPopulationRepositoryAbstractBaseClass:
 
     def test_has_abstract_method_get_all_postal_codes(self):
         """Test that PopulationRepository has abstract method get_all_postal_codes."""
-        from abc import ABC
-
         # Check that get_all_postal_codes is abstract
         assert hasattr(PopulationRepository, 'get_all_postal_codes')
         # Check if it's an abstract method
@@ -181,14 +178,12 @@ class TestPopulationRepositoryInterface:
 
     def test_get_all_postal_codes_signature(self):
         """Test that get_all_postal_codes has correct signature."""
-        import inspect
-
         sig = inspect.signature(PopulationRepository.get_all_postal_codes)
-        
+
         # Should have only self as parameter
         assert len(sig.parameters) == 1
         assert 'self' in sig.parameters
-        
+
         # Return type annotation should be List[PostalCode]
         return_annotation = sig.return_annotation
         assert return_annotation is not inspect.Signature.empty
@@ -197,7 +192,7 @@ class TestPopulationRepositoryInterface:
         """Test that concrete implementations must implement get_all_postal_codes."""
         # Create an incomplete implementation
         class IncompleteRepository(PopulationRepository):
-            pass
+            """Deliberately incomplete implementation for abstract enforcement test."""
 
         # Should raise TypeError when trying to instantiate
         with pytest.raises(TypeError):
@@ -281,7 +276,7 @@ class TestPopulationRepositoryIntegration:
 
 class TestPostalCodeBoundedContextRules:
     """Test postal code bounded context rules in repository context.
-    
+
     Bounded Context Rules:
     - Postal Code Format: Numeric and exactly 5 digits
     - Region Support: Must start with 10, 12, 13, or 14
@@ -295,7 +290,7 @@ class TestPostalCodeBoundedContextRules:
             "10117",
             "10999",  # Maximum for 10 prefix
         ]
-        
+
         for code in valid_codes:
             postal_code = PostalCode(code)
             repo = ConcretePopulationRepository([postal_code])
@@ -311,7 +306,7 @@ class TestPostalCodeBoundedContextRules:
             "12117",
             "12999",  # Maximum for 12 prefix
         ]
-        
+
         for code in valid_codes:
             postal_code = PostalCode(code)
             repo = ConcretePopulationRepository([postal_code])
@@ -327,7 +322,7 @@ class TestPostalCodeBoundedContextRules:
             "13117",
             "13999",  # Maximum for 13 prefix
         ]
-        
+
         for code in valid_codes:
             postal_code = PostalCode(code)
             repo = ConcretePopulationRepository([postal_code])
@@ -343,7 +338,7 @@ class TestPostalCodeBoundedContextRules:
             "14117",
             "14199",  # Maximum for 14 prefix (must be < 14200)
         ]
-        
+
         for code in valid_codes:
             postal_code = PostalCode(code)
             repo = ConcretePopulationRepository([postal_code])
@@ -360,7 +355,7 @@ class TestPostalCodeBoundedContextRules:
             "abcde",  # All letters
             "10.15",  # Contains dot
         ]
-        
+
         for code in invalid_codes:
             with pytest.raises(InvalidPostalCodeError, match="must be numeric"):
                 PostalCode(code)
@@ -374,7 +369,7 @@ class TestPostalCodeBoundedContextRules:
             "10",     # 2 digits (too short)
             "1011555", # 7 digits (too long)
         ]
-        
+
         for code in invalid_codes:
             if len(code) != 5:
                 with pytest.raises(InvalidPostalCodeError, match="exactly 5 digits"):
@@ -389,7 +384,7 @@ class TestPostalCodeBoundedContextRules:
             "20000",  # Starts with 20
             "99999",  # Starts with 99
         ]
-        
+
         for code in invalid_codes:
             with pytest.raises(InvalidPostalCodeError, match="must start with 10, 12, 13, or 14"):
                 PostalCode(code)
@@ -404,7 +399,7 @@ class TestPostalCodeBoundedContextRules:
             "14201",  # Just above boundary
             "15000",  # Well above boundary
         ]
-        
+
         for code in invalid_codes:
             with pytest.raises(InvalidPostalCodeError):
                 PostalCode(code)
@@ -413,7 +408,7 @@ class TestPostalCodeBoundedContextRules:
         """Test that empty or None postal codes are rejected."""
         with pytest.raises(InvalidPostalCodeError, match="cannot be None or empty"):
             PostalCode("")
-        
+
         with pytest.raises(InvalidPostalCodeError, match="cannot be None or empty"):
             PostalCode("   ")  # Whitespace only
 
@@ -425,10 +420,10 @@ class TestPostalCodeBoundedContextRules:
             PostalCode("13115"),  # Region 13
             PostalCode("14115"),  # Region 14
         ]
-        
+
         repo = ConcretePopulationRepository(postal_codes)
         result = repo.get_all_postal_codes()
-        
+
         assert len(result) == 4
         assert all(isinstance(plz, PostalCode) for plz in result)
         assert result[0].value == "10115"
@@ -440,14 +435,14 @@ class TestPostalCodeBoundedContextRules:
         """Test that repository cannot be created with invalid postal codes."""
         # This test verifies that invalid postal codes are caught at PostalCode creation
         # before they can be added to the repository
-        
+
         # Try to create invalid postal codes - should fail before repository creation
         with pytest.raises(InvalidPostalCodeError):
             PostalCode("99999")  # Invalid starting digits
-        
+
         with pytest.raises(InvalidPostalCodeError):
             PostalCode("1011")  # Wrong length
-        
+
         with pytest.raises(InvalidPostalCodeError):
             PostalCode("1011a")  # Non-numeric
 
@@ -458,7 +453,7 @@ class TestPostalCodeBoundedContextRules:
         for code in valid_numeric:
             postal_code = PostalCode(code)
             assert postal_code.value == code
-        
+
         # Invalid non-numeric codes
         invalid_non_numeric = ["1011a", "10-15", "10.15", "10 15"]
         for code in invalid_non_numeric:
@@ -472,14 +467,14 @@ class TestPostalCodeBoundedContextRules:
         for code in valid_length:
             postal_code = PostalCode(code)
             assert len(postal_code.value) == 5
-        
+
         # Invalid lengths
         invalid_lengths = {
             "1011": "exactly 5 digits",    # 4 digits
             "101155": "exactly 5 digits",  # 6 digits
             "10": "exactly 5 digits",     # 2 digits
         }
-        
+
         for code, expected_error in invalid_lengths.items():
             with pytest.raises(InvalidPostalCodeError, match=expected_error):
                 PostalCode(code)
@@ -492,7 +487,7 @@ class TestPostalCodeBoundedContextRules:
             "13": ["13000", "13115", "13999"],
             "14": ["14000", "14115", "14199"],  # Must be < 14200
         }
-        
+
         for prefix, codes in valid_prefixes.items():
             for code in codes:
                 postal_code = PostalCode(code)
@@ -505,7 +500,7 @@ class TestPostalCodeBoundedContextRules:
     def test_region_support_invalid_prefixes_rejected(self):
         """Test that invalid region prefixes are rejected."""
         invalid_prefixes = ["09", "11", "15", "20", "99"]
-        
+
         for prefix in invalid_prefixes:
             # Create a 5-digit code with invalid prefix
             invalid_code = prefix + "000"
@@ -521,13 +516,13 @@ class TestPostalCodeBoundedContextRules:
             PostalCode("13115"),
             PostalCode("14115"),
         ]
-        
+
         repo = ConcretePopulationRepository(valid_codes)
         result = repo.get_all_postal_codes()
-        
+
         assert len(result) == 4
         assert all(isinstance(plz, PostalCode) for plz in result)
-        
+
         # Verify all returned codes are valid
         for postal_code in result:
             assert len(postal_code.value) == 5

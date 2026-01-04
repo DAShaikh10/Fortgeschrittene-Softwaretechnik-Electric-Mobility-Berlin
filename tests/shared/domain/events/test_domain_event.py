@@ -36,7 +36,7 @@ def test_event_type():
     """
 
     class MockEvent(DomainEvent):
-        pass
+        """Simple domain event for testing type resolution."""
 
     event = MockEvent()
     assert event.event_type() == "MockEvent"

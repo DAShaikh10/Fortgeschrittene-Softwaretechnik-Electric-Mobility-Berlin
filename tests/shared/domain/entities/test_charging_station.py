@@ -23,7 +23,7 @@ class TestChargingStationCreation:
         """Test creating a charging station with valid attributes."""
         station = ChargingStation(postal_code="10115", latitude=52.5200, longitude=13.4050, power_kw=50.0)
 
-        assert station.postal_code == "10115"
+        assert station.postal_code.value == "10115"
         assert station.latitude == 52.5200
         assert station.longitude == 13.4050
         assert station.power_capacity.kilowatts == 50.0
@@ -192,7 +192,7 @@ class TestChargingStationGeographicData:
         """Test that postal code is stored correctly."""
         station = ChargingStation("12345", 52.5200, 13.4050, 50.0)
 
-        assert station.postal_code == "12345"
+        assert station.postal_code.value == "12345"
 
     def test_charging_station_stores_latitude(self):
         """Test that latitude is stored correctly."""

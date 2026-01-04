@@ -7,7 +7,7 @@ Test categories:
 - Get resident data tests
 """
 
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name,protected-access,unused-argument,no-else-return,duplicate-code,R0801
 
 from unittest.mock import Mock
 
@@ -447,7 +447,7 @@ class TestPostalCodeResidentServiceIntegration:
 
 class TestPostalCodeBoundedContextInPostalCodeResidentService:
     """Test postal code bounded context rules in PostalCodeResidentService context.
-    
+
     Bounded Context Rules:
     - Postal Code Format: Numeric and exactly 5 digits
     - Region Support: Must start with 10, 12, 13, or 14
@@ -463,11 +463,11 @@ class TestPostalCodeBoundedContextInPostalCodeResidentService:
             PostalCode("13115"),  # Region 13
             PostalCode("14115"),  # Region 14
         ]
-        
+
         mock_repository.get_all_postal_codes.return_value = valid_postal_codes
-        
+
         result = postal_code_resident_service.get_all_postal_codes()
-        
+
         assert len(result) == 4
         assert all(isinstance(plz, PostalCode) for plz in result)
 
@@ -478,10 +478,10 @@ class TestPostalCodeBoundedContextInPostalCodeResidentService:
         # Invalid postal codes should fail at PostalCode creation, not in service
         with pytest.raises(InvalidPostalCodeError, match="must start with 10, 12, 13, or 14"):
             PostalCode("99999")  # Invalid starting digits
-        
+
         with pytest.raises(InvalidPostalCodeError, match="exactly 5 digits"):
             PostalCode("1011")  # Wrong length
-        
+
         with pytest.raises(InvalidPostalCodeError, match="must be numeric"):
             PostalCode("1011a")  # Non-numeric
 
@@ -494,11 +494,11 @@ class TestPostalCodeBoundedContextInPostalCodeResidentService:
             PostalCode("10115"),
             PostalCode("10999"),  # Maximum for 10 prefix
         ]
-        
+
         mock_repository.get_all_postal_codes.return_value = valid_codes
-        
+
         result = postal_code_resident_service.get_all_postal_codes()
-        
+
         assert len(result) == 3
         assert all(plz.value.startswith("10") for plz in result)
 
@@ -511,11 +511,11 @@ class TestPostalCodeBoundedContextInPostalCodeResidentService:
             PostalCode("12115"),
             PostalCode("12999"),
         ]
-        
+
         mock_repository.get_all_postal_codes.return_value = valid_codes
-        
+
         result = postal_code_resident_service.get_all_postal_codes()
-        
+
         assert len(result) == 3
         assert all(plz.value.startswith("12") for plz in result)
 
@@ -528,11 +528,11 @@ class TestPostalCodeBoundedContextInPostalCodeResidentService:
             PostalCode("13115"),
             PostalCode("13999"),
         ]
-        
+
         mock_repository.get_all_postal_codes.return_value = valid_codes
-        
+
         result = postal_code_resident_service.get_all_postal_codes()
-        
+
         assert len(result) == 3
         assert all(plz.value.startswith("13") for plz in result)
 
@@ -545,11 +545,11 @@ class TestPostalCodeBoundedContextInPostalCodeResidentService:
             PostalCode("14115"),
             PostalCode("14199"),  # Maximum for 14 prefix (must be < 14200)
         ]
-        
+
         mock_repository.get_all_postal_codes.return_value = valid_codes
-        
+
         result = postal_code_resident_service.get_all_postal_codes()
-        
+
         assert len(result) == 3
         assert all(plz.value.startswith("14") for plz in result)
 
@@ -559,7 +559,7 @@ class TestPostalCodeBoundedContextInPostalCodeResidentService:
         """Test that postal code format enforces numeric-only requirement."""
         # Invalid non-numeric codes should fail at PostalCode creation
         invalid_codes = ["1011a", "10-15", "10.15", "10 15"]
-        
+
         for code in invalid_codes:
             with pytest.raises(InvalidPostalCodeError, match="must be numeric"):
                 PostalCode(code)
@@ -574,7 +574,7 @@ class TestPostalCodeBoundedContextInPostalCodeResidentService:
             "101155": "exactly 5 digits",  # 6 digits
             "10": "exactly 5 digits",     # 2 digits
         }
-        
+
         for code, expected_error in invalid_codes.items():
             with pytest.raises(InvalidPostalCodeError, match=expected_error):
                 PostalCode(code)
@@ -589,11 +589,11 @@ class TestPostalCodeBoundedContextInPostalCodeResidentService:
             "13": [PostalCode("13000"), PostalCode("13115"), PostalCode("13999")],
             "14": [PostalCode("14000"), PostalCode("14115"), PostalCode("14199")],
         }
-        
+
         for prefix, postal_codes in valid_prefixes.items():
             mock_repository.get_all_postal_codes.return_value = postal_codes
             result = postal_code_resident_service.get_all_postal_codes()
-            
+
             assert len(result) == 3
             assert all(plz.value.startswith(prefix) for plz in result)
 
@@ -602,7 +602,7 @@ class TestPostalCodeBoundedContextInPostalCodeResidentService:
     ):
         """Test that invalid region prefixes are rejected."""
         invalid_prefixes = ["09", "11", "15", "20", "99"]
-        
+
         for prefix in invalid_prefixes:
             invalid_code = prefix + "000"
             with pytest.raises(InvalidPostalCodeError, match="must start with 10, 12, 13, or 14"):
@@ -618,7 +618,7 @@ class TestPostalCodeBoundedContextInPostalCodeResidentService:
             "14200",  # At upper boundary (must be < 14200)
             "14201",  # Just above boundary
         ]
-        
+
         for code in invalid_codes:
             with pytest.raises(InvalidPostalCodeError):
                 PostalCode(code)
@@ -633,11 +633,11 @@ class TestPostalCodeBoundedContextInPostalCodeResidentService:
             PostalCode("13115"),  # Region 13
             PostalCode("14115"),  # Region 14
         ]
-        
+
         mock_repository.get_all_postal_codes.return_value = postal_codes
-        
+
         result = postal_code_resident_service.get_all_postal_codes()
-        
+
         assert len(result) == 4
         assert set(plz.value for plz in result) == {"10115", "12115", "13115", "14115"}
 
@@ -652,12 +652,12 @@ class TestPostalCodeBoundedContextInPostalCodeResidentService:
             PostalCode("13115"),
             PostalCode("14115"),
         ]
-        
+
         mock_repository.get_residents_count.return_value = 5000
-        
+
         for postal_code in valid_codes:
             result = postal_code_resident_service.get_resident_data(postal_code)
-            
+
             assert isinstance(result, PopulationData)
             assert result.postal_code == postal_code
             # Verify postal code is valid format
@@ -676,14 +676,14 @@ class TestPostalCodeBoundedContextInPostalCodeResidentService:
             PostalCode("13115"),
             PostalCode("14115"),
         ]
-        
+
         mock_repository.get_all_postal_codes.return_value = valid_codes
         mock_repository.get_residents_count.return_value = 5000
-        
+
         # Get all postal codes
         all_codes = postal_code_resident_service.get_all_postal_codes()
         assert len(all_codes) == 4
-        
+
         # Get resident data for each
         for postal_code in valid_codes:
             result = postal_code_resident_service.get_resident_data(postal_code)

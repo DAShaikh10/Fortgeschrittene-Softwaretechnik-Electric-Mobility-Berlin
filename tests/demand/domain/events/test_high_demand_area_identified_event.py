@@ -1,5 +1,5 @@
+# pylint: disable=redefined-outer-name,duplicate-code,R0801
 """Tests for High Demand Area Identified Event."""
-# pylint: disable=redefined-outer-name
 
 from dataclasses import FrozenInstanceError
 from datetime import datetime
