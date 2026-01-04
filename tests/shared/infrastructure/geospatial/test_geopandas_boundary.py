@@ -19,9 +19,7 @@ def polygon_gdf_data():
 
 def test_from_wkt_creates_non_empty_boundary():
     """Test that the GeopandasBoundary can be created from a WKT string."""
-    boundary = GeopandasBoundary.from_wkt(
-        "POLYGON ((13.4 52.5, 13.5 52.5, 13.5 52.6, 13.4 52.6, 13.4 52.5))"
-    )
+    boundary = GeopandasBoundary.from_wkt("POLYGON ((13.4 52.5, 13.5 52.5, 13.5 52.6, 13.4 52.6, 13.4 52.5))")
 
     assert isinstance(boundary.gdf, gpd.GeoDataFrame)
     assert isinstance(boundary.geometry, gpd.GeoSeries)
@@ -54,11 +52,15 @@ def test_constructor_rejects_non_geodataframe():
         GeopandasBoundary("not a geodataframe")
 
 
+def test_constructor_rejects_none():
+    """Test that the GeopandasBoundary constructor raises ValueError for None."""
+    with pytest.raises(ValueError, match="Boundary geometry cannot be None"):
+        GeopandasBoundary(None)
+
+
 def test_geopandas_boundary_delegates_to_geodataframe_methods():
     """Test that GeopandasBoundary delegates methods to the underlying GeoDataFrame."""
-    boundary = GeopandasBoundary.from_wkt(
-        "POLYGON ((13.4 52.5, 13.5 52.5, 13.5 52.6, 13.4 52.6, 13.4 52.5))"
-    )
+    boundary = GeopandasBoundary.from_wkt("POLYGON ((13.4 52.5, 13.5 52.5, 13.5 52.6, 13.4 52.6, 13.4 52.5))")
 
     # __getattr__ should proxy attributes like shape
     assert boundary.shape[0] == 1
