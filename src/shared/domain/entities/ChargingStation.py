@@ -7,8 +7,9 @@ from __future__ import annotations
 import uuid
 from typing import Optional, Union
 
-from src.shared.domain.value_objects import PostalCode, PowerCapacity
+from src.shared.domain.enums import ChargingCategory
 from src.shared.domain.constants import PowerThresholds
+from src.shared.domain.value_objects import PostalCode, PowerCapacity
 
 
 class ChargingStation:
@@ -43,14 +44,14 @@ class ChargingStation:
         """Fast charger if power is at least 50 kW."""
         return self.power_capacity.kilowatts >= PowerThresholds.FAST_CHARGING_THRESHOLD_KW
 
-    def get_charging_category(self) -> str:
+    def get_charging_category(self) -> ChargingCategory:
         """Classify charger by power output."""
         power = self.power_capacity.kilowatts
         if power >= PowerThresholds.ULTRA_CHARGING_THRESHOLD_KW:
-            return "ULTRA"
+            return ChargingCategory.ULTRA
         if power >= PowerThresholds.FAST_CHARGING_THRESHOLD_KW:
-            return "FAST"
-        return "NORMAL"
+            return ChargingCategory.FAST
+        return ChargingCategory.NORMAL
 
     def _generate_id(
         self,

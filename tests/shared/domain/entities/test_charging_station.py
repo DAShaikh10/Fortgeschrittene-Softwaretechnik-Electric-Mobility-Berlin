@@ -13,6 +13,7 @@ Test categories:
 import pytest
 
 from src.shared.domain.entities import ChargingStation
+from src.shared.domain.enums import ChargingCategory
 from src.shared.domain.value_objects import PowerCapacity
 
 
@@ -125,73 +126,73 @@ class TestChargingStationCreation:
         """Test that 0 kW station is categorized as NORMAL."""
         station = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(0.0))
 
-        assert station.get_charging_category() == "NORMAL"
+        assert station.get_charging_category() == ChargingCategory.NORMAL
 
     def test_get_charging_category_returns_normal_for_low_power(self):
         """Test that 11 kW station is categorized as NORMAL."""
         station = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(11.0))
 
-        assert station.get_charging_category() == "NORMAL"
+        assert station.get_charging_category() == ChargingCategory.NORMAL
 
     def test_get_charging_category_returns_normal_for_typical_home_charging(self):
         """Test that 22 kW station is categorized as NORMAL."""
         station = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(22.0))
 
-        assert station.get_charging_category() == "NORMAL"
+        assert station.get_charging_category() == ChargingCategory.NORMAL
 
     def test_get_charging_category_returns_normal_just_below_fast_threshold(self):
         """Test that 49.9 kW station is categorized as NORMAL."""
         station = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(49.9))
 
-        assert station.get_charging_category() == "NORMAL"
+        assert station.get_charging_category() == ChargingCategory.NORMAL
 
     def test_get_charging_category_returns_fast_at_threshold(self):
         """Test that exactly 50 kW station is categorized as FAST."""
         station = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(50.0))
 
-        assert station.get_charging_category() == "FAST"
+        assert station.get_charging_category() == ChargingCategory.FAST
 
     def test_get_charging_category_returns_fast_just_above_threshold(self):
         """Test that 50.1 kW station is categorized as FAST."""
         station = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(50.1))
 
-        assert station.get_charging_category() == "FAST"
+        assert station.get_charging_category() == ChargingCategory.FAST
 
     def test_get_charging_category_returns_fast_for_typical_dc_charging(self):
         """Test that 100 kW station is categorized as FAST."""
         station = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(100.0))
 
-        assert station.get_charging_category() == "FAST"
+        assert station.get_charging_category() == ChargingCategory.FAST
 
     def test_get_charging_category_returns_fast_just_below_ultra_threshold(self):
         """Test that 149.9 kW station is categorized as FAST."""
         station = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(149.9))
 
-        assert station.get_charging_category() == "FAST"
+        assert station.get_charging_category() == ChargingCategory.FAST
 
     def test_get_charging_category_returns_ultra_at_threshold(self):
         """Test that exactly 150 kW station is categorized as ULTRA."""
         station = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(150.0))
 
-        assert station.get_charging_category() == "ULTRA"
+        assert station.get_charging_category() == ChargingCategory.ULTRA
 
     def test_get_charging_category_returns_ultra_just_above_threshold(self):
         """Test that 150.1 kW station is categorized as ULTRA."""
         station = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(150.1))
 
-        assert station.get_charging_category() == "ULTRA"
+        assert station.get_charging_category() == ChargingCategory.ULTRA
 
     def test_get_charging_category_returns_ultra_for_high_power(self):
         """Test that 350 kW station is categorized as ULTRA."""
         station = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(350.0))
 
-        assert station.get_charging_category() == "ULTRA"
+        assert station.get_charging_category() == ChargingCategory.ULTRA
 
     def test_get_charging_category_returns_ultra_for_maximum_power(self):
         """Test that 1000 kW station is categorized as ULTRA."""
         station = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(1000.0))
 
-        assert station.get_charging_category() == "ULTRA"
+        assert station.get_charging_category() == ChargingCategory.ULTRA
 
 
 class TestChargingStationGeographicData:
@@ -236,14 +237,14 @@ class TestChargingStationBoundaryConditions:
         station = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(50.0))
 
         assert station.is_fast_charger() is True
-        assert station.get_charging_category() == "FAST"
+        assert station.get_charging_category() == ChargingCategory.FAST
 
     def test_charging_station_at_ultra_charging_boundary(self):
         """Test station exactly at ultra charging boundary."""
         station = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(150.0))
 
         assert station.is_fast_charger() is True
-        assert station.get_charging_category() == "ULTRA"
+        assert station.get_charging_category() == ChargingCategory.ULTRA
 
     def test_charging_station_with_fractional_power(self):
         """Test station with fractional power value."""
@@ -251,7 +252,7 @@ class TestChargingStationBoundaryConditions:
 
         assert station.power_capacity.kilowatts == 75.5
         assert station.is_fast_charger() is True
-        assert station.get_charging_category() == "FAST"
+        assert station.get_charging_category() == ChargingCategory.FAST
 
     def test_charging_station_with_very_small_power(self):
         """Test station with very small power value."""
@@ -259,7 +260,7 @@ class TestChargingStationBoundaryConditions:
 
         assert station.power_capacity.kilowatts == 0.001
         assert station.is_fast_charger() is False
-        assert station.get_charging_category() == "NORMAL"
+        assert station.get_charging_category() == ChargingCategory.NORMAL
 
 
 class TestChargingStationIntegration:
@@ -276,17 +277,17 @@ class TestChargingStationIntegration:
         """Test that category is consistent with power capacity value."""
         # Test NORMAL
         station_normal = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(22.0))
-        assert station_normal.get_charging_category() == "NORMAL"
+        assert station_normal.get_charging_category() == ChargingCategory.NORMAL
         assert station_normal.power_capacity.kilowatts < 50.0
 
         # Test FAST
         station_fast = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(100.0))
-        assert station_fast.get_charging_category() == "FAST"
+        assert station_fast.get_charging_category() == ChargingCategory.FAST
         assert 50.0 <= station_fast.power_capacity.kilowatts < 150.0
 
         # Test ULTRA
         station_ultra = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(350.0))
-        assert station_ultra.get_charging_category() == "ULTRA"
+        assert station_ultra.get_charging_category() == ChargingCategory.ULTRA
         assert station_ultra.power_capacity.kilowatts >= 150.0
 
     def test_multiple_stations_with_different_powers(self):
@@ -295,9 +296,9 @@ class TestChargingStationIntegration:
         station2 = ChargingStation("10115", 52.5201, 13.4051, PowerCapacity(50.0))
         station3 = ChargingStation("10115", 52.5202, 13.4052, PowerCapacity(150.0))
 
-        assert station1.get_charging_category() == "NORMAL"
-        assert station2.get_charging_category() == "FAST"
-        assert station3.get_charging_category() == "ULTRA"
+        assert station1.get_charging_category() == ChargingCategory.NORMAL
+        assert station2.get_charging_category() == ChargingCategory.FAST
+        assert station3.get_charging_category() == ChargingCategory.ULTRA
 
         assert station1.is_fast_charger() is False
         assert station2.is_fast_charger() is True
@@ -403,7 +404,7 @@ class TestChargingStationRealWorldScenarios:
 
         assert station.power_capacity.kilowatts == 11.0
         assert station.is_fast_charger() is False
-        assert station.get_charging_category() == "NORMAL"
+        assert station.get_charging_category() == ChargingCategory.NORMAL
 
     def test_typical_public_ac_charger(self):
         """Test typical public AC charger (22 kW)."""
@@ -411,7 +412,7 @@ class TestChargingStationRealWorldScenarios:
 
         assert station.power_capacity.kilowatts == 22.0
         assert station.is_fast_charger() is False
-        assert station.get_charging_category() == "NORMAL"
+        assert station.get_charging_category() == ChargingCategory.NORMAL
 
     def test_typical_dc_fast_charger(self):
         """Test typical DC fast charger (50 kW)."""
@@ -419,7 +420,7 @@ class TestChargingStationRealWorldScenarios:
 
         assert station.power_capacity.kilowatts == 50.0
         assert station.is_fast_charger() is True
-        assert station.get_charging_category() == "FAST"
+        assert station.get_charging_category() == ChargingCategory.FAST
 
     def test_typical_highway_fast_charger(self):
         """Test typical highway fast charger (150 kW)."""
@@ -427,7 +428,7 @@ class TestChargingStationRealWorldScenarios:
 
         assert station.power_capacity.kilowatts == 150.0
         assert station.is_fast_charger() is True
-        assert station.get_charging_category() == "ULTRA"
+        assert station.get_charging_category() == ChargingCategory.ULTRA
 
     def test_ultra_fast_charger_350kw(self):
         """Test ultra-fast charger (350 kW)."""
@@ -435,4 +436,4 @@ class TestChargingStationRealWorldScenarios:
 
         assert station.power_capacity.kilowatts == 350.0
         assert station.is_fast_charger() is True
-        assert station.get_charging_category() == "ULTRA"
+        assert station.get_charging_category() == ChargingCategory.ULTRA

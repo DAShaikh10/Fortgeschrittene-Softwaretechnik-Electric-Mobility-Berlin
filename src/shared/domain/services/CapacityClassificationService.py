@@ -7,6 +7,8 @@ into categories (Low, Medium, High, None) based on quantile analysis.
 
 from typing import Dict, List, Tuple
 
+from src.shared.domain.enums import CapacityCategory
+
 
 class CapacityClassificationService:
     """
@@ -49,7 +51,7 @@ class CapacityClassificationService:
         return q33, q66
 
     @staticmethod
-    def classify_capacity(capacity: float, q33: float, q66: float) -> str:
+    def classify_capacity(capacity: float, q33: float, q66: float) -> CapacityCategory:
         """
         Classify a single capacity value into a category.
 
@@ -59,15 +61,15 @@ class CapacityClassificationService:
             q66: 66th percentile threshold
 
         Returns:
-            Category string: "None", "Low", "Medium", or "High"
+            CapacityCategory: Capacity classification
         """
         if capacity == 0:
-            return "None"
+            return CapacityCategory.NONE
         if capacity <= q33:
-            return "Low"
+            return CapacityCategory.LOW
         if capacity <= q66:
-            return "Medium"
-        return "High"
+            return CapacityCategory.MEDIUM
+        return CapacityCategory.HIGH
 
     @staticmethod
     def classify_capacities(capacities: List[float]) -> Tuple[Dict[str, Tuple[float, float]], List[str]]:

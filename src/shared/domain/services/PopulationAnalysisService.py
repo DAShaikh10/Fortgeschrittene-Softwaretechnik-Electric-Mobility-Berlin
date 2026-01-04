@@ -2,6 +2,9 @@
 Shared Domain Service - Population Analysis Service Module.
 """
 
+from src.shared.domain.constants import PopulationThresholds
+from src.shared.domain.enums import PopulationDensityCategory
+
 
 class PopulationAnalysisService:
     """
@@ -12,7 +15,7 @@ class PopulationAnalysisService:
     """
 
     @staticmethod
-    def get_density_category(population: int) -> str:
+    def get_density_category(population: int) -> PopulationDensityCategory:
         """
         Business logic: Categorize population density into standard ranges.
 
@@ -25,13 +28,13 @@ class PopulationAnalysisService:
             population (int): The population count.
 
         Returns:
-            str: Population density category.
+            PopulationDensityCategory: Population density category.
         """
-        if population > 20000:
-            return "HIGH"
-        if population > 10000:
-            return "MEDIUM"
-        return "LOW"
+        if population > PopulationThresholds.HIGH_DENSITY_THRESHOLD:
+            return PopulationDensityCategory.HIGH
+        if population > PopulationThresholds.MEDIUM_DENSITY_THRESHOLD:
+            return PopulationDensityCategory.MEDIUM
+        return PopulationDensityCategory.LOW
 
     @staticmethod
     def is_high_density(population: int) -> bool:
@@ -47,7 +50,7 @@ class PopulationAnalysisService:
         Returns:
             bool: True if population exceeds high-density threshold.
         """
-        return population > 15000
+        return population > PopulationThresholds.HIGH_DENSITY_DEMAND_THRESHOLD
 
     @staticmethod
     def calculate_demand_ratio(population: int, station_count: int) -> float:

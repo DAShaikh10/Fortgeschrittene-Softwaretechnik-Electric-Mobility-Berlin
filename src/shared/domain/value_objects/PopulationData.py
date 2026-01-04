@@ -5,6 +5,7 @@ Shared Domain Value Object - Population Data Module.
 from dataclasses import dataclass
 
 from src.shared.domain.constants import PopulationThresholds
+from src.shared.domain.enums import PopulationDensityCategory
 from src.shared.domain.value_objects import PostalCode
 
 
@@ -35,7 +36,7 @@ class PopulationData:
         """
         return self.population
 
-    def get_population_density_category(self) -> str:
+    def get_population_density_category(self) -> PopulationDensityCategory:
         """
         Business logic: Categorize population density into standard ranges.
 
@@ -45,14 +46,14 @@ class PopulationData:
         - LOW: < 10,000 residents (low density/rural)
 
         Returns:
-            str: Population density category.
+            PopulationDensityCategory: Population density category.
         """
         if self.population > PopulationThresholds.HIGH_DENSITY_THRESHOLD:
-            return "HIGH"
+            return PopulationDensityCategory.HIGH
         if self.population > PopulationThresholds.MEDIUM_DENSITY_THRESHOLD:
-            return "MEDIUM"
+            return PopulationDensityCategory.MEDIUM
 
-        return "LOW"
+        return PopulationDensityCategory.LOW
 
     def is_high_density(self) -> bool:
         """

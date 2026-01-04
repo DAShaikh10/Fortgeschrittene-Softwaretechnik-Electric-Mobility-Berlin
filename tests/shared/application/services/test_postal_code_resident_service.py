@@ -14,6 +14,7 @@ from unittest.mock import Mock
 import pytest
 
 from src.shared.application.services import BaseService, PostalCodeResidentService
+from src.shared.domain.enums import PopulationDensityCategory
 from src.shared.domain.events import IDomainEventPublisher
 from src.shared.domain.exceptions import InvalidPostalCodeError
 from src.shared.domain.value_objects import PostalCode, PopulationData
@@ -231,7 +232,7 @@ class TestGetResidentData:
         result = postal_code_resident_service.get_resident_data(valid_postal_code)
 
         assert result.population == 25000
-        assert result.get_population_density_category() == "HIGH"
+        assert result.get_population_density_category() == PopulationDensityCategory.HIGH
         assert result.is_high_density() is True
 
     def test_handles_different_postal_codes(self, postal_code_resident_service, mock_repository):
@@ -264,7 +265,7 @@ class TestGetResidentData:
 
         result = postal_code_resident_service.get_resident_data(valid_postal_code)
 
-        assert result.get_population_density_category() == "LOW"
+        assert result.get_population_density_category() == PopulationDensityCategory.LOW
         assert result.is_high_density() is False
 
     def test_population_data_has_correct_density_category_medium(
@@ -275,7 +276,7 @@ class TestGetResidentData:
 
         result = postal_code_resident_service.get_resident_data(valid_postal_code)
 
-        assert result.get_population_density_category() == "MEDIUM"
+        assert result.get_population_density_category() == PopulationDensityCategory.MEDIUM
         assert result.is_high_density() is False  # Threshold is > 15000, so 15000 is not high density
 
     def test_population_data_medium_density_boundary_high(
@@ -286,7 +287,9 @@ class TestGetResidentData:
 
         result = postal_code_resident_service.get_resident_data(valid_postal_code)
 
-        assert result.get_population_density_category() == "MEDIUM"  # Still MEDIUM (threshold is 20000)
+        assert (
+            result.get_population_density_category() == PopulationDensityCategory.MEDIUM
+        )  # Still MEDIUM (threshold is 20000)
         assert result.is_high_density() is True  # But is_high_density() returns True for > 15000
 
     def test_population_data_has_correct_density_category_high(
@@ -297,7 +300,7 @@ class TestGetResidentData:
 
         result = postal_code_resident_service.get_resident_data(valid_postal_code)
 
-        assert result.get_population_density_category() == "HIGH"
+        assert result.get_population_density_category() == PopulationDensityCategory.HIGH
         assert result.is_high_density() is True
 
     def test_population_data_calculates_demand_ratio(
@@ -359,7 +362,7 @@ class TestPostalCodeResidentServiceIntegration:
         assert isinstance(result, PopulationData)
         assert result.population == 12000
         assert result.postal_code == valid_postal_code
-        assert result.get_population_density_category() == "MEDIUM"
+        assert result.get_population_density_category() == PopulationDensityCategory.MEDIUM
 
         # Verify no events were published
         mock_event_bus.publish.assert_not_called()
@@ -398,7 +401,7 @@ class TestPostalCodeResidentServiceIntegration:
         mock_repository.get_residents_count.return_value = 0
         result = postal_code_resident_service.get_resident_data(postal_code)
         assert result.population == 0
-        assert result.get_population_density_category() == "LOW"
+        assert result.get_population_density_category() == PopulationDensityCategory.LOW
 
     def test_service_handles_large_population(self, postal_code_resident_service, valid_postal_code, mock_repository):
         """Test service handles large population values correctly."""
@@ -407,7 +410,7 @@ class TestPostalCodeResidentServiceIntegration:
         result = postal_code_resident_service.get_resident_data(valid_postal_code)
 
         assert result.population == 100000
-        assert result.get_population_density_category() == "HIGH"
+        assert result.get_population_density_category() == PopulationDensityCategory.HIGH
         assert result.is_high_density() is True
 
 

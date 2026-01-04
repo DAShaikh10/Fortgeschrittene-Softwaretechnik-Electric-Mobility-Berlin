@@ -8,27 +8,30 @@ Test categories:
 """
 
 import pytest
+from src.shared.domain.enums import PopulationDensityCategory
 from src.shared.domain.services import PopulationAnalysisService
+
 
 class TestDensityCategory:
     """Test get_density_category business logic."""
 
     def test_high_density_category(self):
         """Test HIGH category for population > 20,000."""
-        assert PopulationAnalysisService.get_density_category(25000) == "HIGH"
-        assert PopulationAnalysisService.get_density_category(20001) == "HIGH"
+        assert PopulationAnalysisService.get_density_category(25000) == PopulationDensityCategory.HIGH
+        assert PopulationAnalysisService.get_density_category(20001) == PopulationDensityCategory.HIGH
 
     def test_medium_density_category(self):
         """Test MEDIUM category (10,000 - 20,000)."""
-        assert PopulationAnalysisService.get_density_category(20000) == "MEDIUM"
-        assert PopulationAnalysisService.get_density_category(15000) == "MEDIUM"
-        assert PopulationAnalysisService.get_density_category(10001) == "MEDIUM"
+        assert PopulationAnalysisService.get_density_category(20000) == PopulationDensityCategory.MEDIUM
+        assert PopulationAnalysisService.get_density_category(15000) == PopulationDensityCategory.MEDIUM
+        assert PopulationAnalysisService.get_density_category(10001) == PopulationDensityCategory.MEDIUM
 
     def test_low_density_category(self):
         """Test LOW category (< 10,000)."""
-        assert PopulationAnalysisService.get_density_category(10000) == "LOW"
-        assert PopulationAnalysisService.get_density_category(5000) == "LOW"
-        assert PopulationAnalysisService.get_density_category(0) == "LOW"
+        assert PopulationAnalysisService.get_density_category(10000) == PopulationDensityCategory.LOW
+        assert PopulationAnalysisService.get_density_category(5000) == PopulationDensityCategory.LOW
+        assert PopulationAnalysisService.get_density_category(0) == PopulationDensityCategory.LOW
+
 
 class TestHighDensityCheck:
     """Test is_high_density business rule."""
@@ -43,6 +46,7 @@ class TestHighDensityCheck:
         assert PopulationAnalysisService.is_high_density(15000) is False
         assert PopulationAnalysisService.is_high_density(10000) is False
         assert PopulationAnalysisService.is_high_density(0) is False
+
 
 class TestDemandRatioCalculation:
     """Test calculate_demand_ratio business calculation."""
@@ -63,6 +67,7 @@ class TestDemandRatioCalculation:
         ratio = PopulationAnalysisService.calculate_demand_ratio(10000, 3)
         assert ratio == pytest.approx(3333.33, rel=0.01)
 
+
 class TestServiceIntegration:
     """Integration style tests for the service logic."""
 
@@ -73,4 +78,4 @@ class TestServiceIntegration:
         category = PopulationAnalysisService.get_density_category(population)
 
         assert is_high is True
-        assert category == "MEDIUM"
+        assert category == PopulationDensityCategory.MEDIUM

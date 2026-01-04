@@ -24,11 +24,11 @@ Your project shows **decent understanding of DDD concepts** but has **fundamenta
 
 **Location:** `src/demand/domain/value_objects/DemandPriority.py:8`
 
+<details>
+
 ```python
 from src.demand.application.enums import PriorityLevel  # ❌ ARCHITECTURE CORRUPTION
 ```
-
-<details>
 
 **Why This Destroys Your Architecture:**
 
@@ -409,7 +409,7 @@ class DemandCalculationService:
 
 ---
 
-~~###~~###~~###~###~### ⚠️ VIOLATION #10: VALUE OBJECT CONTA~~
+### ~~⚠️ VIOLATION #10: VALUE OBJECT CONTAINS BUSINESS LOGIC~~
 
 **Severity: MODERATE** 🟡
 

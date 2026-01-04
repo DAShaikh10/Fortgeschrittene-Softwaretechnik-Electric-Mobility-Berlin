@@ -12,6 +12,7 @@ Test categories:
 
 import pytest
 
+from src.shared.domain.enums import CapacityCategory
 from src.shared.domain.services import CapacityClassificationService
 
 
@@ -63,7 +64,7 @@ class TestClassifyCapacity:
         """Test that zero capacity is classified as 'None'."""
         category = CapacityClassificationService.classify_capacity(0.0, 50.0, 100.0)
 
-        assert category == "None"
+        assert category == CapacityCategory.NONE
 
     def test_classifies_low_capacity(self):
         """Test that capacity <= q33 is classified as 'Low'."""
@@ -72,7 +73,7 @@ class TestClassifyCapacity:
 
         category = CapacityClassificationService.classify_capacity(30.0, q33, q66)
 
-        assert category == "Low"
+        assert category == CapacityCategory.LOW
 
     def test_classifies_medium_capacity(self):
         """Test that capacity between q33 and q66 is classified as 'Medium'."""
@@ -81,7 +82,7 @@ class TestClassifyCapacity:
 
         category = CapacityClassificationService.classify_capacity(75.0, q33, q66)
 
-        assert category == "Medium"
+        assert category == CapacityCategory.MEDIUM
 
     def test_classifies_high_capacity(self):
         """Test that capacity > q66 is classified as 'High'."""
@@ -90,16 +91,16 @@ class TestClassifyCapacity:
 
         category = CapacityClassificationService.classify_capacity(150.0, q33, q66)
 
-        assert category == "High"
+        assert category == CapacityCategory.HIGH
 
     def test_classifies_at_boundaries(self):
         """Test classification at exact quantile boundaries."""
         q33 = 50.0
         q66 = 100.0
 
-        assert CapacityClassificationService.classify_capacity(50.0, q33, q66) == "Low"
-        assert CapacityClassificationService.classify_capacity(100.0, q33, q66) == "Medium"
-        assert CapacityClassificationService.classify_capacity(100.1, q33, q66) == "High"
+        assert CapacityClassificationService.classify_capacity(50.0, q33, q66) == CapacityCategory.LOW
+        assert CapacityClassificationService.classify_capacity(100.0, q33, q66) == CapacityCategory.MEDIUM
+        assert CapacityClassificationService.classify_capacity(100.1, q33, q66) == CapacityCategory.HIGH
 
 
 class TestClassifyCapacities:
@@ -116,7 +117,7 @@ class TestClassifyCapacities:
         assert "Medium" in range_definitions
         assert "High" in range_definitions
         assert len(categories) == 5
-        assert all(cat in ["Low", "Medium", "High"] for cat in categories)
+        assert all(cat in [CapacityCategory.LOW, CapacityCategory.MEDIUM, CapacityCategory.HIGH] for cat in categories)
 
     def test_handles_empty_list(self):
         """Test that method handles empty list."""
@@ -140,9 +141,9 @@ class TestClassifyCapacities:
 
         range_definitions, categories = CapacityClassificationService.classify_capacities(capacities)
 
-        assert categories[0] == "None"
-        assert categories[1] in ["Low", "Medium", "High"]
-        assert categories[2] in ["Low", "Medium", "High"]
+        assert categories[0] == CapacityCategory.NONE
+        assert categories[1] in [CapacityCategory.LOW, CapacityCategory.MEDIUM, CapacityCategory.HIGH]
+        assert categories[2] in [CapacityCategory.LOW, CapacityCategory.MEDIUM, CapacityCategory.HIGH]
         assert "Low" in range_definitions
         assert "Medium" in range_definitions
         assert "High" in range_definitions
