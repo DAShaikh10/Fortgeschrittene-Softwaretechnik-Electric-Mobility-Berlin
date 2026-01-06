@@ -45,10 +45,21 @@ ignore-imports = true
 [tool.black]
 line-length = 120
 target-version = ['py311']
+extend-exclude = '''
+/(
+  htmlcov
+  | \.venv
+  | venv
+  | env
+  | \.git
+)/
+'''
 
 # Task runner config.
 [tool.taskipy.tasks]
 install = "pip install -r requirements.txt"
+format = "black ."
+format-check = "black . --check"
 lint = "pylint main.py config.py src/ tests/"
 clean = "python -c \"import shutil, pathlib; [shutil.rmtree(p) for p in pathlib.Path('.').rglob('__pycache__')]\""
 run = "streamlit run main.py"
