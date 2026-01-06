@@ -192,15 +192,12 @@ class StreamlitApp:
             streamlit.sidebar.markdown("---")
             streamlit.sidebar.subheader("⚡ Capacity Range Filter")
 
-            # Get current capacity filter or default to "All"
-            current_capacity_filter = streamlit.session_state.get("capacity_filter", "All")
-
             capacity_filter = streamlit.sidebar.radio(
                 "Filter by Capacity:",
                 ["All", "Low", "Medium", "High"],
-                index=["All", "Low", "Medium", "High"].index(current_capacity_filter),
                 help="Filter postal codes by their total charging power capacity",
             )
+            # Store the selected filter in session state for use in rendering
             streamlit.session_state["capacity_filter"] = capacity_filter
 
         streamlit.sidebar.header("📊 Layer Selection")

@@ -85,12 +85,14 @@ class PowerCapacityService:
         range_definitions, categories = CapacityClassificationService.classify_capacities(capacities)
 
         # Create DTOs with categories (application layer responsibility)
+        # Convert CapacityCategory enum to string value for DTO
+        # Handle both string and enum types from domain service
         capacity_dtos_with_category = [
             PowerCapacityDTO(
                 postal_code=dto.postal_code,
                 total_capacity_kw=dto.total_capacity_kw,
                 station_count=dto.station_count,
-                capacity_category=category,
+                capacity_category=category.value if hasattr(category, 'value') else category,
             )
             for dto, category in zip(capacity_dtos, categories)
         ]

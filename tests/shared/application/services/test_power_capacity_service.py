@@ -18,7 +18,6 @@ import pytest
 from src.shared.application.dtos import PowerCapacityDTO
 from src.shared.application.services import PowerCapacityService
 from src.shared.domain.entities import ChargingStation
-from src.shared.domain.enums import CapacityCategory
 from src.shared.domain.value_objects import PostalCode, PowerCapacity
 from src.shared.infrastructure.repositories import ChargingStationRepository
 
@@ -250,17 +249,9 @@ class TestClassifyCapacityRanges:
         _, result_dtos = power_capacity_service.classify_capacity_ranges(capacity_dtos)
 
         result_dict = {dto.postal_code: dto for dto in result_dtos}
-        assert result_dict["10115"].capacity_category == CapacityCategory.NONE
-        assert result_dict["10117"].capacity_category in [
-            CapacityCategory.LOW,
-            CapacityCategory.MEDIUM,
-            CapacityCategory.HIGH,
-        ]
-        assert result_dict["10119"].capacity_category in [
-            CapacityCategory.LOW,
-            CapacityCategory.MEDIUM,
-            CapacityCategory.HIGH,
-        ]
+        assert result_dict["10115"].capacity_category == "None"
+        assert result_dict["10117"].capacity_category in ["Low", "Medium", "High"]
+        assert result_dict["10119"].capacity_category in ["Low", "Medium", "High"]
 
     def test_returns_range_definitions(self, power_capacity_service):
         """Test that method returns correct range definitions."""
