@@ -125,7 +125,9 @@ class PowerCapacityService:
 
         return f"#{r:02x}{g:02x}{b:02x}"
 
-    def filter_by_capacity_category(self, capacity_dtos: List[PowerCapacityDTO], category: str) -> List[PowerCapacityDTO]:
+    def filter_by_capacity_category(
+        self, capacity_dtos: List[PowerCapacityDTO], category: str
+    ) -> List[PowerCapacityDTO]:
         """
         Filter postal codes by capacity category.
 

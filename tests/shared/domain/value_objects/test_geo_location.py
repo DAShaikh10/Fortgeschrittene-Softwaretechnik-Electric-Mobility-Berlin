@@ -60,6 +60,7 @@ def test_empty_boundary_raises_invalid_geo_location(valid_postal_code, empty_bou
 
 def test_boundary_must_implement_interface(valid_postal_code):
     """Test that passing an invalid boundary type raises an error."""
+
     class NotABoundary:
         """A class that does not implement the Boundary interface."""
 

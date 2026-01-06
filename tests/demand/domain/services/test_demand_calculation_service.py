@@ -169,9 +169,7 @@ class TestCompareAreas:
 class TestIdentifyPriorityClusters:
     """Test identify_priority_clusters method."""
 
-    def test_groups_areas_by_priority(
-        self, high_priority_aggregate, medium_priority_aggregate, low_priority_aggregate
-    ):
+    def test_groups_areas_by_priority(self, high_priority_aggregate, medium_priority_aggregate, low_priority_aggregate):
         """Test that method groups areas by priority level."""
         aggregates = [high_priority_aggregate, medium_priority_aggregate, low_priority_aggregate]
 

@@ -895,9 +895,7 @@ class StreamlitApp:
                         streamlit.metric("Charging Stations", analysis.station_count)
 
                     with col3:
-                        priority_color = {"High": "🔴", "Medium": "🟡", "Low": "🟢"}.get(
-                            analysis.demand_priority, "⚪"
-                        )
+                        priority_color = {"High": "🔴", "Medium": "🟡", "Low": "🟢"}.get(analysis.demand_priority, "⚪")
                         streamlit.metric("Priority", f"{priority_color} {analysis.demand_priority}")
 
                     with col4:

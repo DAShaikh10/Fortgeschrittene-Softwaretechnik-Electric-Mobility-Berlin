@@ -31,7 +31,7 @@ class Population:
     def __int__(self) -> int:
         """
         Allow conversion to int for calculations.
-        
+
         Returns:
             int: Population value
         """
@@ -40,7 +40,7 @@ class Population:
     def __str__(self) -> str:
         """
         String representation.
-        
+
         Returns:
             str: Population value as string
         """
@@ -49,7 +49,7 @@ class Population:
     def __repr__(self) -> str:
         """
         Developer-friendly representation.
-        
+
         Returns:
             str: Population representation
         """

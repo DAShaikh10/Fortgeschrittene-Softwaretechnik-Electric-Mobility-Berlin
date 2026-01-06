@@ -32,7 +32,7 @@ class StationCount:
     def __int__(self) -> int:
         """
         Allow conversion to int for calculations.
-        
+
         Returns:
             int: Station count value
         """
@@ -41,7 +41,7 @@ class StationCount:
     def is_zero(self) -> bool:
         """
         Check if there are no stations (critical shortage indicator).
-        
+
         Returns:
             bool: True if no stations exist
         """
@@ -50,7 +50,7 @@ class StationCount:
     def __str__(self) -> str:
         """
         String representation.
-        
+
         Returns:
             str: Station count value as string
         """
@@ -59,7 +59,7 @@ class StationCount:
     def __repr__(self) -> str:
         """
         Developer-friendly representation.
-        
+
         Returns:
             str: StationCount representation
         """

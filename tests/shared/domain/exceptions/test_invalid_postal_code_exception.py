@@ -254,6 +254,7 @@ class TestInvalidPostalCodeErrorUsageScenarios:
 
     def test_exception_in_none_validation_context(self):
         """Test exception when postal code is None."""
+
         def validate_postal_code(postal_code):
             if postal_code is None:
                 raise InvalidPostalCodeError("Postal code cannot be None or empty.")
@@ -264,6 +265,7 @@ class TestInvalidPostalCodeErrorUsageScenarios:
 
     def test_exception_in_empty_validation_context(self):
         """Test exception when postal code is empty."""
+
         def validate_postal_code(postal_code):
             if not postal_code or not postal_code.strip():
                 raise InvalidPostalCodeError("Postal code cannot be None or empty.")
@@ -274,6 +276,7 @@ class TestInvalidPostalCodeErrorUsageScenarios:
 
     def test_exception_in_numeric_validation_context(self):
         """Test exception when postal code is not numeric."""
+
         def validate_numeric(postal_code):
             if not postal_code.isdigit():
                 raise InvalidPostalCodeError(f"Postal code must be numeric: '{postal_code}'.")
@@ -284,6 +287,7 @@ class TestInvalidPostalCodeErrorUsageScenarios:
 
     def test_exception_in_length_validation_context(self):
         """Test exception when postal code has wrong length."""
+
         def validate_length(postal_code):
             if len(postal_code) != 5:
                 raise InvalidPostalCodeError(f"Postal code must be exactly 5 digits: '{postal_code}'.")
@@ -294,11 +298,10 @@ class TestInvalidPostalCodeErrorUsageScenarios:
 
     def test_exception_in_berlin_rule_validation_context(self):
         """Test exception when postal code doesn't follow Berlin rules."""
+
         def validate_berlin_rule(postal_code):
             if not postal_code.startswith(("10", "12", "13", "14")):
-                raise InvalidPostalCodeError(
-                    f"Berlin postal code must start with 10, 12, 13, or 14: '{postal_code}'."
-                )
+                raise InvalidPostalCodeError(f"Berlin postal code must start with 10, 12, 13, or 14: '{postal_code}'.")
             return True
 
         with pytest.raises(InvalidPostalCodeError, match="must start with 10, 12, 13, or 14: '99999'"):
@@ -306,6 +309,7 @@ class TestInvalidPostalCodeErrorUsageScenarios:
 
     def test_exception_chaining(self):
         """Test exception can be chained with other exceptions."""
+
         def outer_function():
             try:
                 raise ValueError("Original error")
@@ -346,6 +350,7 @@ class TestInvalidPostalCodeErrorUsageScenarios:
 
     def test_exception_in_complete_validation_workflow(self):
         """Test exception in a complete validation workflow."""
+
         def validate_complete(postal_code):
             if postal_code is None or not postal_code.strip():
                 raise InvalidPostalCodeError("Postal code cannot be None or empty.")
@@ -359,9 +364,7 @@ class TestInvalidPostalCodeErrorUsageScenarios:
                 raise InvalidPostalCodeError(f"Postal code must be exactly 5 digits: '{cleaned}'.")
 
             if not cleaned.startswith(("10", "12", "13", "14")):
-                raise InvalidPostalCodeError(
-                    f"Berlin postal code must start with 10, 12, 13, or 14: '{cleaned}'."
-                )
+                raise InvalidPostalCodeError(f"Berlin postal code must start with 10, 12, 13, or 14: '{cleaned}'.")
 
             return True
 

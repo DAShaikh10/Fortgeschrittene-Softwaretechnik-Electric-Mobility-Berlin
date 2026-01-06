@@ -7,6 +7,7 @@ Test categories:
 - Immutability tests
 - Edge cases and boundary values
 """
+
 # pylint: disable=redefined-outer-name  # pytest fixtures redefine names
 
 import pytest

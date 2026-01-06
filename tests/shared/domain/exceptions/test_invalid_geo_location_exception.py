@@ -245,6 +245,7 @@ class TestInvalidGeoLocationErrorUsageScenarios:
 
     def test_exception_in_validation_context(self):
         """Test exception in typical validation context."""
+
         def validate_boundary(boundary):
             if boundary is None:
                 raise InvalidGeoLocationError("Geo Location boundary cannot be None or empty.")
@@ -255,6 +256,7 @@ class TestInvalidGeoLocationErrorUsageScenarios:
 
     def test_exception_in_processing_context(self):
         """Test exception in data processing context."""
+
         def process_wkt(wkt_string):
             if not wkt_string or not isinstance(wkt_string, str):
                 raise InvalidGeoLocationError("Invalid WKT format provided")
@@ -265,6 +267,7 @@ class TestInvalidGeoLocationErrorUsageScenarios:
 
     def test_exception_chaining(self):
         """Test exception can be chained with other exceptions."""
+
         def outer_function():
             try:
                 raise ValueError("Original error")

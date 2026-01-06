@@ -310,10 +310,7 @@ class TestStationCountIntegration:
         station_count = StationCount(5)
 
         # Calculate priority using both value objects
-        priority = DemandPriority.calculate_priority(
-            population=population,
-            station_count=station_count
-        )
+        priority = DemandPriority.calculate_priority(population=population, station_count=station_count)
 
         assert priority.residents_per_station == 6000.0
         assert not station_count.is_zero()

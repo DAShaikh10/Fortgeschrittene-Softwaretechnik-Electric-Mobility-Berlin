@@ -1,4 +1,5 @@
 """Tests for In-Memory Event Bus."""
+
 # pylint: disable=redefined-outer-name
 
 from unittest.mock import MagicMock, patch
@@ -7,12 +8,14 @@ import pytest
 from src.shared.infrastructure.event_bus.InMemoryEventBus import InMemoryEventBus
 from src.shared.domain.events.DomainEvent import DomainEvent
 
-# Renamed to 'SampleEvent' so pytest doesn't try to collect it as a test class
+
 class SampleEvent(DomainEvent):
     """A sample event for testing."""
 
+
 class AnotherSampleEvent(DomainEvent):
     """Another sample event for testing."""
+
 
 @pytest.fixture
 def event_bus():
@@ -20,6 +23,7 @@ def event_bus():
     Fixture to provide a fresh instance of InMemoryEventBus for each test.
     """
     return InMemoryEventBus()
+
 
 def test_initialization(event_bus):
     """
@@ -30,6 +34,7 @@ def test_initialization(event_bus):
     assert isinstance(event_bus, InMemoryEventBus)
     # Publishing to empty bus should not raise errors
     event_bus.publish(SampleEvent())  # Should complete without errors
+
 
 def test_subscribe_and_publish(event_bus):
     """
@@ -46,6 +51,7 @@ def test_subscribe_and_publish(event_bus):
 
     mock_handler.assert_called_once_with(event)
 
+
 def test_publish_no_subscribers(event_bus):
     """
     Test publishing an event with no subscribers (should not fail).
@@ -53,6 +59,7 @@ def test_publish_no_subscribers(event_bus):
     event = SampleEvent()
     # Should execute without raising an exception
     event_bus.publish(event)
+
 
 def test_multiple_subscribers(event_bus):
     """
@@ -72,6 +79,7 @@ def test_multiple_subscribers(event_bus):
 
     handler1.assert_called_once_with(event)
     handler2.assert_called_once_with(event)
+
 
 def test_different_event_types(event_bus):
     """
@@ -97,6 +105,7 @@ def test_different_event_types(event_bus):
     # Publish second event type
     event_bus.publish(event2)
     handler_another.assert_called_once_with(event2)
+
 
 def test_handler_error_isolation(event_bus):
     """
@@ -125,6 +134,7 @@ def test_handler_error_isolation(event_bus):
         args, _ = mock_logger.error.call_args
         assert "Error handling event" in args[0]
 
+
 def test_prevent_duplicate_subscription(event_bus):
     """
     Test that subscribing the same handler instance multiple times doesn't add it twice.
@@ -133,7 +143,7 @@ def test_prevent_duplicate_subscription(event_bus):
     handler.__name__ = "handler"
 
     event_bus.subscribe(SampleEvent, handler)
-    event_bus.subscribe(SampleEvent, handler) # Duplicate subscription
+    event_bus.subscribe(SampleEvent, handler)  # Duplicate subscription
 
     # Test behavior instead of internal state
     # If duplicate prevention works, handler should only be called once

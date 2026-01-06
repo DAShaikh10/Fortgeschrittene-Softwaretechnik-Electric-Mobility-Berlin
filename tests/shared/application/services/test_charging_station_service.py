@@ -43,7 +43,6 @@ def charging_station_service(mock_repository, mock_event_bus):
     return ChargingStationService(mock_repository, mock_event_bus)
 
 
-
 @pytest.fixture
 def mock_station_list():
     """Create a list of mock charging stations."""

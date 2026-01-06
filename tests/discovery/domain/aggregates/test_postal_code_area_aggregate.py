@@ -21,7 +21,6 @@ from src.shared.domain.events import StationSearchPerformedEvent
 from src.discovery.domain.aggregates import PostalCodeAreaAggregate
 
 
-
 class TestPostalCodeAreaAggregateFactoryMethods:
     """Test factory methods for creating aggregates."""
 

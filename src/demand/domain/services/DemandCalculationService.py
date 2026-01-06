@@ -97,28 +97,17 @@ class DemandCalculationService:
 
         # Count priority levels
         high_priority_count = sum(1 for agg in aggregates if agg.get_demand_priority().is_high_priority())
-        medium_priority_count = sum(
-            1
-            for agg in aggregates
-            if agg.get_demand_priority().level == PriorityLevel.MEDIUM
-        )
-        low_priority_count = sum(
-            1
-            for agg in aggregates
-            if agg.get_demand_priority().level == PriorityLevel.LOW
-        )
+        medium_priority_count = sum(1 for agg in aggregates if agg.get_demand_priority().level == PriorityLevel.MEDIUM)
+        low_priority_count = sum(1 for agg in aggregates if agg.get_demand_priority().level == PriorityLevel.LOW)
 
         # Calculate average residents per station across region
-        average_residents_per_station = (
-            total_population / total_stations if total_stations > 0 else float("inf")
-        )
+        average_residents_per_station = total_population / total_stations if total_stations > 0 else float("inf")
 
         # Identify critical areas (high priority with urgency score > 0.8)
         critical_areas = [
             agg.get_postal_code().value
             for agg in aggregates
-            if agg.get_demand_priority().is_high_priority()
-            and agg.get_demand_priority().get_urgency_score() > 0.8
+            if agg.get_demand_priority().is_high_priority() and agg.get_demand_priority().get_urgency_score() > 0.8
         ]
 
         return RegionalDemandAnalysis(
@@ -132,9 +121,7 @@ class DemandCalculationService:
         )
 
     @staticmethod
-    def compare_areas(
-        aggregate1: DemandAnalysisAggregate, aggregate2: DemandAnalysisAggregate
-    ) -> Dict[str, any]:
+    def compare_areas(aggregate1: DemandAnalysisAggregate, aggregate2: DemandAnalysisAggregate) -> Dict[str, any]:
         """
         Compare demand between two postal code areas.
 
@@ -168,9 +155,7 @@ class DemandCalculationService:
                 "residents_per_station": priority2.residents_per_station,
             },
             "more_urgent": (
-                aggregate1.get_postal_code().value
-                if urgency1 > urgency2
-                else aggregate2.get_postal_code().value
+                aggregate1.get_postal_code().value if urgency1 > urgency2 else aggregate2.get_postal_code().value
             ),
             "priority_difference": abs(urgency1 - urgency2),
         }

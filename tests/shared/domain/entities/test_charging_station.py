@@ -126,6 +126,7 @@ class TestChargingStationFastChargingBusinessRule:
         station = ChargingStation("10115", 52.5200, 13.4050, PowerCapacity(1000.0))
         assert station.is_fast_charger() is True
 
+
 class TestChargingStationChargingCategoryBusinessRule:
     """Test get_charging_category() business rule."""
 
