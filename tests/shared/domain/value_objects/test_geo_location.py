@@ -5,8 +5,7 @@
 import pytest
 
 from src.shared.domain.exceptions import InvalidGeoLocationError
-from src.shared.domain.value_objects import GeoLocation, PostalCode
-from src.shared.domain.value_objects.Boundary import Boundary
+from src.shared.domain.value_objects import Boundary, GeoLocation, PostalCode
 
 
 class FakeBoundary(Boundary):

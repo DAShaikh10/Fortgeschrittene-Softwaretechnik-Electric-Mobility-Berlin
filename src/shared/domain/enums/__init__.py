@@ -2,8 +2,8 @@
 Shared Domain Enums Module.
 """
 
-from .CoverageLevel import *
-from .CoverageAssessment import *
-from .ChargingCategory import *
-from .PopulationDensityCategory import *
-from .CapacityCategory import *
+from .coverage_level import *
+from .coverage_assessment import *
+from .charging_category import *
+from .population_density_category import *
+from .capacity_category import *

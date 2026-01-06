@@ -203,7 +203,7 @@ class TestAnalyzeMultipleAreasUseCase:
             {"postal_code": "13579", "population": 12000, "station_count": 8},
         ]
 
-        with patch("src.demand.application.services.DemandAnalysisService.logger") as mock_logger:
+        with patch("src.demand.application.services.demand_analysis_service.logger") as mock_logger:
             results = demand_analysis_service.analyze_multiple_areas(areas)
 
             # Should process 2 valid areas

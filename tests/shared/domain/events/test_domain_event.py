@@ -6,7 +6,7 @@ from dataclasses import FrozenInstanceError
 from datetime import datetime
 import pytest
 
-from src.shared.domain.events.DomainEvent import DomainEvent
+from src.shared.domain.events import DomainEvent
 
 
 def test_default_values():

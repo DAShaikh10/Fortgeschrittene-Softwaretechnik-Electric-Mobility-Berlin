@@ -11,7 +11,7 @@ from src.shared.infrastructure.repositories import ChargingStationRepository
 from src.discovery.application.dtos import PostalCodeAreaDTO
 from src.discovery.domain.aggregates import PostalCodeAreaAggregate
 
-from .BaseService import BaseService
+from .base_service import BaseService
 
 
 class ChargingStationService(BaseService):

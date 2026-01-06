@@ -16,7 +16,7 @@ from unittest.mock import patch
 import pytest
 import pandas as pd
 
-from src.shared.infrastructure.repositories.CSVRepository import CSVRepository
+from src.shared.infrastructure.repositories import CSVRepository
 
 
 # Create a concrete implementation for testing

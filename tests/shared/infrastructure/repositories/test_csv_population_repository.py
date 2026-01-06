@@ -9,8 +9,8 @@ from unittest.mock import patch, MagicMock
 import pytest
 import pandas as pd
 
-from src.shared.infrastructure.repositories.CSVPopulationRepository import CSVPopulationRepository
-from src.shared.domain.value_objects.PostalCode import PostalCode
+from src.shared.domain.value_objects import PostalCode
+from src.shared.infrastructure.repositories import CSVPopulationRepository
 
 
 @pytest.fixture
@@ -49,7 +49,7 @@ def test_initialization_and_transform(mock_read_csv, population_data_setup):
     assert kwargs.get("sep") == ","
 
 
-@patch("src.shared.infrastructure.repositories.CSVPopulationRepository.PostalCode")
+@patch("src.shared.infrastructure.repositories.csv_population_repository.PostalCode")
 @patch("pandas.read_csv")
 def test_get_all_postal_codes_success(mock_read_csv, mock_postal_code_cls, population_data_setup):
     """
@@ -80,7 +80,7 @@ def test_get_all_postal_codes_success(mock_read_csv, mock_postal_code_cls, popul
     assert "10247" in call_args_list
 
 
-@patch("src.shared.infrastructure.repositories.CSVPopulationRepository.PostalCode")
+@patch("src.shared.infrastructure.repositories.csv_population_repository.PostalCode")
 @patch("pandas.read_csv")
 def test_get_all_postal_codes_skip_invalid(mock_read_csv, mock_postal_code_cls, population_data_setup):
     """

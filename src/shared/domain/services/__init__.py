@@ -2,10 +2,5 @@
 Shared Domain Services package.
 """
 
-from .CapacityClassificationService import CapacityClassificationService
-from .PopulationAnalysisService import PopulationAnalysisService
-
-__all__ = [
-    "CapacityClassificationService",
-    "PopulationAnalysisService",
-]
+from .capacity_classification_service import *
+from .population_analysis_service import *

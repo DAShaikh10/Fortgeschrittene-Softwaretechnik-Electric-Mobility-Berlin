@@ -2,4 +2,4 @@
 src.shared.domain.entities - Shared Domain Entities module.
 """
 
-from .ChargingStation import *
+from .charging_station import *

@@ -7,9 +7,9 @@ from unittest.mock import patch, MagicMock
 import pytest
 import pandas as pd
 
-from src.shared.infrastructure.repositories.CSVChargingStationRepository import CSVChargingStationRepository
-from src.shared.domain.entities.ChargingStation import ChargingStation
-from src.shared.domain.value_objects.PostalCode import PostalCode
+from src.shared.infrastructure.repositories import CSVChargingStationRepository
+from src.shared.domain.entities import ChargingStation
+from src.shared.domain.value_objects import PostalCode
 
 
 @pytest.fixture

@@ -2,5 +2,5 @@
 src.demand.infrastructure.repositories - Demand analysis specific Infrastructure Repositories module.
 """
 
-from .DemandAnalysisRepository import *
-from .InMemoryDemandAnalysisRepository import *
+from .demand_analysis_repository import *
+from .in_memory_demand_analysis_repository import *

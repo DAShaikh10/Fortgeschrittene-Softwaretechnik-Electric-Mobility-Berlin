@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from src.shared.domain.value_objects import PostalCode
 
-from .DomainEvent import DomainEvent
+from .domain_event import DomainEvent
 
 
 @dataclass(frozen=True)

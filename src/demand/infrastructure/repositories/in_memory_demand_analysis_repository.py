@@ -7,7 +7,7 @@ from typing import Dict, List, Optional
 from src.shared.domain.value_objects import PostalCode
 from src.demand.domain.aggregates import DemandAnalysisAggregate
 
-from .DemandAnalysisRepository import DemandAnalysisRepository
+from .demand_analysis_repository import DemandAnalysisRepository
 
 
 class InMemoryDemandAnalysisRepository(DemandAnalysisRepository):

@@ -2,8 +2,8 @@
 Data Transfer Object for Power Capacity information.
 """
 
-from dataclasses import dataclass
 from typing import Optional
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)

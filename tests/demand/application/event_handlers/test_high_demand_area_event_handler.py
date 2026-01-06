@@ -61,7 +61,7 @@ def low_urgency_event(valid_postal_code):
 class TestHighDemandAreaEventHandlerBasicFunctionality:
     """Test basic event handler functionality."""
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_high_urgency_event_with_correct_format(self, mock_logger, high_urgency_event):
         """Test that handle method logs high urgency events with proper formatting."""
         HighDemandAreaEventHandler.handle(high_urgency_event)
@@ -75,7 +75,7 @@ class TestHighDemandAreaEventHandlerBasicFunctionality:
             5,
         )
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_medium_urgency_event(self, mock_logger, medium_urgency_event):
         """Test that handle method logs medium urgency events correctly."""
         HighDemandAreaEventHandler.handle(medium_urgency_event)
@@ -89,7 +89,7 @@ class TestHighDemandAreaEventHandlerBasicFunctionality:
             4,
         )
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_low_urgency_event(self, mock_logger, low_urgency_event):
         """Test that handle method logs low urgency events correctly."""
         HighDemandAreaEventHandler.handle(low_urgency_event)
@@ -103,14 +103,14 @@ class TestHighDemandAreaEventHandlerBasicFunctionality:
             6,
         )
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_returns_none(self, high_urgency_event):
         """Test that handle method returns None."""
         result = HighDemandAreaEventHandler.handle(high_urgency_event)
 
         assert result is None
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_is_static_method(self, mock_logger, high_urgency_event):
         """Test that handle can be called as a static method without instantiation."""
         # Call without creating an instance
@@ -123,7 +123,7 @@ class TestHighDemandAreaEventHandlerBasicFunctionality:
 class TestHighDemandAreaEventHandlerWithVariousPostalCodes:
     """Test event handler with different postal codes."""
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_event_with_different_postal_code_10xxx(self, mock_logger):
         """Test logging with postal code starting with 10."""
         postal_code = PostalCode("10178")
@@ -140,7 +140,7 @@ class TestHighDemandAreaEventHandlerWithVariousPostalCodes:
         args = mock_logger.warning.call_args[0]
         assert args[1] == "10178"
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_event_with_postal_code_12xxx(self, mock_logger):
         """Test logging with postal code starting with 12."""
         postal_code = PostalCode("12345")
@@ -157,7 +157,7 @@ class TestHighDemandAreaEventHandlerWithVariousPostalCodes:
         args = mock_logger.warning.call_args[0]
         assert args[1] == "12345"
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_event_with_postal_code_13xxx(self, mock_logger):
         """Test logging with postal code starting with 13."""
         postal_code = PostalCode("13579")
@@ -174,7 +174,7 @@ class TestHighDemandAreaEventHandlerWithVariousPostalCodes:
         args = mock_logger.warning.call_args[0]
         assert args[1] == "13579"
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_event_with_postal_code_14xxx(self, mock_logger):
         """Test logging with postal code starting with 14."""
         postal_code = PostalCode("14195")
@@ -195,7 +195,7 @@ class TestHighDemandAreaEventHandlerWithVariousPostalCodes:
 class TestHighDemandAreaEventHandlerEdgeCases:
     """Test event handler with edge cases and boundary values."""
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_event_with_zero_stations(self, mock_logger, valid_postal_code):
         """Test logging when station count is zero (critical shortage)."""
         event = HighDemandAreaIdentifiedEvent(
@@ -216,7 +216,7 @@ class TestHighDemandAreaEventHandlerEdgeCases:
             0,
         )
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_event_with_single_station(self, mock_logger, valid_postal_code):
         """Test logging when there is exactly one station."""
         event = HighDemandAreaIdentifiedEvent(
@@ -232,7 +232,7 @@ class TestHighDemandAreaEventHandlerEdgeCases:
         args = mock_logger.warning.call_args[0]
         assert args[4] == 1  # station_count
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_event_with_large_population(self, mock_logger, valid_postal_code):
         """Test logging with very large population."""
         event = HighDemandAreaIdentifiedEvent(
@@ -248,7 +248,7 @@ class TestHighDemandAreaEventHandlerEdgeCases:
         args = mock_logger.warning.call_args[0]
         assert args[3] == 1500000  # population
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_event_with_many_stations(self, mock_logger, valid_postal_code):
         """Test logging with large number of stations but still high demand."""
         event = HighDemandAreaIdentifiedEvent(
@@ -264,7 +264,7 @@ class TestHighDemandAreaEventHandlerEdgeCases:
         args = mock_logger.warning.call_args[0]
         assert args[4] == 100  # station_count
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_event_with_fractional_urgency_score(self, mock_logger, valid_postal_code):
         """Test that urgency score is logged with two decimal places."""
         event = HighDemandAreaIdentifiedEvent(
@@ -284,7 +284,7 @@ class TestHighDemandAreaEventHandlerEdgeCases:
         args = mock_logger.warning.call_args[0]
         assert args[2] == 87.6543
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_event_with_maximum_urgency_score(self, mock_logger, valid_postal_code):
         """Test logging with maximum urgency score (100.0)."""
         event = HighDemandAreaIdentifiedEvent(
@@ -300,7 +300,7 @@ class TestHighDemandAreaEventHandlerEdgeCases:
         args = mock_logger.warning.call_args[0]
         assert args[2] == 100.0
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_event_with_minimum_high_urgency_score(self, mock_logger, valid_postal_code):
         """Test logging with minimum urgency score for high demand (50.0)."""
         event = HighDemandAreaIdentifiedEvent(
@@ -316,7 +316,7 @@ class TestHighDemandAreaEventHandlerEdgeCases:
         args = mock_logger.warning.call_args[0]
         assert args[2] == 50.0
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_event_with_decimal_urgency_score(self, mock_logger, valid_postal_code):
         """Test logging with typical decimal urgency scores."""
         urgency_scores = [75.5, 82.33, 91.99, 67.25]
@@ -336,7 +336,7 @@ class TestHighDemandAreaEventHandlerEdgeCases:
 class TestHighDemandAreaEventHandlerLoggerIntegration:
     """Test integration with the logging system."""
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_calls_logger_warning_not_info_or_error(self, mock_logger, high_urgency_event):
         """Test that handler uses warning level logging, not info or error."""
         HighDemandAreaEventHandler.handle(high_urgency_event)
@@ -346,7 +346,7 @@ class TestHighDemandAreaEventHandlerLoggerIntegration:
         mock_logger.error.assert_not_called()
         mock_logger.debug.assert_not_called()
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_with_event_prefix(self, mock_logger, high_urgency_event):
         """Test that log message includes [EVENT] prefix."""
         HighDemandAreaEventHandler.handle(high_urgency_event)
@@ -354,7 +354,7 @@ class TestHighDemandAreaEventHandlerLoggerIntegration:
         format_string = mock_logger.warning.call_args[0][0]
         assert format_string.startswith("[EVENT]")
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_logs_with_high_demand_identifier(self, mock_logger, high_urgency_event):
         """Test that log message includes HIGH DEMAND AREA IDENTIFIED text."""
         HighDemandAreaEventHandler.handle(high_urgency_event)
@@ -362,7 +362,7 @@ class TestHighDemandAreaEventHandlerLoggerIntegration:
         format_string = mock_logger.warning.call_args[0][0]
         assert "HIGH DEMAND AREA IDENTIFIED" in format_string
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_multiple_events_logs_each_separately(self, mock_logger, high_urgency_event, low_urgency_event):
         """Test that multiple events are logged independently."""
         HighDemandAreaEventHandler.handle(high_urgency_event)
@@ -370,7 +370,7 @@ class TestHighDemandAreaEventHandlerLoggerIntegration:
 
         assert mock_logger.warning.call_count == 2
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_extracts_correct_attributes_from_event(self, mock_logger, valid_postal_code):
         """Test that all event attributes are correctly extracted and logged."""
         event = HighDemandAreaIdentifiedEvent(
@@ -400,7 +400,7 @@ class TestHighDemandAreaEventHandlerStaticMethodBehavior:
         # Should have no instance attributes
         assert len(handler.__dict__) == 0
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_can_be_called_from_instance(self, mock_logger, high_urgency_event):
         """Test that handle method can be called from an instance (though not typical)."""
         handler = HighDemandAreaEventHandler()
@@ -419,7 +419,7 @@ class TestHighDemandAreaEventHandlerStaticMethodBehavior:
 class TestHighDemandAreaEventHandlerEventDataValidation:
     """Test event handler behavior with valid event data structures."""
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_accepts_frozen_dataclass_event(self, mock_logger, high_urgency_event):
         """Test that handler accepts frozen dataclass events (immutable)."""
         # HighDemandAreaIdentifiedEvent is a frozen dataclass
@@ -427,7 +427,7 @@ class TestHighDemandAreaEventHandlerEventDataValidation:
 
         mock_logger.warning.assert_called_once()
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_with_various_urgency_scores(self, mock_logger, valid_postal_code):
         """Test handler with various urgency score values."""
         urgency_scores = [100.0, 75.0, 50.0, 87.5, 62.25]
@@ -444,7 +444,7 @@ class TestHighDemandAreaEventHandlerEventDataValidation:
 
         assert mock_logger.warning.call_count == 5
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_handle_with_integration_event_characteristics(self, mock_logger, high_urgency_event):
         """Test that handler properly handles integration events (cross-context events)."""
         # Integration events are logged with warning level to alert external systems
@@ -460,7 +460,7 @@ class TestHighDemandAreaEventHandlerEventDataValidation:
 class TestHighDemandAreaEventHandlerComparisonWithOtherHandlers:
     """Test characteristics that distinguish this handler from others."""
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_uses_warning_level_unlike_demand_analysis_handler(self, mock_logger, high_urgency_event):
         """Test that this handler uses warning level (not info) for integration events."""
         HighDemandAreaEventHandler.handle(high_urgency_event)
@@ -469,7 +469,7 @@ class TestHighDemandAreaEventHandlerComparisonWithOtherHandlers:
         mock_logger.warning.assert_called_once()
         mock_logger.info.assert_not_called()
 
-    @patch("src.demand.application.event_handlers.HighDemandAreaEventHandler.logger")
+    @patch("src.demand.application.event_handlers.high_demand_area_event_handler.logger")
     def test_logs_urgency_score_not_priority_level(self, mock_logger, high_urgency_event):
         """Test that this handler logs urgency score (numeric) not priority level (enum)."""
         HighDemandAreaEventHandler.handle(high_urgency_event)

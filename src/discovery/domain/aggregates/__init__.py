@@ -2,4 +2,4 @@
 src.discovery.domain.aggregates - Discovery Domain Aggregates module.
 """
 
-from .PostalCodeAreaAggregate import *
+from .postal_code_area_aggregate import *

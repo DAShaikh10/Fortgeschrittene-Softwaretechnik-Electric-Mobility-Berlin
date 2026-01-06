@@ -7,12 +7,12 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Optional
 
 from src.shared.domain.exceptions import InvalidGeoLocationError
-from src.shared.domain.value_objects.Boundary import Boundary
+from src.shared.domain.value_objects.boundary import Boundary
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from src.shared.domain.value_objects.PostalCode import PostalCode
+    from src.shared.domain.value_objects.postal_code import PostalCode
 
 
 @dataclass(frozen=True)

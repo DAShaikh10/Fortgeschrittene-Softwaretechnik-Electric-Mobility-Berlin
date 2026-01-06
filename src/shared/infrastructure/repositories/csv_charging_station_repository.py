@@ -7,8 +7,8 @@ from typing import List
 from src.shared.domain.entities import ChargingStation
 from src.shared.domain.value_objects import PostalCode, PowerCapacity
 
-from .CSVRepository import CSVRepository
-from .ChargingStationRepository import ChargingStationRepository
+from .csv_repository import CSVRepository
+from .charging_station_repository import ChargingStationRepository
 
 
 class CSVChargingStationRepository(ChargingStationRepository, CSVRepository):

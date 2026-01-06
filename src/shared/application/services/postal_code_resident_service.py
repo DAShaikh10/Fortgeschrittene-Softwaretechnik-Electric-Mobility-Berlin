@@ -8,7 +8,7 @@ from src.shared.domain.events import IDomainEventPublisher
 from src.shared.domain.value_objects import PostalCode, PopulationData
 from src.shared.infrastructure.repositories import PopulationRepository
 
-from .BaseService import BaseService
+from .base_service import BaseService
 
 
 class PostalCodeResidentService(BaseService):

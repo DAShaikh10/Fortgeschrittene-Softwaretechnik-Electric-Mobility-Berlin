@@ -2,4 +2,4 @@
 Demand Application DTOs.
 """
 
-from .DemandAnalysisDTO import *
+from .demand_analysis_dto import *

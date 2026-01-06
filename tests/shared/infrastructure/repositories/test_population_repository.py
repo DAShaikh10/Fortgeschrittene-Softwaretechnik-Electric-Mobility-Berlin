@@ -17,7 +17,7 @@ import pytest
 
 from src.shared.domain.exceptions import InvalidPostalCodeError
 from src.shared.domain.value_objects import PostalCode
-from src.shared.infrastructure.repositories.PopulationRepository import PopulationRepository
+from src.shared.infrastructure.repositories import PopulationRepository
 
 
 # Create a concrete implementation for testing

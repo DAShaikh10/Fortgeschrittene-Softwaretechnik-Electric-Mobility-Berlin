@@ -1,5 +1,5 @@
-"""Geospatial infrastructure components."""
+"""
+Shared Infrastructure Geospatial components.
+"""
 
-from .GeopandasBoundary import GeopandasBoundary
-
-__all__ = ["GeopandasBoundary"]
+from .geopandas_boundary import *

@@ -9,9 +9,9 @@ import pandas as pd
 
 from shapely.geometry import Polygon
 
-from src.shared.infrastructure.repositories.CSVGeoDataRepository import CSVGeoDataRepository
-from src.shared.domain.value_objects.PostalCode import PostalCode
 from src.shared.infrastructure.geospatial import GeopandasBoundary
+from src.shared.domain.value_objects import PostalCode
+from src.shared.infrastructure.repositories import CSVGeoDataRepository
 
 
 @pytest.fixture
@@ -50,8 +50,8 @@ def test_initialization_transform(mock_read_csv, repo_setup):
     assert result is not None
 
 
-@patch("src.shared.infrastructure.repositories.CSVGeoDataRepository.GeoLocation")
-@patch("src.shared.infrastructure.repositories.CSVGeoDataRepository.CSVGeoDataRepository._coerce_boundary")
+@patch("src.shared.infrastructure.repositories.csv_geo_data_repository.GeoLocation")
+@patch("src.shared.infrastructure.repositories.csv_geo_data_repository.CSVGeoDataRepository._coerce_boundary")
 @patch("pandas.read_csv")
 def test_fetch_geolocation_data_found(mock_read_csv, mock_coerce, mock_geo_location_cls, repo_setup):
     """
@@ -158,7 +158,7 @@ def test_coerce_boundary_builds_from_wkt():
     repo = CSVGeoDataRepository.__new__(CSVGeoDataRepository)  # bypass __init__
     sentinel = object()
     with patch(
-        "src.shared.infrastructure.repositories.CSVGeoDataRepository.GeopandasBoundary.from_wkt",
+        "src.shared.infrastructure.repositories.csv_geo_data_repository.GeopandasBoundary.from_wkt",
         return_value=sentinel,
     ) as mock_from_wkt:
         result = repo.coerce_boundary("POLYGON((13 52, 13 53, 14 53, 13 52))")

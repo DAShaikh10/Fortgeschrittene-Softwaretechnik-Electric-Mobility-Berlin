@@ -2,4 +2,4 @@
 Demand Domain Services.
 """
 
-from .DemandCalculationService import *
+from .demand_calculation_service import *

@@ -2,7 +2,7 @@
 Domain Constants Module.
 """
 
-from .InfrastructureThresholds import *
-from .PowerThresholds import *
-from .PopulationThresholds import *
-from .PostalCodeThresholds import *
+from .infrastructure_thresholds import *
+from .power_thresholds import *
+from .population_thresholds import *
+from .postal_code_thresholds import *

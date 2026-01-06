@@ -2,4 +2,4 @@
 src.demand.application.services - Demand Analysis specific Application Services module.
 """
 
-from .DemandAnalysisService import *
+from .demand_analysis_service import *

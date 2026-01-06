@@ -3,7 +3,7 @@
 # pylint: disable=abstract-class-instantiated
 
 import pytest
-from src.shared.domain.events.IDomainEventPublisher import IDomainEventPublisher
+from src.shared.domain.events import IDomainEventPublisher
 
 
 def test_cannot_instantiate_interface():

@@ -8,8 +8,8 @@ from src.shared.domain.value_objects import GeoLocation, PostalCode
 from src.shared.infrastructure.geospatial import GeopandasBoundary
 from src.shared.infrastructure.logging_config import get_logger
 
-from .CSVRepository import CSVRepository
-from .GeoDataRepository import GeoDataRepository
+from .csv_repository import CSVRepository
+from .geo_data_repository import GeoDataRepository
 
 logger = get_logger(__name__)
 

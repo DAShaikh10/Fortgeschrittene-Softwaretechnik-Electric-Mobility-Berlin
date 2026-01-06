@@ -6,7 +6,7 @@ from src.shared.domain.events import IDomainEventPublisher
 from src.shared.domain.value_objects import GeoLocation, PostalCode
 from src.shared.infrastructure.repositories import GeoDataRepository
 
-from .BaseService import BaseService
+from .base_service import BaseService
 
 
 class GeoLocationService(BaseService):

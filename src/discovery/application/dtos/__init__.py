@@ -2,4 +2,4 @@
 Discovery Application DTOs.
 """
 
-from .PostalCodeAreaDTO import *
+from .postal_code_area_dto import *

@@ -4,8 +4,9 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from src.shared.infrastructure.event_bus.InMemoryEventBus import InMemoryEventBus
-from src.shared.domain.events.DomainEvent import DomainEvent
+
+from src.shared.domain.events import DomainEvent
+from src.shared.infrastructure.event_bus import InMemoryEventBus
 
 # Renamed to 'SampleEvent' so pytest doesn't try to collect it as a test class
 class SampleEvent(DomainEvent):
@@ -114,7 +115,7 @@ def test_handler_error_isolation(event_bus):
     event = SampleEvent()
 
     # We expect the error to be logged, but not raised to crash the app
-    with patch("src.shared.infrastructure.event_bus.InMemoryEventBus.logger") as mock_logger:
+    with patch("src.shared.infrastructure.event_bus.in_memory_event_bus.logger") as mock_logger:
         event_bus.publish(event)
 
         failing_handler.assert_called_once_with(event)

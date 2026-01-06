@@ -2,4 +2,4 @@
 Shared Application DTOs.
 """
 
-from .PowerCapacityDTO import *
+from .power_capacity_dto import *

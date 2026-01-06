@@ -2,4 +2,4 @@
 src.ui.application - UI Application module.
 """
 
-from .StreamlitApp import *
+from .streamlit_app import *

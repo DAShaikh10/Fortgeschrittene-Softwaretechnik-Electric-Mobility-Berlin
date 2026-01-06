@@ -5,7 +5,7 @@ Shared Domain - Domain Event Publisher Interface.
 from abc import ABC, abstractmethod
 from typing import Callable, Type
 
-from .DomainEvent import DomainEvent
+from .domain_event import DomainEvent
 
 
 class IDomainEventPublisher(ABC):
