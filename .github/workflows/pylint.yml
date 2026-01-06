@@ -2,9 +2,9 @@ name: Pylint
 
 on:
   push:
-    branches: [main, task/prof-selcan-ipek-ugay]
+    branches: [main]
   pull_request:
-    branches: [main, task/prof-selcan-ipek-ugay]
+    branches: [main]
 
 permissions:
   contents: read
