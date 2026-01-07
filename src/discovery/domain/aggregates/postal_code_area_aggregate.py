@@ -12,6 +12,7 @@ from src.shared.domain.events import (
     StationSearchPerformedEvent,
     StationSearchFailedEvent,
     NoStationsFoundEvent,
+    StationsFoundEvent,
 )
 from src.shared.domain.constants import InfrastructureThresholds
 
@@ -277,4 +278,17 @@ class PostalCodeAreaAggregate(BaseAggregate):
         """
         # Emit domain event for no stations found
         event = NoStationsFoundEvent(postal_code=self._postal_code)
+        self._add_domain_event(event)
+
+    def record_stations_found(self):
+        """
+        Business operation: Record a successful search that found stations and emit domain event.
+
+        This explicitly indicates stations were discovered, providing clear success tracking.
+        """
+        # Emit domain event for stations found
+        event = StationsFoundEvent(
+            postal_code=self._postal_code,
+            stations_found=self.get_station_count(),
+        )
         self._add_domain_event(event)

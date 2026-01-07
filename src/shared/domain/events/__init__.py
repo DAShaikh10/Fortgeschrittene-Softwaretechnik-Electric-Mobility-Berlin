@@ -7,3 +7,4 @@ from .domain_event_publisher_interface import *
 from .station_search_performed_event import *
 from .station_search_failed_event import *
 from .no_stations_found_event import *
+from .stations_found_event import *

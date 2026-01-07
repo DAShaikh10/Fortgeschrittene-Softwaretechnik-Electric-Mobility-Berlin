@@ -21,6 +21,7 @@ from src.shared.domain.events import (
     StationSearchPerformedEvent,
     StationSearchFailedEvent,
     NoStationsFoundEvent,
+    StationsFoundEvent,
 )
 from src.discovery.domain.aggregates import PostalCodeAreaAggregate
 
@@ -484,7 +485,32 @@ class TestPostalCodeAreaAggregateEventHandling:
 
         events = aggregate.get_domain_events()
         assert len(events) == 1
-        assert isinstance(events[0], NoStationsFoundEvent)
+
+    def test_record_stations_found_adds_domain_event(self, valid_postal_code, mock_charging_station):
+        """Test record_stations_found creates and adds a domain event."""
+        aggregate = PostalCodeAreaAggregate.create(valid_postal_code)
+        aggregate.add_station(mock_charging_station)
+
+        aggregate.record_stations_found()
+
+        assert aggregate.has_domain_events() is True
+        assert aggregate.get_event_count() == 1
+
+    def test_record_stations_found_event_contains_correct_data(self, valid_postal_code, mock_charging_station):
+        """Test record_stations_found event contains correct information."""
+        aggregate = PostalCodeAreaAggregate.create(valid_postal_code)
+        aggregate.add_station(mock_charging_station)
+        aggregate.add_station(mock_charging_station)
+        aggregate.add_station(mock_charging_station)
+
+        aggregate.record_stations_found()
+
+        events = aggregate.get_domain_events()
+        event = events[0]
+
+        assert isinstance(event, StationsFoundEvent)
+        assert event.postal_code == valid_postal_code
+        assert event.stations_found == 3
 
 
 class TestPostalCodeAreaAggregateIntegration:

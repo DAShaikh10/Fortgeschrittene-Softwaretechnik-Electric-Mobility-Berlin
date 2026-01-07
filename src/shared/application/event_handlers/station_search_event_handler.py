@@ -8,6 +8,7 @@ from src.shared.domain.events import (
     StationSearchPerformedEvent,
     StationSearchFailedEvent,
     NoStationsFoundEvent,
+    StationsFoundEvent,
 )
 
 logger = get_logger(__name__)
@@ -63,4 +64,18 @@ class StationSearchEventHandler:
         logger.warning(
             "[EVENT] No stations found for postal code: %s - Infrastructure gap identified",
             event.postal_code.value,
+        )
+
+    @staticmethod
+    def handle_stations_found(event: StationsFoundEvent) -> None:
+        """
+        Handle stations found event.
+
+        Args:
+            event: The StationsFoundEvent instance.
+        """
+        logger.info(
+            "[EVENT] Stations found for postal code: %s (%d stations discovered)",
+            event.postal_code.value,
+            event.stations_found,
         )

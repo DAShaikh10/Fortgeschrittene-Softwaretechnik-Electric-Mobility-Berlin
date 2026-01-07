@@ -19,9 +19,9 @@ from src.shared.domain.value_objects import PostalCode
 from src.shared.application.services import BaseService, ChargingStationService
 from src.shared.domain.events import (
     IDomainEventPublisher,
-    StationSearchPerformedEvent,
     StationSearchFailedEvent,
     NoStationsFoundEvent,
+    StationsFoundEvent,
 )
 from src.shared.infrastructure.repositories import ChargingStationRepository
 from src.discovery.application.dtos import PostalCodeAreaDTO
@@ -175,13 +175,14 @@ class TestSearchByPostalCode:
     def test_search_publishes_performed_event_when_stations_found(
         self, charging_station_service, valid_postal_code, mock_station_list, mock_repository, mock_event_bus
     ):
-        """Test that search publishes StationSearchPerformedEvent when stations are found."""
+        """Test that search publishes StationsFoundEvent when stations are found."""
         mock_repository.find_stations_by_postal_code.return_value = mock_station_list
 
         charging_station_service.search_by_postal_code(valid_postal_code)
 
         published_event = mock_event_bus.publish.call_args[0][0]
-        assert isinstance(published_event, StationSearchPerformedEvent)
+        assert isinstance(published_event, StationsFoundEvent)
+        assert published_event.stations_found == 3
         assert published_event.stations_found == 3
 
     def test_search_clears_events_after_publishing(self, charging_station_service, valid_postal_code, mock_repository):
@@ -313,7 +314,7 @@ class TestChargingStationServiceIntegration:
     def test_search_and_find_use_same_repository_method(
         self, charging_station_service, valid_postal_code, mock_repository, mock_station_list
     ):
-        """Test that search and find both use repository's find_stations_by_postal_code."""
+        """Test that search and find both use repository find_stations_by_postal_code."""
         mock_repository.find_stations_by_postal_code.return_value = mock_station_list
 
         # Call search

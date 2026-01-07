@@ -57,7 +57,7 @@ class ChargingStationService(BaseService):
             if len(stations) == 0:
                 aggregate.record_no_stations()
             else:
-                aggregate.perform_search(search_parameters={"postal_code": postal_code.value})
+                aggregate.record_stations_found()
 
             self.publish_events(aggregate)
 
