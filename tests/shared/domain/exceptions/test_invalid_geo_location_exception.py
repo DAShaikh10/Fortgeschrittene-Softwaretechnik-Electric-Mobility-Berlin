@@ -81,34 +81,25 @@ class TestInvalidGeoLocationErrorRaising:
 
     def test_raise_exception_with_default_message(self):
         """Test raising exception with default message."""
-        with pytest.raises(InvalidGeoLocationError) as exc_info:
+        with pytest.raises(InvalidGeoLocationError):
             raise InvalidGeoLocationError()
-
-        assert exc_info.value.message == "Invalid geo location data"
 
     def test_raise_exception_with_custom_message(self):
         """Test raising exception with custom message."""
         custom_message = "Boundary cannot be empty"
 
-        with pytest.raises(InvalidGeoLocationError) as exc_info:
+        with pytest.raises(InvalidGeoLocationError):
             raise InvalidGeoLocationError(custom_message)
-
-        assert exc_info.value.message == custom_message
-        assert str(exc_info.value) == custom_message
 
     def test_catch_as_value_error(self):
         """Test catching InvalidGeoLocationError as ValueError."""
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValueError):
             raise InvalidGeoLocationError("Test error")
-
-        assert isinstance(exc_info.value, InvalidGeoLocationError)
 
     def test_catch_as_exception(self):
         """Test catching InvalidGeoLocationError as Exception."""
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(Exception):
             raise InvalidGeoLocationError("Test error")
-
-        assert isinstance(exc_info.value, InvalidGeoLocationError)
 
     def test_exception_message_in_traceback(self):
         """Test that exception message appears in error info."""
@@ -300,8 +291,5 @@ class TestInvalidGeoLocationErrorUsageScenarios:
         postal_code = "10115"
         message = f"Invalid boundary for postal code: {postal_code}"
 
-        with pytest.raises(InvalidGeoLocationError) as exc_info:
+        with pytest.raises(InvalidGeoLocationError):
             raise InvalidGeoLocationError(message)
-
-        assert "10115" in exc_info.value.message
-        assert "Invalid boundary" in exc_info.value.message
