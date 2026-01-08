@@ -147,8 +147,6 @@ class StreamlitApp:
         if not is_valid:
             streamlit.sidebar.error(error_msg)
             # Stop processing search if invalid
-            postal_code_area = None
-            resident_data = None
         else:
             if plz_input:
                 selected_plz = plz_input

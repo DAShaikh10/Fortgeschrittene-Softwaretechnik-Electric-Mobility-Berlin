@@ -270,17 +270,9 @@ class TestCSVRepositoryIntegration:
         pd.testing.assert_frame_equal(result2, sample_dataframe)
 
     @patch("pandas.read_csv")
-    def test_repository_handles_different_separators_in_sequence(
-        self, mock_read_csv, sample_file_path, sample_dataframe
-    ):
+    def test_repository_handles_different_separators_in_sequence(self, mock_read_csv, sample_dataframe):
         """Test that repository can handle different separators in sequence."""
         mock_read_csv.return_value = sample_dataframe
-        repo = ConcreteCSVRepository(sample_file_path)
-
-        # Load with different separators
-        _result1 = repo.load_csv(sep=",")
-        _result2 = repo.load_csv(sep=";")
-        _result3 = repo.load_csv(sep="\t")
 
         assert mock_read_csv.call_count == 3
         # Verify each call used the correct separator
