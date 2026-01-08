@@ -17,9 +17,7 @@ class PostalCodeResidentService(BaseService):
     """
 
     def __init__(self, repository: PopulationRepository, event_bus: IDomainEventPublisher):
-        super().__init__(repository)
-
-        self._event_bus = event_bus
+        super().__init__(repository, event_bus)
 
     def get_all_postal_codes(self, sort: bool = False) -> List[PostalCode]:
         """
