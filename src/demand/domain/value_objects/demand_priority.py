@@ -5,8 +5,8 @@ Demand Domain Value Object - DemandPriority
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from src.shared.domain.constants import InfrastructureThresholds
 from src.demand.domain.enums import PriorityLevel
+from src.shared.domain.constants import InfrastructureThresholds
 
 if TYPE_CHECKING:
     from src.demand.domain.value_objects import Population, StationCount

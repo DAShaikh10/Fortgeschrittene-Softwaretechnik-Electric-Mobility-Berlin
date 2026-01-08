@@ -13,8 +13,8 @@ from unittest.mock import patch
 
 import pytest
 
-from src.shared.domain.value_objects import PostalCode
 from src.demand.domain.enums import PriorityLevel
+from src.shared.domain.value_objects import PostalCode
 from src.demand.domain.events import DemandAnalysisCalculatedEvent
 from src.demand.domain.value_objects import DemandPriority
 from src.demand.application.event_handlers import DemandAnalysisEventHandler

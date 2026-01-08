@@ -6,7 +6,7 @@ import geopandas as gpd
 
 from src.shared.domain.value_objects import GeoLocation, PostalCode
 from src.shared.infrastructure.geospatial import GeopandasBoundary
-from src.shared.infrastructure.logging_config import get_logger
+from src.shared.infrastructure import get_logger
 
 from .csv_repository import CSVRepository
 from .geo_data_repository import GeoDataRepository

@@ -2,7 +2,7 @@
 Shared Application Event Handler - Station Search Events.
 """
 
-from src.shared.infrastructure.logging_config import get_logger
+from src.shared.infrastructure import get_logger
 
 from src.shared.domain.events import (
     StationSearchPerformedEvent,

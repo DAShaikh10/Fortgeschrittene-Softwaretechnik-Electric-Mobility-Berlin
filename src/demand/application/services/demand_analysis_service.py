@@ -4,7 +4,7 @@ Demand Application Service for Demand Analysis.
 
 from typing import Dict, List, Optional
 
-from src.shared.infrastructure.logging_config import get_logger
+from src.shared.infrastructure import get_logger
 
 from src.shared.domain.events import IDomainEventPublisher
 from src.shared.domain.value_objects import PostalCode

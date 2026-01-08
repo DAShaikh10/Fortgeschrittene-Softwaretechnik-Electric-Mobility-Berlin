@@ -7,8 +7,8 @@ implementing business logic that doesn't naturally belong to a single aggregate.
 
 from typing import Dict, List
 
-from src.demand.domain.aggregates import DemandAnalysisAggregate
 from src.demand.domain.enums import PriorityLevel
+from src.demand.domain.aggregates import DemandAnalysisAggregate
 
 
 class RegionalDemandAnalysis:

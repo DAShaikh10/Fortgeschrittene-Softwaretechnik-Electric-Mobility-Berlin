@@ -2,8 +2,16 @@
 src.shared.domain.value_objects - Shared Kernel Value Objects module.
 """
 
-from .postal_code import *
-from .boundary import *
-from .geo_location import *
-from .population_data import *
-from .power_capacity import *
+from .postal_code import PostalCode
+from .boundary import Boundary
+from .geo_location import GeoLocation
+from .population_data import PopulationData
+from .power_capacity import PowerCapacity
+
+__all__ = [
+    "PostalCode",
+    "Boundary",
+    "GeoLocation",
+    "PopulationData",
+    "PowerCapacity",
+]

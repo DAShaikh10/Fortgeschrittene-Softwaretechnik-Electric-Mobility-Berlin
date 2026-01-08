@@ -7,7 +7,7 @@ from typing import Optional
 
 import geopandas as gpd
 
-from src.shared.domain.value_objects.boundary import Boundary
+from src.shared.domain.value_objects import Boundary
 
 
 @dataclass(frozen=True)

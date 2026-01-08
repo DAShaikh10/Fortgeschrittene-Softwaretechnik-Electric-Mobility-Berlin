@@ -1,5 +1,5 @@
 """
-Demand Domain Priority Level Enum.
+Demand Domain Enums.
 """
 
 from enum import Enum

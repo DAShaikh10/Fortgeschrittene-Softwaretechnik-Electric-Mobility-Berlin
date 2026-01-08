@@ -2,7 +2,7 @@
 Demand Application Event Handler - High Demand Area Identified.
 """
 
-from src.shared.infrastructure.logging_config import get_logger
+from src.shared.infrastructure import get_logger
 
 from src.demand.domain.events import HighDemandAreaIdentifiedEvent
 

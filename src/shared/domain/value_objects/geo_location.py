@@ -1,5 +1,5 @@
 """
-GeoLocation Value Object Module.
+Shared Domain GeoLocation Value Object.
 """
 
 import logging

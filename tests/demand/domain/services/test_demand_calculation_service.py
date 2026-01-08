@@ -12,11 +12,11 @@ Test categories:
 
 import pytest
 
-from src.demand.domain.aggregates import DemandAnalysisAggregate
-from src.demand.domain.services import DemandCalculationService, RegionalDemandAnalysis
-from src.demand.domain.value_objects import DemandPriority, Population, StationCount
-from src.demand.domain.enums import PriorityLevel
 from src.shared.domain.value_objects import PostalCode
+from src.demand.domain.enums import PriorityLevel
+from src.demand.domain.services import DemandCalculationService, RegionalDemandAnalysis
+from src.demand.domain.aggregates import DemandAnalysisAggregate
+from src.demand.domain.value_objects import DemandPriority, Population, StationCount
 
 
 @pytest.fixture

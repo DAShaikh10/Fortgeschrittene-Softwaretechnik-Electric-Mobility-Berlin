@@ -4,8 +4,8 @@ Centralized Logging Configuration Module.
 This module provides a centralized logging configuration for the EVision Berlin application.
 """
 
-import logging
 import sys
+import logging
 
 
 def setup_logging(level=logging.INFO):
