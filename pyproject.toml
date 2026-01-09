@@ -42,6 +42,37 @@ min-similarity-lines = 10
 # Ignore test files for duplicate code checks
 ignore-imports = true
 
+# Ruff linter and formatter config.
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["htmlcov", ".venv", "venv", "env", ".git"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "DTZ", "T10", "EM", "ISC", "ICN", "PIE", "PT", "Q", "RET", "SIM", "TID", "ARG", "PLE", "PLW", "RUF"]
+ignore = [
+    "ISC001",  # Conflicts with formatter
+    "EM101",   # Allow string literals in exceptions (clearer for simple cases)
+    "EM102",   # Allow f-string literals in exceptions (clearer for simple cases)
+    "B024",    # Allow ABC without abstract methods (used for interface definition)
+    "RET504",  # Allow explicit return variable (clearer intent)
+    "ARG005",  # Allow unused lambda arguments (needed for folium style_function signature)
+    "RUF001",  # Allow unicode characters (emojis in UI)
+    "I001",    # Allow unsorted imports (user preference)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "PT011",   # Allow broad pytest.raises (sometimes intentional)
+    "B017",    # Allow catching broad Exception in tests
+    "SIM108",  # Allow if-else instead of ternary (clearer in tests)
+    "DTZ001",  # Allow datetime without timezone in tests
+    "C401",    # Allow generator instead of set comprehension
+    "PT015",   # Allow assert False with message
+]
+"docs/about.py" = ["W291"]  # Allow trailing whitespace in documentation
+"src/**/repositories/*.py" = ["B024"]  # Repository interfaces don't need abstract methods
+
 # Black formatter config.
 [tool.black]
 line-length = 120
@@ -113,3 +144,18 @@ show_missing = true
 
 [tool.coverage.html]
 directory = "htmlcov"
+
+# MyPy type checker configuration.
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+exclude = ["htmlcov", ".venv", "venv", "env", "scripts"]
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+files = ["src", "tests"]
+
+# Bandit security linter configuration.
+[tool.bandit]
+exclude_dirs = ["tests", "htmlcov", ".venv", "venv"]
+skips = ["B101"]  # Skip assert_used check globally (asserts are fine in tests)

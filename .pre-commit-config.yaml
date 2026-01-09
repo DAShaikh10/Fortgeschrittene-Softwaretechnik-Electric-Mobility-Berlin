@@ -3,6 +3,8 @@
 # Setup: pre-commit install
 # Run manually: pre-commit run --all-files
 
+exclude: "datasets/"
+
 repos:
   # Ruff - Fast Python linter (replaces flake8, isort, and more)
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -27,23 +29,14 @@ repos:
         args: ["-c", "pyproject.toml"]
         additional_dependencies: ["bandit[toml]"]
 
-  # MyPy - Type checking
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.13.0
-    hooks:
-      - id: mypy
-        additional_dependencies: [types-requests, types-setuptools]
-
   # General file checks.
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-      - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
         args: ["--maxkb=1000"]
-      - id: check-json
       - id: check-toml
       - id: check-merge-conflict
       - id: mixed-line-ending
