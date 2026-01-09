@@ -32,7 +32,7 @@ repos:
     rev: v1.13.0
     hooks:
       - id: mypy
-        additional_dependencies: [types-all]
+        additional_dependencies: [types-requests, types-setuptools]
 
   # General file checks.
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -56,8 +56,9 @@ repos:
       - id: validate-pyproject
 
   # Conventional commits (enforce commit message format)
-  - repo: https://github.com/compwa/mirrors-commitlint
-    rev: v19.6.0
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.23.0
     hooks:
       - id: commitlint
         stages: [commit-msg]
+        additional_dependencies: ["@commitlint/config-conventional"]
