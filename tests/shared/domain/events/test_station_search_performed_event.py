@@ -30,7 +30,7 @@ def test_initialization(mock_postal_code):
 
     assert event.postal_code == mock_postal_code
     assert event.stations_found == stations_count
-    assert event.search_parameters == {}  # Default empty dict
+    assert not event.search_parameters  # Default empty dict
 
     # Verify inherited fields
     assert event.event_id is not None

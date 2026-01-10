@@ -23,7 +23,6 @@ max-line-length = 130
 
 [tool.pylint.messages_control]
 disable = [
-    "C0103", # Variable name doesn't conform to snake_case naming style.
     "R0903", # Too few public methods.
     "R0913", # Too many arguments.
     "R0917", # Too many positional arguments.
@@ -39,13 +38,11 @@ ignore-paths = ["tests/.*/.*_test\\.py$"]
 [tool.pylint.similarities]
 # Increase minimum lines for duplicate code detection
 min-similarity-lines = 10
-# Ignore test files for duplicate code checks
-ignore-imports = true
 
 # Ruff linter and formatter config.
 [tool.ruff]
 line-length = 120
-target-version = "py311"
+target-version = "py313"
 extend-exclude = ["htmlcov", ".venv", "venv", "env", ".git"]
 
 [tool.ruff.lint]
@@ -148,7 +145,7 @@ directory = "htmlcov"
 
 # MyPy type checker configuration.
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.13"
 mypy_path = "src"
 exclude = ["htmlcov", ".venv", "venv", "env", "scripts"]
 warn_return_any = true
