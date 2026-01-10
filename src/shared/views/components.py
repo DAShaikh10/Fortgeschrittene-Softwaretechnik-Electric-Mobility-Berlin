@@ -168,8 +168,15 @@ def render_sidebar(  # pylint: disable=too-many-locals
 
     if current_layer not in layer_options:
         current_layer = layer_options[0]
+        streamlit.session_state["layer_selection"] = current_layer
 
-    layer_selection = streamlit.sidebar.radio("Select Layer", layer_options, index=layer_options.index(current_layer))
-    streamlit.session_state["layer_selection"] = layer_selection
+    # Use a unique key for the radio button to prevent state conflicts
+    layer_selection = streamlit.sidebar.radio(
+        "Select Layer", layer_options, index=layer_options.index(current_layer), key=f"layer_radio_{view_mode}"
+    )
+
+    # Only update session state if the selection actually changed
+    if layer_selection != streamlit.session_state.get("layer_selection"):
+        streamlit.session_state["layer_selection"] = layer_selection
 
     return selected_plz, view_mode, layer_selection, capacity_filter
