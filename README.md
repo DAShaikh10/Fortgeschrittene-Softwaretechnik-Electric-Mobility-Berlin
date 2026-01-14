@@ -42,16 +42,19 @@ URL: **[evision-berlin.streamlit.app](https://evision-berlin.streamlit.app/)**
 ## Table of Contents
 
 1. [Key Features](#key-features)
-2. [Program Structure](#program-structure)
-3. [Data Sources](#data-sources)
+2. [Architecture Overview](#architecture-overview)
+3. [Project Structure](#project-structure)
 4. [Installation & Setup](#installation--setup)
-5. [How to Run](#how-to-run)
-6. [Application Usage](#application-usage)
-7. [Data Quality Analysis](#data-quality-analysis)
-8. [Results Interpretation](#results-interpretation)
-9. [Demand Analysis](#demand-analysis)
-10. [Limitations of Analysis](#limitations-of-analysis)
-11. [Technologies Used](#technologies-used)
+5. [Task Commands](#task-commands)
+6. [How to Run](#how-to-run)
+7. [Application Usage](#application-usage)
+8. [Data Sources](#data-sources)
+9. [Data Quality Analysis](#data-quality-analysis)
+10. [Results Interpretation](#results-interpretation)
+11. [Demand Analysis](#demand-analysis)
+12. [Testing Strategy](#testing-strategy)
+13. [Limitations of Analysis](#limitations-of-analysis)
+14. [Technologies Used](#technologies-used)
 
 ---
 
@@ -73,70 +76,116 @@ URL: **[evision-berlin.streamlit.app](https://evision-berlin.streamlit.app/)**
 
 ---
 
-## Program Structure
+## Architecture Overview
+
+### Domain-Driven Design (DDD)
+
+EVision Berlin is built using **Domain-Driven Design** principles with **Test-Driven Development** (TDD):
+
+#### 🎯 Bounded Contexts
+
+**1. Station Discovery Context**
+- **Aggregate Root**: `PostalCodeAreaAggregate` - manages charging station collections by area
+- **Entities**: `ChargingStation` - individual charging infrastructure
+- **Value Objects**: `PostalCode`, `GeoLocation` - immutable domain concepts
+- **Services**: `ChargingStationService`, `GeoLocationService` - use case orchestration
+- **Repositories**: `CSVChargingStationRepository`, `CSVGeoDataRepository` - data persistence
+
+**2. Demand Analysis Context**
+- **Aggregate Root**: `DemandAnalysisAggregate` - encapsulates demand calculations and priority
+- **Value Objects**: `DemandPriority` - priority level categorization
+- **Services**: `DemandAnalysisService`, `PopulationAnalysisService` - business logic
+- **Domain Events**: `DemandAnalysisCalculatedEvent`, `HighDemandAreaIdentifiedEvent`
+- **Repositories**: `InMemoryDemandAnalysisRepository` - demand data storage
+
+**3. Shared Kernel**
+- **Value Objects**: `PostalCode`, `GeoLocation`, `Population` - shared across contexts
+- **Domain Events**: `DomainEventBus`, `StationSearchPerformedEvent` - event-driven architecture
+- **Services**: `PostalCodeResidentService`, `PowerCapacityService` - shared services
+- **Constants**: `InfrastructureThresholds`, `PowerThresholds` - business rules (no magic numbers)
+
+#### 🏗️ Architecture Layers
+
+- **Domain Layer**: Business logic in aggregates and value objects, domain events for loose coupling
+- **Application Layer**: Service orchestration, use case implementations, DTOs for presentation isolation
+- **Infrastructure Layer**: CSV repositories, logging configuration, GeoDataFrame processing, event bus
+- **UI Layer**: Streamlit presentation with DDD validation, interactive maps with Folium
+
+#### ✅ Key DDD Features
+
+- **Domain Validation**: PostalCode enforces Berlin-specific rules (10xxx-14xxx, 5 digits)
+- **Event-Driven Architecture**: Domain events track searches and high-demand area identification
+- **Type Safety**: Enums replace magic strings for better IDE support
+- **Immutable Value Objects**: Validation enforced in `__post_init__`
+- **Centralized Constants**: Business thresholds in dedicated constant classes
+
+---
+
+## Project Structure
 
 ```
 EVision-Berlin/
-├── main.py                          # Main entry point for the Streamlit application
-├── config.py                        # Configuration file with data file paths
-├── requirements.txt                 # Python package dependencies
-├── README.md                        # This documentation file
-├── core/                            # Core modules
-│   ├── __init__.py                 # Package initializer
-│   ├── methods.py                  # Core data processing and visualization functions
-│   └── helper_tools.py             # Utility functions (timer, serialization, etc.)
-└── datasets/                        # Data files
-    ├── Ladesaeulenregister.csv     # Charging station data from Bundesnetzagentur
-    ├── plz_einwohner.csv           # Population data by postal code
-    ├── geodata_berlin_plz.csv      # Postal code boundary geometries (WKT format)
-    ├── geodata_berlin_dis.csv      # District boundary geometries
-    └── berlin_postleitzahlen/       # Shapefile data for postal codes
-        ├── berlin_postleitzahlen.shp
-        ├── berlin_postleitzahlen.dbf
-        ├── berlin_postleitzahlen.shx
-        └── berlin_postleitzahlen.prj
+├── main.py                          # Application entry point
+├── config.py                        # Configuration management
+├── requirements.txt                 # Python dependencies
+├── pyproject.toml                   # Project metadata & task configuration
+├── README.md                        # This documentation
+├── src/
+│   ├── demand/                      # Demand Analysis bounded context
+│   │   ├── domain/                  # Domain models, aggregates, events
+│   │   │   ├── aggregates/          # DemandAnalysisAggregate
+│   │   │   ├── value_objects/       # DemandPriority, StationCount, Population
+│   │   │   ├── events/              # Domain events
+│   │   │   └── constants/           # Business thresholds
+│   │   ├── application/             # Application services, DTOs
+│   │   │   ├── services/            # DemandAnalysisService, PopulationAnalysisService
+│   │   │   ├── dtos/                # Data Transfer Objects
+│   │   │   └── event_handlers/      # Event handlers
+│   │   └── infrastructure/          # Repositories, event handlers
+│   │       └── repositories/        # InMemoryDemandAnalysisRepository
+│   ├── discovery/                   # Station Discovery bounded context
+│   │   ├── domain/                  # Aggregates, entities, value objects
+│   │   │   ├── aggregates/          # PostalCodeAreaAggregate
+│   │   │   ├── entities/            # ChargingStation
+│   │   │   └── value_objects/       # PostalCode, GeoLocation
+│   │   ├── application/             # Services, use cases
+│   │   │   └── services/            # ChargingStationService
+│   │   └── infrastructure/          # Data access implementations
+│   ├── shared/                      # Shared kernel
+│   │   ├── domain/                  # Shared value objects, events
+│   │   │   ├── value_objects/       # PostalCode, GeoLocation, Population
+│   │   │   ├── events/              # DomainEvent, StationSearchPerformedEvent
+│   │   │   └── constants/           # Shared business constants
+│   │   ├── application/             # Shared services
+│   │   │   └── services/            # PostalCodeResidentService, PowerCapacityService
+│   │   └── infrastructure/          # Event bus, logging, repositories
+│   │       ├── event_bus.py         # InMemoryEventBus
+│   │       ├── logging_config.py    # Centralized logging
+│   │       ├── repositories/        # CSV repository implementations
+│   │       └── datasets/            # Data files
+│   │           ├── Ladesaeulenregister.csv  # Charging station data (BNetzA)
+│   │           ├── plz_einwohner.csv        # Population data by postal code
+│   │           └── geodata_berlin_plz.csv   # Postal code boundary geometries (WKT)
+│   └── ui/                          # Presentation layer
+│       └── application.py           # Streamlit UI components
+├── tests/                           # Test suite (TDD)
+│   ├── unit/                        # Unit tests for domain & application
+│   │   ├── demand/                  # Demand context tests
+│   │   ├── discovery/               # Discovery context tests
+│   │   └── shared/                  # Shared kernel tests
+│   ├── integration/                 # Integration tests
+│   │   ├── repositories/            # Repository integration tests
+│   │   └── services/                # Service integration tests
+│   └── fixtures/                    # Test fixtures and mocks
+├── docs/                            # Documentation
+│   ├── about.py                     # About section for UI
+│   └── DATA_QUALITY_ANALYSIS.md     # Data quality report
+├── assets/                          # Static resources
+│   ├── data_quality_charging_stations.png  # Generated visualizations
+│   ├── data_quality_residents.png          # Generated visualizations
+│   └── data_quality_combined.png           # Generated visualizations
+└── htmlcov/                         # Test coverage reports (generated)
 ```
-
-### File Descriptions
-
-#### Core Application Files
-
-**`main.py`**
-
-- Entry point for the application
-- Orchestrates data loading, preprocessing, and Streamlit app generation
-- Executes demand analysis calculations
-- Key functions:
-  - `main()`: Coordinates the entire workflow from data loading to visualization
-
-**`config.py`**
-
-- Central configuration dictionary (`pdict`)
-- Defines file paths for all datasets
-- Specifies geocode column names
-- Easy modification point for data sources
-
-**`core/methods.py`**
-
-- Contains all core data processing functions
-- Key functions:
-  - `load_datasets()`: Loads CSV files for geodata, charging stations, and population
-  - `preprop_lstat()`: Preprocesses charging station data (filters Berlin, handles coordinates)
-  - `preprop_resid()`: Preprocesses resident/population data
-  - `count_plz_occurrences()`: Counts charging stations per postal code
-  - `count_plz_occurrences_by_kw()`: Categorizes stations by power output
-  - `calculate_demand_priority()`: Analyzes demand based on population vs. infrastructure
-  - `make_streamlit_electric_charging_resid()`: Generates the complete Streamlit web interface
-  - `demand_analysis_summary()`: Prints summary statistics of demand analysis
-
-**`core/helper_tools.py`**
-
-- Utility functions supporting the main application
-- Key functions:
-  - `@timer`: Decorator for measuring function execution time
-  - `pickle_out()` / `pickle_in()`: Serialization for caching processed data
-  - Various lambda functions for data manipulation
-  - Helper functions for data cleaning and validation
 
 ---
 
@@ -201,22 +250,6 @@ EVision-Berlin/
 - Defines boundaries for each postal code area
 - Allows spatial joins and geographic aggregations
 
-### 4. District Boundaries (`geodata_berlin_dis.csv`)
-
-- **Purpose:** Provides larger administrative district (Bezirk) boundaries
-- **Format:** Similar to PLZ geodata
-- **Usage:** Contextual overlays on maps
-
-### 5. Shapefile Data (`berlin_postleitzahlen/`)
-
-- **Alternative Format:** ESRI Shapefile format
-- **Components:**
-  - `.shp`: Shape geometry
-  - `.dbf`: Attribute data
-  - `.shx`: Shape index
-  - `.prj`: Projection information
-- **Usage:** Can be loaded with GeoPandas for additional analysis
-
 ---
 
 ## Installation & Setup
@@ -264,6 +297,12 @@ With the virtual environment activated:
 pip install -r requirements.txt
 ```
 
+**Or using task command:**
+
+```bash
+task install
+```
+
 **Key Packages Installed:**
 
 | Package            | Version | Purpose                          |
@@ -273,22 +312,72 @@ pip install -r requirements.txt
 | `streamlit`        | 1.51+   | Web application framework        |
 | `folium`           | Latest  | Interactive maps                 |
 | `streamlit-folium` | Latest  | Streamlit-Folium integration     |
-| `branca`           | Latest  | Color mapping for visualizations |
+| `matplotlib`       | Latest  | Statistical visualizations       |
+| `seaborn`          | Latest  | Advanced statistical plots       |
+| `scipy`            | Latest  | Statistical analysis             |
+| `pytest`           | Latest  | Testing framework                |
+| `pytest-cov`       | Latest  | Code coverage                    |
+| `pylint`           | Latest  | Code quality linting             |
+| `black`            | Latest  | Code formatter                   |
+| `taskipy`          | Latest  | Task runner                      |
 
 ### Step 4: Verify Data Files
 
-Ensure the following files are present in the `datasets/` folder:
+Ensure the following files are present in the `src/shared/infrastructure/datasets/` folder:
 
 ✅ `Ladesaeulenregister.csv` (charging stations)  
 ✅ `plz_einwohner.csv` (population data)  
-✅ `geodata_berlin_plz.csv` (postal code boundaries)  
-✅ `geodata_berlin_dis.csv` (district boundaries)
+✅ `geodata_berlin_plz.csv` (postal code boundaries)
 
 **If Missing:**
 
 - Download `Ladesaeulenregister.csv` from [Bundesnetzagentur](https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/E-Mobilitaet/start.html)
 - Rename to `Ladesaeulenregister.csv` if the filename includes a date
 - Contact the repository maintainers for other data files
+
+---
+
+## Task Commands
+
+The project uses **taskipy** for convenient task automation. All commands are defined in `pyproject.toml`.
+
+### Development Commands
+
+```bash
+task install         # Install all project dependencies
+task run            # Run the Streamlit application (streamlit run main.py)
+task run-clean      # Clean __pycache__ and run application
+task clean          # Remove all __pycache__ directories
+```
+
+### Testing Commands
+
+```bash
+task test           # Run all tests with verbose output
+task test-cov       # Run tests with coverage report (HTML + terminal)
+```
+
+**Test Coverage Output:**
+- HTML report generated in `htmlcov/` directory
+- Terminal shows missing lines for quick identification
+- Open `htmlcov/index.html` in browser for detailed visualization
+
+### Code Quality Commands
+
+```bash
+task format         # Format code with black (auto-fix)
+task format-check   # Check code formatting without modifying files
+task lint           # Run pylint on main.py, config.py, src/, tests/
+```
+
+### Git Workflow Commands
+
+```bash
+task pull-main      # Stash changes, pull from main branch, restore changes
+task pull-task      # Stash changes, pull from task branch, restore changes
+```
+
+**Note:** These commands automatically stash uncommitted changes, pull updates, and restore your work.
 
 ---
 
@@ -307,6 +396,12 @@ Ensure the following files are present in the `datasets/` folder:
 
    ```bash
    streamlit run main.py
+   ```
+
+   **Or using task command:**
+
+   ```bash
+   task run
    ```
 
 3. **Access the Application:**
@@ -704,6 +799,142 @@ Demand Score = (Population / Number of Stations) × Density Factor
 
 ---
 
+## Testing Strategy
+
+### Test-Driven Development (TDD) Approach
+
+EVision Berlin follows **Test-Driven Development** principles:
+
+1. **Write Test First**: Define expected behavior before implementation
+2. **Implement Code**: Write minimal code to pass the test
+3. **Refactor**: Improve code while maintaining test coverage
+
+### Test Structure
+
+```
+tests/
+├── unit/                           # Unit tests (isolated components)
+│   ├── demand/                     # Demand context tests
+│   │   ├── test_aggregates.py      # DemandAnalysisAggregate tests
+│   │   ├── test_services.py        # Service layer tests
+│   │   └── test_value_objects.py   # Value object validation tests
+│   ├── discovery/                  # Discovery context tests
+│   │   ├── test_aggregates.py      # PostalCodeAreaAggregate tests
+│   │   ├── test_entities.py        # ChargingStation entity tests
+│   │   └── test_value_objects.py   # PostalCode, GeoLocation tests
+│   └── shared/                     # Shared kernel tests
+│       ├── test_events.py          # Domain event tests
+│       └── test_services.py        # Shared service tests
+├── integration/                    # Integration tests (component interaction)
+│   ├── test_repositories.py        # CSV repository tests
+│   ├── test_event_bus.py           # Event bus integration
+│   └── test_services.py            # Cross-context service tests
+└── fixtures/                       # Test data and mocks
+    ├── sample_data.py              # Sample datasets
+    └── mocks.py                    # Mock objects
+```
+
+### Running Tests
+
+**Run all tests:**
+```bash
+task test
+# Or: pytest tests/ -v
+```
+
+**Run with coverage:**
+```bash
+task test-cov
+# Or: pytest tests/ -v --cov=src --cov-report=html --cov-report=term-missing
+```
+
+**Run specific test file:**
+```bash
+pytest tests/unit/demand/test_aggregates.py -v
+```
+
+**Run specific test function:**
+```bash
+pytest tests/unit/demand/test_aggregates.py::test_demand_analysis_aggregate_creation -v
+```
+
+### Testing Tools
+
+- **pytest**: Primary testing framework with fixtures and parametrization
+- **pytest-cov**: Code coverage measurement and reporting
+- **unittest.mock**: Mocking external dependencies and isolating units
+- **GitHub Actions**: Automated CI/CD testing on every commit
+
+### Coverage Goals
+
+- **Domain Layer**: >90% coverage (critical business logic)
+- **Application Layer**: >85% coverage (service orchestration)
+- **Infrastructure Layer**: >75% coverage (external dependencies)
+- **Overall Project**: >80% coverage
+
+### Quality Assurance
+
+**Automated Checks (GitHub Actions):**
+- ✅ **pylint**: Code quality and style enforcement
+- ✅ **pytest**: All tests must pass
+- ✅ **coverage**: Minimum coverage thresholds
+
+**Pre-commit Hooks:**
+- Code formatting with `black`
+- Linting with `pylint`
+- Test execution before commit
+
+### Test Categories
+
+**1. Unit Tests:**
+- Value object validation (PostalCode, GeoLocation)
+- Aggregate business logic (DemandAnalysisAggregate)
+- Service methods (isolated with mocks)
+- Domain event creation and publishing
+
+**2. Integration Tests:**
+- Repository data access (CSV reading/writing)
+- Event bus message passing
+- Cross-context service interactions
+- End-to-end use case flows
+
+**3. Domain Validation Tests:**
+- PostalCode format validation (Berlin-specific rules)
+- GeoLocation coordinate validation
+- Business rule enforcement (thresholds, priorities)
+- Invariant protection in aggregates
+
+### Example Test Patterns
+
+**Value Object Validation:**
+```python
+def test_postal_code_invalid_format():
+    with pytest.raises(InvalidPostalCodeError):
+        PostalCode("12345")  # Not in Berlin range
+```
+
+**Aggregate Behavior:**
+```python
+def test_demand_analysis_calculates_priority():
+    aggregate = DemandAnalysisAggregate(
+        postal_code=PostalCode("10115"),
+        population=Population(20000),
+        station_count=StationCount(5)
+    )
+    assert aggregate.demand_priority == DemandPriority.HIGH
+```
+
+**Service Integration:**
+```python
+def test_demand_analysis_service_integration():
+    service = DemandAnalysisService(repo, event_bus)
+    result = service.analyze_demand(postal_code)
+    assert result.priority == "HIGH"
+    assert event_bus.published_events[0].event_type == "DemandAnalysisCalculated"
+```
+
+---
+
 ## Limitations of Analysis
 
 ### 1. Data Limitations
@@ -921,18 +1152,6 @@ Demand Score = (Population / Number of Stations) × Density Factor
    - Report missing stations
    - Suggest new locations
    - Rate existing infrastructure
-
----
-
-## Contributing
-
-We welcome contributions! Please follow these guidelines:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/YourFeature`)
-3. Commit your changes (`git commit -m 'Add YourFeature'`)
-4. Push to the branch (`git push origin feature/YourFeature`)
-5. Open a Pull Request
 
 ---
 
