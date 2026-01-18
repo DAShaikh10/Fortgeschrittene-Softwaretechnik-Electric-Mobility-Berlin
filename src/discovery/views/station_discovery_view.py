@@ -196,9 +196,7 @@ class StationDiscoveryView:
                             "fillOpacity": 0.7,
                         },
                         tooltip=(
-                            f"Postal Code: {plz}<br>"
-                            f"👥 Population: {population:,}<br>"
-                            f"⚡ Stations: {station_count}"
+                            f"Postal Code: {plz}<br>👥 Population: {population:,}<br>⚡ Stations: {station_count}"
                         ),
                     ).add_to(folium_map)
                     areas_rendered += 1
@@ -316,9 +314,7 @@ class StationDiscoveryView:
                             "fillOpacity": 0.7,
                         },
                         tooltip=(
-                            f"Postal Code: {plz}<br>"
-                            f"👥 Population: {population:,}<br>"
-                            f"⚡ Stations: {station_count}"
+                            f"Postal Code: {plz}<br>👥 Population: {population:,}<br>⚡ Stations: {station_count}"
                         ),
                     ).add_to(folium_map)
                     areas_rendered += 1

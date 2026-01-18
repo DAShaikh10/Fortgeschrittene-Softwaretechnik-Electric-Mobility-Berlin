@@ -67,8 +67,7 @@ class TestHighDemandAreaEventHandlerBasicFunctionality:
         HighDemandAreaEventHandler.handle(high_urgency_event)
 
         mock_logger.warning.assert_called_once_with(
-            "[EVENT] HIGH DEMAND AREA IDENTIFIED: Postal Code %s | "
-            "Urgency Score: %.2f | Population: %d | Stations: %d",
+            "[EVENT] HIGH DEMAND AREA IDENTIFIED: Postal Code %s | Urgency Score: %.2f | Population: %d | Stations: %d",
             "10115",
             100.0,
             50000,
@@ -81,8 +80,7 @@ class TestHighDemandAreaEventHandlerBasicFunctionality:
         HighDemandAreaEventHandler.handle(medium_urgency_event)
 
         mock_logger.warning.assert_called_once_with(
-            "[EVENT] HIGH DEMAND AREA IDENTIFIED: Postal Code %s | "
-            "Urgency Score: %.2f | Population: %d | Stations: %d",
+            "[EVENT] HIGH DEMAND AREA IDENTIFIED: Postal Code %s | Urgency Score: %.2f | Population: %d | Stations: %d",
             "10115",
             75.0,
             20000,
@@ -95,8 +93,7 @@ class TestHighDemandAreaEventHandlerBasicFunctionality:
         HighDemandAreaEventHandler.handle(low_urgency_event)
 
         mock_logger.warning.assert_called_once_with(
-            "[EVENT] HIGH DEMAND AREA IDENTIFIED: Postal Code %s | "
-            "Urgency Score: %.2f | Population: %d | Stations: %d",
+            "[EVENT] HIGH DEMAND AREA IDENTIFIED: Postal Code %s | Urgency Score: %.2f | Population: %d | Stations: %d",
             "10115",
             50.0,
             12000,
@@ -206,8 +203,7 @@ class TestHighDemandAreaEventHandlerEdgeCases:
         HighDemandAreaEventHandler.handle(event)
 
         mock_logger.warning.assert_called_once_with(
-            "[EVENT] HIGH DEMAND AREA IDENTIFIED: Postal Code %s | "
-            "Urgency Score: %.2f | Population: %d | Stations: %d",
+            "[EVENT] HIGH DEMAND AREA IDENTIFIED: Postal Code %s | Urgency Score: %.2f | Population: %d | Stations: %d",
             "10115",
             100.0,
             80000,

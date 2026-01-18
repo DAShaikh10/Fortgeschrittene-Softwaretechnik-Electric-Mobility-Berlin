@@ -264,15 +264,13 @@ class DemandAnalysisView:
             else:
                 streamlit.success("✅ This area has adequate charging infrastructure coverage.")
 
-            streamlit.markdown(
-                f"""
+            streamlit.markdown(f"""
                 **Infrastructure Status:**
-                - Current stations: {recommendations['current_stations']}
-                - Recommended total: {recommendations['recommended_total_stations']}
-                - Current ratio: {recommendations['current_ratio']:.0f} residents/station
-                - Target ratio: {recommendations['target_ratio']:.0f} residents/station
-                """
-            )
+                - Current stations: {recommendations["current_stations"]}
+                - Recommended total: {recommendations["recommended_total_stations"]}
+                - Current ratio: {recommendations["current_ratio"]:.0f} residents/station
+                - Target ratio: {recommendations["target_ratio"]:.0f} residents/station
+                """)
         else:
             streamlit.warning(f"No analysis data available for {selected_postal_code}")
 

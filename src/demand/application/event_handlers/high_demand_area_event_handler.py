@@ -26,8 +26,7 @@ class HighDemandAreaEventHandler:
             event: The HighDemandAreaIdentifiedEvent instance.
         """
         logger.warning(
-            "[EVENT] HIGH DEMAND AREA IDENTIFIED: Postal Code %s | "
-            "Urgency Score: %.2f | Population: %d | Stations: %d",
+            "[EVENT] HIGH DEMAND AREA IDENTIFIED: Postal Code %s | Urgency Score: %.2f | Population: %d | Stations: %d",
             event.postal_code.value,
             event.urgency_score,
             event.population,
