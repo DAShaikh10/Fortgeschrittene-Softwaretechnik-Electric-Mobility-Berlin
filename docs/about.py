@@ -34,7 +34,7 @@ ABOUT_SECTION = """
 
     - 🗺️ **Interactive Map Visualization**: Dynamic Folium maps with postal code boundaries and station markers
     - 📊 **Population Density Analysis**: Visual heatmaps showing resident distribution across Berlin
-    - ⚡ **Power Category Filtering**: Analyze stations by charging speed (Slow, Normal, Fast, Rapid, Ultra-rapid)
+    - ⚡ **Visualization Modes**: Basic View and Power Capacity (KW) View with capacity range filtering
     - 🔍 **Postal Code Search**: Instant lookup with detailed area statistics
     - 📈 **Demand Priority Analysis**: Automated high/medium/low priority classification
     - 🎯 **Smart Recommendations**: Infrastructure expansion suggestions based on target ratios
@@ -230,10 +230,10 @@ ABOUT_SECTION = """
        - Demand priority classification (High/Medium/Low)
        - Recommendations for additional charging points needed
 
-    4. **Explore Filters**:
-       - Filter by power category (Slow, Normal, Fast, Rapid, Ultra-rapid)
-       - View data quality analysis and outlier detection
-       - Compare multiple postal codes
+    4. **Explore Views**:
+       - Switch between Basic View and Power Capacity (KW) View
+       - Filter by capacity range in Power Capacity view (All, Low, Medium, High)
+       - View data quality analysis and outlier detection in the About tab
 
     5. **Interpret Recommendations**:
        - **High Priority**: Significant infrastructure gap, immediate action needed
@@ -255,11 +255,9 @@ ABOUT_SECTION = """
     - **Low Priority**: Small population (<2000) or adequate infrastructure coverage
 
     **Power Category Analysis:**
-    - Slow: < 11 kW (home/workplace charging)
-    - Normal: 11-22 kW (public charging)
-    - Fast: 22-50 kW (semi-rapid charging)
-    - Rapid: 50-150 kW (highway charging)
-    - Ultra-rapid: > 150 kW (next-gen fast charging)
+    - Normal: < 50 kW (AC charging, home wallboxes, public charging)
+    - Fast: 50-150 kW (DC fast charging, highway charging)
+    - Ultra: ≥ 150 kW (Ultra-fast DC charging, next-gen charging)
 
     ---
 
