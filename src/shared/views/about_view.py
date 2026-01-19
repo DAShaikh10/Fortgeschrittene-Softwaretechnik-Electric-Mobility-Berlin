@@ -25,4 +25,4 @@ class AboutView:
     def render_about(self) -> None:
         """Render about/information view."""
         streamlit.header("ℹ️ About EVision Berlin")
-        streamlit.markdown(ABOUT_SECTION)
+        streamlit.markdown(ABOUT_SECTION, unsafe_allow_html=True)

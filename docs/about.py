@@ -244,39 +244,6 @@ ABOUT_SECTION = """
 
     ---
 
-    ### 🏗️ Project Structure
-
-    ```
-    EVision-Berlin/
-    ├── main.py                          # Application entry point
-    ├── config.py                        # Configuration management
-    ├── requirements.txt                 # Python dependencies
-    ├── pyproject.toml                   # Project metadata
-    ├── src/
-    │   ├── demand/                      # Demand Analysis bounded context
-    │   │   ├── domain/                  # Domain models, aggregates, events
-    │   │   ├── application/             # Application services, DTOs
-    │   │   └── infrastructure/          # Repositories, event handlers
-    │   ├── discovery/                   # Station Discovery bounded context
-    │   │   ├── domain/                  # Aggregates, entities, value objects
-    │   │   ├── application/             # Services, use cases
-    │   │   └── infrastructure/          # Data access implementations
-    │   ├── shared/                      # Shared kernel
-    │   │   ├── domain/                  # Shared value objects, events
-    │   │   ├── application/             # Shared services
-    │   │   └── infrastructure/          # Event bus, logging, repositories
-    │   └── ui/                          # Presentation layer
-    │       └── application.py           # Streamlit UI components
-    ├── tests/                           # Test suite
-    │   ├── unit/                        # Unit tests
-    │   ├── integration/                 # Integration tests
-    │   └── fixtures/                    # Test fixtures and mocks
-    ├── docs/                            # Documentation
-    └── assets/                          # Static resources
-    ```
-
-    ---
-
     ### 📈 Analysis Methodology
 
     **Demand Calculation:**
@@ -308,10 +275,10 @@ ABOUT_SECTION = """
 
     ---
 
-    **Version**: 2.0 (TDD Enhanced DDD)
-    **Framework**: Streamlit + DDD + TDD + Event-Driven Architecture
-    **Course**: Advanced Software Engineering
-    **Institution**: Berlin University of Applied Sciences (BHT)
+    **Version**: 2.0 (TDD Enhanced DDD) <br>
+    **Framework**: Streamlit + DDD + TDD + Event-Driven Architecture <br>
+    **Course**: Advanced Software Engineering <br>
+    **Institution**: Berlin University of Applied Sciences (BHT) <br>
     **Professor**: Dr. Prof. Selcan Ipek Ugay
 
     **Development Team**:
@@ -324,7 +291,7 @@ ABOUT_SECTION = """
 
     ### 📫 Contact & Contribution
 
-    **GitHub Repository**: [DAShaikh10/EVision-Berlin](https://github.com/DAShaikh10/EVision-Berlin)
+    **GitHub Repository**: [DAShaikh10/EVision-Berlin](https://github.com/DAShaikh10/EVision-Berlin) <br>
     **Issues & Feedback**: [GitHub Issues](https://github.com/DAShaikh10/EVision-Berlin/issues)
 
     Contributions, bug reports, and feature requests are welcome!
