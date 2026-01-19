@@ -12,8 +12,15 @@ from config import pdict  # Serves as the project configuration dictionary.
 from src.shared.infrastructure.logging_config import get_logger, setup_logging
 
 from src.ui.application import StreamlitApp
-from src.shared.application.event_handlers import StationSearchEventHandler
-from src.shared.domain.events import IDomainEventPublisher, StationSearchPerformedEvent
+from src.shared.application.event_handlers import StationSearchEventHandler, PostalCodeEventHandler
+from src.shared.domain.events import (
+    IDomainEventPublisher,
+    StationSearchPerformedEvent,
+    StationSearchFailedEvent,
+    NoStationsFoundEvent,
+    StationsFoundEvent,
+    PostalCodeValidatedEvent,
+)
 from src.shared.infrastructure.event_bus import InMemoryEventBus
 from src.shared.infrastructure.repositories import (
     CSVChargingStationRepository,
@@ -99,6 +106,10 @@ def setup_event_handlers(event_bus: IDomainEventPublisher):
     """
     # Subscribe handlers for shared events.
     event_bus.subscribe(StationSearchPerformedEvent, StationSearchEventHandler.handle)
+    event_bus.subscribe(StationSearchFailedEvent, StationSearchEventHandler.handle_failure)
+    event_bus.subscribe(NoStationsFoundEvent, StationSearchEventHandler.handle_no_results)
+    event_bus.subscribe(StationsFoundEvent, StationSearchEventHandler.handle_stations_found)
+    event_bus.subscribe(PostalCodeValidatedEvent, PostalCodeEventHandler.handle_postal_code_validated)
 
     # Subscribe handlers for demand events.
     event_bus.subscribe(DemandAnalysisCalculatedEvent, DemandAnalysisEventHandler.handle)
